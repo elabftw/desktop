@@ -29,6 +29,31 @@ func main() {
 			app,
 		},
 	})
+	/*
+		idx, err := loadProfileIndex()
+		if err != nil {
+			panic(err)
+		}
+
+			// Example: add a profile entry (you will generate a real UUIDv4 elsewhere)
+			entry := ProfileEntry{
+				UUID:        "11111111-2222-3333-4444-555555555555",
+				CreatedAt:   time.Now(),
+				DisplayName: "My Profile",
+			}
+			idx.Profiles = append(idx.Profiles, entry)
+
+			if err := saveProfileIndex(idx); err != nil {
+				panic(err)
+			}
+
+			metaPath, err := writeProfileMetaFile(entry.UUID, []byte(`{"version":1}`))
+			if err != nil {
+				panic(err)
+			}
+	*/
+
+	//fmt.Println("Wrote meta:", metaPath)
 
 	if err != nil {
 		println("Error:", err.Error())

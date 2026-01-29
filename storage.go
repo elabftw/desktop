@@ -1,0 +1,164 @@
+package main
+
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
+	"time"
+)
+
+const AppName = "elabftw-desktop"
+
+type ProfileIndex struct {
+	Version  int            `json:"version"`
+	Profiles []ProfileEntry `json:"profiles"`
+}
+
+type ProfileEntry struct {
+	UUID        string    `json:"uuid"`
+	DisplayName string    `json:"display_name,omitempty"`
+	CreatedAt   time.Time `json:"created_at"`
+	LastUsedAt  time.Time `json:"last_used_at,omitempty"`
+}
+
+func appRootDir() (string, error) {
+	base, err := os.UserConfigDir()
+	if err != nil {
+		return "", fmt.Errorf("os.UserConfigDir: %w", err)
+	}
+	return filepath.Join(base, AppName), nil
+}
+
+func profilesDir() (string, error) {
+	root, err := appRootDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(root, "profiles"), nil
+}
+
+func profileDir(uuid string) (string, error) {
+	if uuid == "" {
+		return "", errors.New("uuid is empty")
+	}
+	pdir, err := profilesDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(pdir, uuid), nil
+}
+
+func ensureAppDirs() (string, error) {
+	root, err := appRootDir()
+	if err != nil {
+		return "", err
+	}
+	// 0700: user read/write/execute only
+	if err := os.MkdirAll(root, 0o700); err != nil {
+		return "", fmt.Errorf("mkdir app root: %w", err)
+	}
+
+	pdir := filepath.Join(root, "profiles")
+	if err := os.MkdirAll(pdir, 0o700); err != nil {
+		return "", fmt.Errorf("mkdir profiles: %w", err)
+	}
+
+	return root, nil
+}
+
+func indexPath() (string, error) {
+	pdir, err := profilesDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(pdir, "index.json"), nil
+}
+
+func loadProfileIndex() (*ProfileIndex, error) {
+	if _, err := ensureAppDirs(); err != nil {
+		return nil, err
+	}
+
+	path, err := indexPath()
+	if err != nil {
+		return nil, err
+	}
+
+	b, err := os.ReadFile(path)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return &ProfileIndex{Version: 1, Profiles: []ProfileEntry{}}, nil
+		}
+		return nil, fmt.Errorf("read index: %w", err)
+	}
+
+	var idx ProfileIndex
+	if err := json.Unmarshal(b, &idx); err != nil {
+		return nil, fmt.Errorf("parse index.json: %w", err)
+	}
+	if idx.Version == 0 {
+		idx.Version = 1
+	}
+	if idx.Profiles == nil {
+		idx.Profiles = []ProfileEntry{}
+	}
+
+	return &idx, nil
+}
+
+func saveProfileIndex(idx *ProfileIndex) error {
+	if idx == nil {
+		return errors.New("idx is nil")
+	}
+	if _, err := ensureAppDirs(); err != nil {
+		return err
+	}
+
+	path, err := indexPath()
+	if err != nil {
+		return err
+	}
+
+	tmp := path + ".tmp"
+	b, err := json.MarshalIndent(idx, "", "  ")
+	if err != nil {
+		return fmt.Errorf("marshal index: %w", err)
+	}
+
+	// 0600: user read/write only
+	if err := os.WriteFile(tmp, b, 0o600); err != nil {
+		return fmt.Errorf("write tmp index: %w", err)
+	}
+	if err := os.Rename(tmp, path); err != nil {
+		return fmt.Errorf("rename index: %w", err)
+	}
+
+	return nil
+}
+
+func ensureProfileDir(uuid string) (string, error) {
+	dir, err := profileDir(uuid)
+	if err != nil {
+		return "", err
+	}
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return "", fmt.Errorf("mkdir profile dir: %w", err)
+	}
+	return dir, nil
+}
+
+// Example: creates profiles/<uuid>/meta.json with restrictive permissions.
+func writeProfileMetaFile(uuid string, content []byte) (string, error) {
+	dir, err := ensureProfileDir(uuid)
+	if err != nil {
+		return "", err
+	}
+
+	path := filepath.Join(dir, "meta.json")
+	if err := os.WriteFile(path, content, 0o600); err != nil {
+		return "", fmt.Errorf("write meta.json: %w", err)
+	}
+	return path, nil
+}
