@@ -1,0 +1,91 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Linux
+          - name: linux-amd64
+            runs_on: ubuntu-24.04
+            platform: linux/amd64
+            wails_tags: webkit2_41
+          - name: linux-arm64
+            runs_on: ubuntu-24.04-arm
+            platform: linux/arm64
+            wails_tags: webkit2_41
+
+          # macOS
+          - name: macos-arm64
+            runs_on: macos-15
+            platform: darwin/arm64
+            wails_tags: ""
+          - name: macos-amd64
+            runs_on: macos-15-intel
+            platform: darwin/amd64
+            wails_tags: ""
+
+          # Windows
+          - name: windows-amd64
+            runs_on: windows-latest
+            platform: windows/amd64
+            wails_tags: ""
+          - name: windows-arm64
+            runs_on: windows-11-arm
+            platform: windows/arm64
+            wails_tags: ""
+
+    runs-on: ${{ matrix.runs_on }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            pkg-config \
+            libgtk-3-dev \
+            libwebkit2gtk-4.1-dev
+
+      - name: Install Wails CLI
+        run: |
+          go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+      - name: Build (Wails)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -n "${{ matrix.wails_tags }}" ]; then
+            wails build -clean -platform "${{ matrix.platform }}" -tags "${{ matrix.wails_tags }}"
+          else
+            wails build -clean -platform "${{ matrix.platform }}"
+          fi
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: build/bin/**
+          if-no-files-found: error
