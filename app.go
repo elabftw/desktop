@@ -3,12 +3,15 @@ package main
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
+	"time"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -52,6 +55,118 @@ func (a *App) Login(passphrase string) error {
 
 	a.passphraseHash = hash
 	return nil
+}
+
+type diskProfileIndex struct {
+	Version  int           `json:"version"`
+	Profiles []diskProfile `json:"profiles"`
+}
+
+type diskProfile struct {
+	UUID        string    `json:"uuid"`
+	DisplayName string    `json:"display_name"`
+	CreatedAt   time.Time `json:"created_at"`
+	LastUsedAt  time.Time `json:"last_used_at"`
+}
+
+func indexJSONPath() (string, error) {
+	cfgDir, err := os.UserConfigDir()
+	if err != nil {
+		return "", fmt.Errorf("get config dir: %w", err)
+	}
+	return filepath.Join(cfgDir, "elabftw-desktop", "index.json"), nil
+}
+
+func loadDiskIndex(path string) (*diskProfileIndex, error) {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return &diskProfileIndex{
+				Version:  1,
+				Profiles: []diskProfile{},
+			}, nil
+		}
+		return nil, fmt.Errorf("read index.json: %w", err)
+	}
+
+	var idx diskProfileIndex
+	if err := json.Unmarshal(b, &idx); err != nil {
+		return nil, fmt.Errorf("parse index.json: %w", err)
+	}
+	if idx.Version == 0 {
+		idx.Version = 1
+	}
+	if idx.Profiles == nil {
+		idx.Profiles = []diskProfile{}
+	}
+	return &idx, nil
+}
+
+func writeDiskIndex(path string, idx *diskProfileIndex) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return fmt.Errorf("create config dir: %w", err)
+	}
+
+	b, err := json.MarshalIndent(idx, "", "  ")
+	if err != nil {
+		return fmt.Errorf("marshal index.json: %w", err)
+	}
+	b = append(b, '\n')
+
+	if err := os.WriteFile(path, b, 0o644); err != nil {
+		return fmt.Errorf("write index.json: %w", err)
+	}
+	return nil
+}
+
+func (a *App) AddProfile(displayName string) (*ProfileIndex, error) {
+	displayName = strings.TrimSpace(displayName)
+	if displayName == "" {
+		return nil, fmt.Errorf("display name is empty")
+	}
+
+	indexPath, err := indexJSONPath()
+	if err != nil {
+		return nil, err
+	}
+
+	idx, err := loadDiskIndex(indexPath)
+	if err != nil {
+		return nil, err
+	}
+
+	newUUID := uuid.NewString()
+	now := time.Now()
+
+	idx.Profiles = append(idx.Profiles, diskProfile{
+		UUID:        newUUID,
+		DisplayName: displayName,
+		CreatedAt:   now,
+		LastUsedAt:  time.Time{},
+	})
+
+	if err := writeDiskIndex(indexPath, idx); err != nil {
+		return nil, err
+	}
+
+	// Ensure profile directory exists (DB will be created on first save)
+	cfgDir, err := os.UserConfigDir()
+	if err != nil {
+		return nil, fmt.Errorf("get config dir: %w", err)
+	}
+	profileDir := filepath.Join(cfgDir, "elabftw-desktop", "profiles", newUUID)
+	if err := os.MkdirAll(profileDir, 0o755); err != nil {
+		return nil, fmt.Errorf("create profile dir: %w", err)
+	}
+
+	// Reload the in-memory index using your existing loader
+	reloaded, err := loadProfileIndex()
+	if err != nil {
+		return nil, err
+	}
+	a.index = reloaded
+
+	return a.index, nil
 }
 func (a *App) SaveEntry(profileUUID string, title string, body string) (int64, error) {
 	fmt.Println("SaveEntry called")

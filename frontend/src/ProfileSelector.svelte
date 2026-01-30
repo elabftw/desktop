@@ -1,12 +1,60 @@
 <script>
 	import { onMount, createEventDispatcher } from 'svelte';
-	import { GetProfileIndex } from '../wailsjs/go/main/App';
+	import { GetProfileIndex, AddProfile } from '../wailsjs/go/main/App';
 
 	const dispatch = createEventDispatcher();
 
+  let showAddProfile = false;
 	let profiles = [];
 	let activeProfile = null;
 	let passphrase = '';
+
+    let index = null;
+
+  async function refreshIndex() {
+    index = await GetProfileIndex();
+  }
+
+   let newProfileName = "";
+  let addError = "";
+
+  function openAddProfile() {
+    newProfileName = "";
+    addError = "";
+    showAddProfile = true;
+  }
+
+  function closeAddProfile() {
+    showAddProfile = false;
+    addError = "";
+  }
+
+  async function confirmAddProfile() {
+    const name = newProfileName.trim();
+    if (!name) {
+      addError = "Please enter a profile name.";
+      return;
+    }
+
+    try {
+      // If your AddProfile returns updated index, assign it to your state here
+      await AddProfile(name);
+
+      closeAddProfile();
+
+      // Refresh your index/list if needed:
+      // await refreshIndex();
+    } catch (e) {
+      addError = e?.message ?? String(e);
+    }
+  }
+
+  function onModalKeydown(e) {
+    if (e.key === "Escape") closeAddProfile();
+    if (e.key === "Enter") confirmAddProfile();
+  }
+
+  refreshIndex();
 
 	async function loadProfiles() {
 		const index = await GetProfileIndex();
@@ -39,6 +87,38 @@
 		</div>
 	{/each}
 </div>
+
+<div style="margin-top: 12px;">
+  <button on:click={openAddProfile}>Add profile</button>
+</div>
+
+{#if showAddProfile}
+  <!-- Backdrop -->
+  <div class="modal-backdrop" on:click={closeAddProfile}></div>
+
+  <!-- Modal -->
+  <div class="modal" role="dialog" aria-modal="true" on:keydown={onModalKeydown}>
+    <div class="modal-title">Add profile</div>
+    <div class="modal-body">
+      <label class="modal-label" for="profileName">Profile name</label>
+      <input
+        id="profileName"
+        class="modal-input"
+        bind:value={newProfileName}
+        autofocus
+      />
+
+      {#if addError}
+        <div class="modal-error">{addError}</div>
+      {/if}
+    </div>
+
+    <div class="modal-actions">
+      <button on:click={closeAddProfile}>Cancel</button>
+      <button on:click={confirmAddProfile}>Add</button>
+    </div>
+  </div>
+{/if}
 
 {#if activeProfile}
   <div class='input-box' id='input'>
