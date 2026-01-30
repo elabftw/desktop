@@ -1,0 +1,71 @@
+package main
+
+import (
+	"database/sql"
+	"fmt"
+	"os"
+	"path/filepath"
+
+	_ "modernc.org/sqlite"
+)
+
+func OpenProfileDB(profileDir string) (*sql.DB, error) {
+	if err := os.MkdirAll(profileDir, 0o755); err != nil {
+		return nil, fmt.Errorf("create profile dir: %w", err)
+	}
+
+	dbPath := filepath.Join(profileDir, "data.sqlite3")
+	db, err := sql.Open("sqlite", dbPath)
+	if err != nil {
+		return nil, fmt.Errorf("open sqlite: %w", err)
+	}
+
+	// Good defaults for desktop apps
+	if _, err := db.Exec(`PRAGMA foreign_keys = ON;`); err != nil {
+		_ = db.Close()
+		return nil, fmt.Errorf("pragma foreign_keys: %w", err)
+	}
+	if _, err := db.Exec(`PRAGMA journal_mode = WAL;`); err != nil {
+		_ = db.Close()
+		return nil, fmt.Errorf("pragma journal_mode: %w", err)
+	}
+
+	if err := initSchema(db); err != nil {
+		_ = db.Close()
+		return nil, err
+	}
+
+	return db, nil
+}
+
+func initSchema(db *sql.DB) error {
+	// Use PRAGMA user_version for schema migrations.
+	var v int
+	if err := db.QueryRow(`PRAGMA user_version;`).Scan(&v); err != nil {
+		return fmt.Errorf("read user_version: %w", err)
+	}
+
+	if v == 0 {
+		// Initial schema
+		_, err := db.Exec(`
+CREATE TABLE IF NOT EXISTS entries (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	title TEXT NOT NULL,
+	body TEXT NOT NULL,
+	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+);
+
+PRAGMA user_version = 1;
+`)
+		if err != nil {
+			return fmt.Errorf("create schema v1: %w", err)
+		}
+		v = 1
+	}
+
+	// Future migrations would go here:
+	// if v == 1 { ... set user_version = 2 }
+
+	return nil
+}

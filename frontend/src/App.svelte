@@ -20,7 +20,7 @@ function selectProfile(uuid) {
 	}
 async function getProfiles() {
   const index = await GetProfileIndex();
-profiles = index?.profiles ?? [];
+  profiles = index?.profiles ?? [];
   console.log(index);
 }
 function unlock() {
@@ -31,8 +31,8 @@ function unlock() {
 	});
 </script>
 <main>
-  <img alt='eLabFTW logo' id='logo' src='{logo}'>
 {#if appState === 'select-profile'}
+  <img alt='eLabFTW logo' id='logo' src='{logo}'>
 	<ProfileSelector
 		on:unlocked={(e) => {
 			activeProfile = e.detail.uuid;
