@@ -110,7 +110,7 @@ jobs:
           EOF
 
           # Add icon
-          cp "frontend/src/assets/elabftw-logo.png" "${APP_NAME}.png"
+          cp "frontend/src/assets/images/elabftw-logo.png" "${APP_NAME}.png"
 
           # Download linuxdeploy + GTK plugin (arch-specific)
           if [ "${{ matrix.platform }}" = "linux/amd64" ]; then
