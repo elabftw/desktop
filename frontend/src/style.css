@@ -16,6 +16,7 @@ body {
     font-family: "Nunito";
     font-style: normal;
     font-weight: 400;
+    font-size: 1.1em;
     src: local(""),
     url("assets/fonts/nunito-v16-latin-regular.woff2") format("woff2");
 }
@@ -24,69 +25,77 @@ body {
     height: 100vh;
     text-align: center;
 }
-  #logo {
-    display: block;
-    width: 50%;
-    height: 50%;
-    margin: auto;
-    padding: 10% 0 0;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
-    background-origin: content-box;
-  }
 
-  .input-box .btn {
-    width: 60px;
-    height: 30px;
-    line-height: 30px;
-    border-radius: 3px;
-    border: none;
-    margin: 20px 0 0 20px;
-    padding: 0 8px;
-    cursor: pointer;
-  }
+#logo {
+display: block;
+width: 50%;
+height: 50%;
+margin: auto;
+padding: 10% 0 0;
+background-position: center;
+background-repeat: no-repeat;
+background-size: 100% 100%;
+background-origin: content-box;
+}
+
+textarea {
+    width: 80vh;
+    height: 200px;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.input-box .btn {
+width: 60px;
+height: 30px;
+line-height: 30px;
+border-radius: 3px;
+border: none;
+margin: 20px 0 0 20px;
+padding: 0 8px;
+cursor: pointer;
+}
 .input-box label {
 display: block;
 margin-top: 24px;
 font-size: 1.4em;
 }
 
-  .input-box .btn:hover {
-    background-image: linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%);
-    color: #333333;
-  }
+.input-box .btn:hover {
+background-image: linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%);
+color: #333333;
+}
 
-  .input-box .input {
-    border: none;
-    border-radius: 3px;
-    outline: none;
-    height: 30px;
-    line-height: 30px;
-    padding: 0 10px;
-    background-color: rgba(240, 240, 240, 1);
-    -webkit-font-smoothing: antialiased;
-  }
+.input-box .input {
+border: none;
+border-radius: 3px;
+outline: none;
+height: 30px;
+line-height: 30px;
+padding: 0 10px;
+background-color: rgba(240, 240, 240, 1);
+-webkit-font-smoothing: antialiased;
+}
 
-  .input-box .input:hover {
-    border: none;
-    background-color: rgba(255, 255, 255, 1);
-  }
+.input-box .input:hover {
+border: none;
+background-color: rgba(255, 255, 255, 1);
+}
 
-  .input-box .input:focus {
-    border: none;
-    background-color: rgba(255, 255, 255, 1);
-  }
+.input-box .input:focus {
+border: none;
+background-color: rgba(255, 255, 255, 1);
+}
 
-  .profile-box {
-      width: 20vw;
-      margin: 10px auto;
-    padding: 12px;
-     border: 1px solid white;
-  }
-   .profile-box.active {
-   background-color: white;
-   color: black;
+.profile-box {
+  width: 20vw;
+  margin: 10px auto;
+padding: 12px;
+ border: 1px solid white;
+}
+.profile-box.active {
+background-color: white;
+color: black;
 }
 .profile-box.masked {
 		opacity: 0.25;

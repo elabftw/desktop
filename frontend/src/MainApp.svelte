@@ -1,5 +1,7 @@
 <script>
   import { onMount } from "svelte";
+  import { DateTime } from 'luxon';
+
   import { ListEntries, SaveEntry, GetEntry } from "../wailsjs/go/main/App";
   export let profileUuid;
   let showEditor = false;
@@ -8,6 +10,15 @@
   let status = "";
     let entries = [];
   let listStatus = "";
+
+function toRelativeTime(iso, locale = 'en') {
+  return (
+    DateTime.fromISO(iso)
+      .setLocale(locale)
+      .toRelative() ?? 'now'
+  );
+}
+
 
 async function openEntry(id) {
   status = "";
@@ -56,9 +67,9 @@ async function openEntry(id) {
   });
 </script>
 
-<h1>Main App</h1>
+<h1 >Index</h1>
   <button on:click={refreshEntries}>
-   Index
+    Refresh
   </button>
 
 <p>
@@ -78,7 +89,7 @@ async function openEntry(id) {
       <a class="title" href="#" on:click|preventDefault={() => openEntry(e.id)}>
         {e.title}
       </a>
-      <div>Updated: {e.updatedAt}</div>
+      <div>Last modification: {toRelativeTime(e.updatedAt)}</div>
     </li>
   {/each}
 </ul>
