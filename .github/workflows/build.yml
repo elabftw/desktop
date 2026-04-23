@@ -85,71 +85,71 @@ jobs:
           go install github.com/wailsapp/wails/v2/cmd/wails@latest
           wails build -clean -platform "${{ matrix.platform }}" -tags webkit2_41
 
-      - name: Package AppImage
-        if: runner.os == 'Linux'
-        shell: bash
-        run: |
-          set -euo pipefail
+      #- name: Package AppImage
+      #  if: runner.os == 'Linux'
+      #  shell: bash
+      #  run: |
+      #    set -euo pipefail
 
-          APP_NAME="elabftw-desktop"
-          BIN="build/bin/${APP_NAME}"
+      #    APP_NAME="elabftw-desktop"
+      #    BIN="build/bin/${APP_NAME}"
 
-          # Create AppDir skeleton
-          APPDIR="AppDir"
-          mkdir -p "${APPDIR}/usr/bin"
-          cp "${BIN}" "${APPDIR}/usr/bin/${APP_NAME}"
+      #    # Create AppDir skeleton
+      #    APPDIR="AppDir"
+      #    mkdir -p "${APPDIR}/usr/bin"
+      #    cp "${BIN}" "${APPDIR}/usr/bin/${APP_NAME}"
 
-          # Desktop file + icon (adjust paths if your icon lives elsewhere)
-          cat > "${APP_NAME}.desktop" << 'EOF'
-          [Desktop Entry]
-          Type=Application
-          Name=elabftw-desktop
-          Exec=elabftw-desktop
-          Icon=elabftw-desktop
-          Categories=Utility;
-          EOF
+      #    # Desktop file + icon (adjust paths if your icon lives elsewhere)
+      #    cat > "${APP_NAME}.desktop" << 'EOF'
+      #    [Desktop Entry]
+      #    Type=Application
+      #    Name=elabftw-desktop
+      #    Exec=elabftw-desktop
+      #    Icon=elabftw-desktop
+      #    Categories=Utility;
+      #    EOF
 
-          # Add icon
-          cp "frontend/src/assets/images/elabftw-logo.png" "${APP_NAME}.png"
+      #    # Add icon
+      #    cp "frontend/src/assets/images/elabftw-logo.png" "${APP_NAME}.png"
 
-          # Download linuxdeploy + GTK plugin (arch-specific)
-          if [ "${{ matrix.platform }}" = "linux/amd64" ]; then
-            LD_BIN="linuxdeploy-x86_64.AppImage"
-            GTK_PLUGIN="linuxdeploy-plugin-gtk-x86_64.AppImage"
-          else
-            LD_BIN="linuxdeploy-aarch64.AppImage"
-            GTK_PLUGIN="linuxdeploy-plugin-gtk-aarch64.AppImage"
-          fi
+      #    # Download linuxdeploy + GTK plugin (arch-specific)
+      #    if [ "${{ matrix.platform }}" = "linux/amd64" ]; then
+      #      LD_BIN="linuxdeploy-x86_64.AppImage"
+      #      GTK_PLUGIN="linuxdeploy-plugin-gtk-x86_64.AppImage"
+      #    else
+      #      LD_BIN="linuxdeploy-aarch64.AppImage"
+      #      GTK_PLUGIN="linuxdeploy-plugin-gtk-aarch64.AppImage"
+      #    fi
 
-          curl -L -o "${LD_BIN}" "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/${LD_BIN}"
-          curl -L -o "${GTK_PLUGIN}" "https://github.com/linuxdeploy/linuxdeploy-plugin-gtk/releases/download/continuous/${GTK_PLUGIN}"
-          chmod +x "${LD_BIN}" "${GTK_PLUGIN}"
+      #    curl -L -o "${LD_BIN}" "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/${LD_BIN}"
+      #    curl -L -o "${GTK_PLUGIN}" "https://github.com/linuxdeploy/linuxdeploy-plugin-gtk/releases/download/continuous/${GTK_PLUGIN}"
+      #    chmod +x "${LD_BIN}" "${GTK_PLUGIN}"
 
-          # On Ubuntu 24.04+ stripping can break due to modern ELF relr sections
-          # Disabling strip avoids that. (Safe default in CI.)
-          export NO_STRIP=1
+      #    # On Ubuntu 24.04+ stripping can break due to modern ELF relr sections
+      #    # Disabling strip avoids that. (Safe default in CI.)
+      #    export NO_STRIP=1
 
-          # Make the plugin discoverable for linuxdeploy
-          export LINUXDEPLOY_PLUGINS=gtk
-          export LINUXDEPLOY_PLUGIN_GTK_FILE="${PWD}/${GTK_PLUGIN}"
+      #    # Make the plugin discoverable for linuxdeploy
+      #    export LINUXDEPLOY_PLUGINS=gtk
+      #    export LINUXDEPLOY_PLUGIN_GTK_FILE="${PWD}/${GTK_PLUGIN}"
 
-          "./${LD_BIN}" \
-            --appdir "${APPDIR}" \
-            --executable "${APPDIR}/usr/bin/${APP_NAME}" \
-            --desktop-file "${APP_NAME}.desktop" \
-            --icon-file "${APP_NAME}.png" \
-            --plugin gtk \
-            --output appimage
+      #    "./${LD_BIN}" \
+      #      --appdir "${APPDIR}" \
+      #      --executable "${APPDIR}/usr/bin/${APP_NAME}" \
+      #      --desktop-file "${APP_NAME}.desktop" \
+      #      --icon-file "${APP_NAME}.png" \
+      #      --plugin gtk \
+      #      --output appimage
 
-          ls -la ./*.AppImage
+      #    ls -la ./*.AppImage
 
-      - name: Upload AppImage
-        if: runner.os == 'Linux'
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.name }}-appimage
-          path: ./*.AppImage
-          if-no-files-found: error
+      #- name: Upload AppImage
+      #  if: runner.os == 'Linux'
+      #  uses: actions/upload-artifact@v4
+      #  with:
+      #    name: ${{ matrix.name }}-appimage
+      #    path: ./*.AppImage
+      #    if-no-files-found: error
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
