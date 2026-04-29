@@ -1,38 +1,38 @@
 <script>
-	import { onMount, createEventDispatcher } from 'svelte';
-	import { GetProfileIndex, AddProfile } from '../wailsjs/go/main/App';
+  import { onMount, createEventDispatcher } from 'svelte';
+  import { GetProfileIndex, AddProfile } from '../wailsjs/go/main/App';
 
-	const dispatch = createEventDispatcher();
+  const dispatch = createEventDispatcher();
 
   let showAddProfile = false;
-	let profiles = [];
-	let activeProfile = null;
-	let passphrase = '';
+  let profiles = [];
+  let activeProfile = null;
+  let passphrase = '';
 
-    let index = null;
+  let index = null;
 
   async function refreshIndex() {
     index = await GetProfileIndex();
   }
 
-   let newProfileName = "";
-  let addError = "";
+  let newProfileName = '';
+  let addError = '';
 
   function openAddProfile() {
-    newProfileName = "";
-    addError = "";
+    newProfileName = '';
+    addError = '';
     showAddProfile = true;
   }
 
   function closeAddProfile() {
     showAddProfile = false;
-    addError = "";
+    addError = '';
   }
 
   async function confirmAddProfile() {
     const name = newProfileName.trim();
     if (!name) {
-      addError = "Please enter a profile name.";
+      addError = 'Please enter a profile name.';
       return;
     }
 
@@ -50,42 +50,42 @@
   }
 
   function onModalKeydown(e) {
-    if (e.key === "Escape") closeAddProfile();
-    if (e.key === "Enter") confirmAddProfile();
+    if (e.key === 'Escape') closeAddProfile();
+    if (e.key === 'Enter') confirmAddProfile();
   }
 
   refreshIndex();
 
-	async function loadProfiles() {
-		const index = await GetProfileIndex();
-		profiles = index?.profiles ?? [];
-	}
+  async function loadProfiles() {
+    const index = await GetProfileIndex();
+    profiles = index?.profiles ?? [];
+  }
 
-	function selectProfile(uuid) {
-		activeProfile = uuid;
-	}
+  function selectProfile(uuid) {
+    activeProfile = uuid;
+  }
 
-	function unlock() {
-		// encryption skipped for now
-		dispatch('unlocked', { uuid: activeProfile });
-	}
+  function unlock() {
+    // encryption skipped for now
+    dispatch('unlocked', { uuid: activeProfile });
+  }
 
-	onMount(loadProfiles);
+  onMount(loadProfiles);
 </script>
 
 <h1>Select a profile</h1>
 
 <div class="profiles">
-	{#each profiles as profile (profile.uuid)}
-		<div
-			class="profile-box"
-			class:active={activeProfile === profile.uuid}
-			class:masked={activeProfile !== null && activeProfile !== profile.uuid}
-			on:click={() => selectProfile(profile.uuid)}
-		>
-			{profile.display_name || profile.uuid}
-		</div>
-	{/each}
+  {#each profiles as profile (profile.uuid)}
+    <div
+      class="profile-box"
+      class:active={activeProfile === profile.uuid}
+      class:masked={activeProfile !== null && activeProfile !== profile.uuid}
+      on:click={() => selectProfile(profile.uuid)}
+    >
+      {profile.display_name || profile.uuid}
+    </div>
+  {/each}
 </div>
 
 <div style="margin-top: 12px;">
@@ -97,7 +97,12 @@
   <div class="modal-backdrop" on:click={closeAddProfile}></div>
 
   <!-- Modal -->
-  <div class="modal" role="dialog" aria-modal="true" on:keydown={onModalKeydown}>
+  <div
+    class="modal"
+    role="dialog"
+    aria-modal="true"
+    on:keydown={onModalKeydown}
+  >
     <div class="modal-title">Add profile</div>
     <div class="modal-body">
       <label class="modal-label" for="profileName">Profile name</label>
@@ -121,32 +126,39 @@
 {/if}
 
 {#if activeProfile}
-  <div class='input-box' id='input'>
-<label>Enter your passphrase</label>
-    <input autocomplete='off' placeholder='Your passphrase...' bind:value={passphrase} class='input' id='name' type='password'/>
-    <button class='btn' on:click={unlock}>Unlock</button>
+  <div class="input-box" id="input">
+    <label>Enter your passphrase</label>
+    <input
+      autocomplete="off"
+      placeholder="Your passphrase..."
+      bind:value={passphrase}
+      class="input"
+      id="name"
+      type="password"
+    />
+    <button class="btn" on:click={unlock}>Unlock</button>
   </div>
 {/if}
 
 <style>
-	.profile-box {
-		cursor: pointer;
-      width: 20vw;
-      margin: 10px auto;
-    padding: 0.5rem;
-     border: 1px solid white;
-	}
-	.profile-box.active {
-		background: white;
-		color: black;
-	}
-	.profile-box.masked {
-		opacity: 0.25;
-		filter: blur(1px);
-	}
-  .profile-box:hover {
-   background-color: white;
-   color: black;
+  .profile-box {
     cursor: pointer;
-}
+    width: 20vw;
+    margin: 10px auto;
+    padding: 0.5rem;
+    border: 1px solid white;
+  }
+  .profile-box.active {
+    background: white;
+    color: black;
+  }
+  .profile-box.masked {
+    opacity: 0.25;
+    filter: blur(1px);
+  }
+  .profile-box:hover {
+    background-color: white;
+    color: black;
+    cursor: pointer;
+  }
 </style>

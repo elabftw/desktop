@@ -71,16 +71,6 @@ sudo dnf install gtk3-devel webkit2gtk4.1-devel pkgconf-pkg-config gcc gcc-c++
 sudo apt install libgtk-3-dev libwebkit2gtk-4.1-dev pkg-config
 ```
 
-[//]: # ()
-[//]: # (### Arch Linux)
-
-[//]: # ()
-[//]: # (```bash)
-
-[//]: # (sudo pacman -S gtk3 webkit2gtk pkgconf)
-
-[//]: # (```)
-
 ---
 
 ## Setup
