@@ -1,16 +1,146 @@
-# README
+# eLabFTW Desktop
 
-## About
+> ⚠️ This project is experimental and not the primary way to run eLabFTW.
+> The recommended production setup is the Docker-based web application. See [official documentation](https://doc.elabftw.net/).
 
-This is the official Wails Svelte template.
+## Development Setup
 
-## Live Development
+---
 
-To run in live development mode, run `wails dev` in the project directory. This will run a Vite development
-server that will provide very fast hot reload of your frontend changes. If you want to develop in a browser
-and have access to your Go methods, there is also a dev server that runs on http://localhost:34115. Connect
-to this in your browser, and you can call your Go code from devtools.
+## Prerequisites
 
-## Building
+### Go
 
-To build a redistributable, production mode package, use `wails build`.
+**Minimum version:** Go **1.22+**
+
+Check:
+
+```bash
+go version
+```
+
+---
+
+### Node.js
+
+- **Minimum version:** Node.js **18+**
+- Recommended: Node.js 20+
+
+```bash
+node -v
+npm -v
+```
+
+---
+
+### Wails CLI
+
+Install:
+
+```bash
+go install github.com/wailsapp/wails/v2/cmd/wails@latest
+```
+
+Ensure it's in your PATH:
+
+```bash
+export PATH="$PATH:$HOME/go/bin"
+```
+
+Verify:
+
+```bash
+wails doctor
+```
+
+---
+
+## Linux dependencies
+
+Wails requires system libraries (GTK + WebKitGTK).
+
+### Fedora (≥ 40)
+
+```bash
+sudo dnf install gtk3-devel webkit2gtk4.1-devel pkgconf-pkg-config gcc gcc-c++
+```
+
+### Ubuntu / Debian
+
+```bash
+sudo apt install libgtk-3-dev libwebkit2gtk-4.1-dev pkg-config
+```
+
+[//]: # ()
+[//]: # (### Arch Linux)
+
+[//]: # ()
+[//]: # (```bash)
+
+[//]: # (sudo pacman -S gtk3 webkit2gtk pkgconf)
+
+[//]: # (```)
+
+---
+
+## Setup
+
+```bash
+git clone https://github.com/elabftw/desktop.git
+cd desktop
+#install frontend dependencies
+cd frontend
+npm install
+# go back to parent directory
+cd ..
+```
+
+---
+
+## Run the application
+
+### Standard (most Linux distros)
+
+```bash
+wails dev
+```
+
+---
+
+### ⚠️ Fedora users (important)
+
+On Fedora ≥ 40, WebKitGTK **4.1** is used instead of **4.0**.
+Wails defaults to 4.0, so you must run:
+
+```bash
+wails dev -tags webkit2_41
+```
+
+If you don’t use this flag, you may see errors like:
+
+```
+Package 'webkit2gtk-4.0' not found
+Build error - exit status 1
+```
+
+---
+
+## 🖥 What to expect
+
+- A **native desktop window** should open automatically
+- The app is **not meant to run in a browser**
+
+---
+
+## 🌐 Dev URLs
+
+During development, Wails exposes:
+
+- Frontend only (no Go backend):
+  http://localhost:5173/
+
+- Internal dev server (Wails):
+  http://localhost:34115
+
+⚠️ These are for debugging only.
+The actual app runs in the native window.
