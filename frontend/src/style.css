@@ -8,14 +8,14 @@ body {
   margin: 0;
   color: white;
   font-family:
-    'Nunito',
+    Nunito,
     -apple-system,
     BlinkMacSystemFont,
     'Segoe UI',
-    'Roboto',
-    'Oxygen',
-    'Ubuntu',
-    'Cantarell',
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
     'Fira Sans',
     'Droid Sans',
     'Helvetica Neue',
@@ -23,7 +23,7 @@ body {
 }
 
 @font-face {
-  font-family: 'Nunito';
+  font-family: Nunito;
   font-style: normal;
   font-weight: 400;
   font-size: 1.1em;

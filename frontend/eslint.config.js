@@ -1,4 +1,5 @@
 import js from '@eslint/js';
+import globals from 'globals';
 import svelte from 'eslint-plugin-svelte';
 import svelteParser from 'svelte-eslint-parser';
 
@@ -8,6 +9,16 @@ export default [
   },
 
   js.configs.recommended,
+
+    // prevent flagging legimitate runtime symbols like Go's 'window.'
+  {
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
+    },
+  },
 
   {
     files: ['**/*.svelte'],

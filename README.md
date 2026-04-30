@@ -106,9 +106,9 @@ Wails defaults to 4.0, so you must run:
 wails dev -tags webkit2_41
 ```
 
-If you don’t use this flag, you may see errors like:
+If you don't use this flag, you may see errors like:
 
-```
+```text
 Package 'webkit2gtk-4.0' not found
 Build error - exit status 1
 ```

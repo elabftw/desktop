@@ -12,7 +12,6 @@
 
   async function login() {
     await Login(passphrase);
-    console.log(GetHash());
   }
   function selectProfile(uuid) {
     activeProfile = uuid;
@@ -20,7 +19,6 @@
   async function getProfiles() {
     const index = await GetProfileIndex();
     profiles = index?.profiles ?? [];
-    console.log(index);
   }
   function unlock() {
     appState = 'unlocked';
