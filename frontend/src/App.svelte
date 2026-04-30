@@ -3,14 +3,15 @@
   import ProfileSelector from './ProfileSelector.svelte';
   import MainApp from './MainApp.svelte';
   import logo from './assets/images/elabftw-logo-white-800px.png';
-  import { Login, GetProfileIndex, GetHash } from '../wailsjs/go/main/App.js';
+  import { Login, GetProfileIndex } from '../wailsjs/go/main/App.js';
 
   let appState = 'select-profile';
   let passphrase;
-  let profiles = [];
+  // let profiles = [];
   let activeProfile = null;
 
   async function login() {
+    passphrase = '';
     await Login(passphrase);
   }
   function selectProfile(uuid) {
@@ -18,7 +19,7 @@
   }
   async function getProfiles() {
     const index = await GetProfileIndex();
-    profiles = index?.profiles ?? [];
+    // profiles = index?.profiles ?? [];
   }
   function unlock() {
     appState = 'unlocked';
