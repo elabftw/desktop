@@ -1,6 +1,3 @@
 build/bin
 node_modules
 frontend/dist
-# wails generated files
-frontend/wailsjs/
-frontend/package.json.md5
