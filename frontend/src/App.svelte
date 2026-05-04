@@ -14,16 +14,20 @@
     passphrase = '';
     await Login(passphrase);
   }
+
   function selectProfile(uuid) {
     activeProfile = uuid;
   }
+
   async function getProfiles() {
     const index = await GetProfileIndex();
     // profiles = index?.profiles ?? [];
   }
+
   function unlock() {
     appState = 'unlocked';
   }
+
   onMount(() => {
     getProfiles();
   });
@@ -31,7 +35,7 @@
 
 <main>
   {#if appState === 'select-profile'}
-    <img alt="eLabFTW logo" id="logo" src={logo} />
+    <img alt='eLabFTW logo' id='logo' src={logo}/>
     <ProfileSelector
       on:unlocked={(e) => {
         activeProfile = e.detail.uuid;
@@ -39,6 +43,6 @@
       }}
     />
   {:else if appState === 'unlocked'}
-    <MainApp profileUuid={activeProfile} />
+    <MainApp profileUuid={activeProfile}/>
   {/if}
 </main>

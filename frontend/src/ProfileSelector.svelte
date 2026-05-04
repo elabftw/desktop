@@ -67,7 +67,7 @@
 
   function unlock() {
     // encryption skipped for now
-    dispatch('unlocked', { uuid: activeProfile });
+    dispatch('unlocked', {uuid: activeProfile});
   }
 
   onMount(loadProfiles);
@@ -75,10 +75,10 @@
 
 <h1>Select a profile</h1>
 
-<div class="profiles">
+<div class='profiles'>
   {#each profiles as profile (profile.uuid)}
     <button
-      class="profile-box"
+      class='profile-box'
       class:active={activeProfile === profile.uuid}
       class:masked={activeProfile !== null && activeProfile !== profile.uuid}
       on:click={() => selectProfile(profile.uuid)}
@@ -88,36 +88,36 @@
   {/each}
 </div>
 
-<div style="margin-top: 12px;">
+<div style='margin-top: 12px;'>
   <button on:click={openAddProfile}>Add profile</button>
 </div>
 
 {#if showAddProfile}
   <!-- Backdrop -->
-  <button class="modal-backdrop" on:click={closeAddProfile}>x</button>
+  <button class='modal-backdrop' on:click={closeAddProfile}>x</button>
 
   <!-- Modal -->
   <div
-    class="modal"
-    role="dialog"
-    aria-modal="true"
+    class='modal'
+    role='dialog'
+    aria-modal='true'
     on:keydown={onModalKeydown}
   >
-    <div class="modal-title">Add profile</div>
-    <div class="modal-body">
-      <label class="modal-label" for="profileName">Profile name</label>
+    <div class='modal-title'>Add profile</div>
+    <div class='modal-body'>
+      <label class='modal-label' for='profileName'>Profile name</label>
       <input
-        id="profileName"
-        class="modal-input"
+        id='profileName'
+        class='modal-input'
         bind:value={newProfileName}
       />
 
       {#if addError}
-        <div class="modal-error">{addError}</div>
+        <div class='modal-error'>{addError}</div>
       {/if}
     </div>
 
-    <div class="modal-actions">
+    <div class='modal-actions'>
       <button on:click={closeAddProfile}>Cancel</button>
       <button on:click={confirmAddProfile}>Add</button>
     </div>
@@ -125,17 +125,17 @@
 {/if}
 
 {#if activeProfile}
-  <div class="input-box" id="input">
+  <div class='input-box' id='input'>
     <label for='passphrase'>Enter your passphrase</label>
     <input
-      autocomplete="off"
-      placeholder="Your passphrase..."
+      autocomplete='off'
+      placeholder='Your passphrase...'
       bind:value={passphrase}
-      class="input"
-      id="passphrase"
-      type="password"
+      class='input'
+      id='passphrase'
+      type='password'
     />
-    <button class="btn" on:click={unlock}>Unlock</button>
+    <button class='btn' on:click={unlock}>Unlock</button>
   </div>
 {/if}
 
@@ -147,14 +147,17 @@
     padding: 0.5rem;
     border: 1px solid white;
   }
+
   .profile-box.active {
     background: white;
     color: black;
   }
+
   .profile-box.masked {
     opacity: 0.25;
     filter: blur(1px);
   }
+
   .profile-box:hover {
     background-color: white;
     color: black;

@@ -3,6 +3,7 @@
   import { DateTime } from 'luxon';
 
   import { ListEntries, SaveEntry, GetEntry } from '../wailsjs/go/main/App';
+
   export let profileUuid;
   let showEditor = false;
   let entryTitle = '';
@@ -44,10 +45,12 @@
     showEditor = true;
     showIndex = false;
   }
+
   function index() {
     showEditor = false;
     showIndex = true;
   }
+
   async function saveEntry() {
     status = 'Saving...';
     try {
@@ -57,13 +60,14 @@
       status = e?.message ?? String(e);
     }
   }
+
   onMount(() => {
     refreshEntries();
   });
 </script>
 
 <h1>Index</h1>
-<button on:click={refreshEntries}> Refresh </button>
+<button on:click={refreshEntries}> Refresh</button>
 
 <p>
   Profile unlocked: {profileUuid}
@@ -80,8 +84,8 @@
     {#each entries as e (e.id)}
       <li>
         <a
-          class="title"
-          href="#"
+          class='title'
+          href='#'
           on:click|preventDefault={() => openEntry(e.id)}
         >
           {e.title}
@@ -93,47 +97,51 @@
 {/if}
 
 {#if !showEditor}
-  <button on:click={createEntry}> Create entry </button>
+  <button on:click={createEntry}> Create entry</button>
 {:else}
   <div>
-    <label for="entryTitle">Entry title</label>
+    <label for='entryTitle'>Entry title</label>
     <input
-      id="entryTitle"
-      type="text"
+      id='entryTitle'
+      type='text'
       bind:value={entryTitle}
-      placeholder="Type something..."
+      placeholder='Type something...'
     />
   </div>
   <div>
-    <label for="entryMaintext">Entry main text</label>
+    <label for='entryMaintext'>Entry main text</label>
     <textarea
-      id="entryMaintext"
+      id='entryMaintext'
       bind:value={entryMaintext}
-      placeholder="Your main content..."
+      placeholder='Your main content...'
     ></textarea>
   </div>
-  <button on:click={saveEntry}> Save </button>
+  <button on:click={saveEntry}> Save</button>
   {#if status}
     <p>{status}</p>
   {/if}
 {/if}
 
 <style>
-  ul {
-    list-style: none;
-  }
-  a {
-    text-decoration: none;
-    color: #fab95b;
-  }
-  a:hover {
-    text-decoration: underline;
-  }
-  .title {
-    font-size: 1.5rem;
-  }
-  input,
-  button {
-    padding: 0.5rem 0.75rem;
-  }
+    ul {
+        list-style: none;
+    }
+
+    a {
+        text-decoration: none;
+        color: #fab95b;
+    }
+
+    a:hover {
+        text-decoration: underline;
+    }
+
+    .title {
+        font-size: 1.5rem;
+    }
+
+    input,
+    button {
+        padding: 0.5rem 0.75rem;
+    }
 </style>
