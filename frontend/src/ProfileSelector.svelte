@@ -77,14 +77,14 @@
 
 <div class="profiles">
   {#each profiles as profile (profile.uuid)}
-    <div
+    <button
       class="profile-box"
       class:active={activeProfile === profile.uuid}
       class:masked={activeProfile !== null && activeProfile !== profile.uuid}
       on:click={() => selectProfile(profile.uuid)}
     >
       {profile.display_name || profile.uuid}
-    </div>
+    </button>
   {/each}
 </div>
 
@@ -94,7 +94,7 @@
 
 {#if showAddProfile}
   <!-- Backdrop -->
-  <div class="modal-backdrop" on:click={closeAddProfile}></div>
+  <button class="modal-backdrop" on:click={closeAddProfile}>x</button>
 
   <!-- Modal -->
   <div
@@ -110,7 +110,6 @@
         id="profileName"
         class="modal-input"
         bind:value={newProfileName}
-        autofocus
       />
 
       {#if addError}
@@ -127,13 +126,13 @@
 
 {#if activeProfile}
   <div class="input-box" id="input">
-    <label>Enter your passphrase</label>
+    <label for='passphrase'>Enter your passphrase</label>
     <input
       autocomplete="off"
       placeholder="Your passphrase..."
       bind:value={passphrase}
       class="input"
-      id="name"
+      id="passphrase"
       type="password"
     />
     <button class="btn" on:click={unlock}>Unlock</button>
