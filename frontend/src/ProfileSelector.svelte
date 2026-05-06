@@ -1,6 +1,6 @@
 <script>
   import { onMount, createEventDispatcher } from 'svelte';
-  import { GetProfileIndex, AddProfile } from '../wailsjs/go/main/App';
+  import { GetProfileIndex, AddProfile, UnlockProfile } from '../wailsjs/go/main/App';
 
   const dispatch = createEventDispatcher();
 
@@ -59,9 +59,24 @@
     activeProfile = uuid;
   }
 
-  function unlock() {
-    // encryption skipped for now
-    dispatch('unlocked', {uuid: activeProfile});
+  async function unlock() {
+    // dispatch('unlocked', {uuid: activeProfile});
+    if (!activeProfile) {
+      addError = 'Please select a profile.';
+      return;
+    }
+
+    if (!passphrase.trim()) {
+      addError = 'Please enter your passphrase.';
+      return;
+    }
+
+    try {
+      await UnlockProfile(activeProfile, passphrase);
+      dispatch('unlocked', {uuid: activeProfile});
+    } catch(e) {
+      addError = e?.message ?? String(e);
+    }
   }
 
   onMount(refreshIndex);

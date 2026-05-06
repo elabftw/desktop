@@ -12,6 +12,10 @@ export function GetProfileIndex():Promise<main.ProfileIndex>;
 
 export function ListEntries(arg1:string):Promise<Array<main.EntrySummary>>;
 
+export function LockProfile():Promise<void>;
+
 export function Login(arg1:string):Promise<void>;
 
 export function SaveEntry(arg1:string,arg2:string,arg3:string):Promise<number>;
+
+export function UnlockProfile(arg1:string,arg2:string):Promise<void>;

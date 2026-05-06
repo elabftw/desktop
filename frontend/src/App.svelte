@@ -22,6 +22,12 @@
       }}
     />
   {:else if appState === 'unlocked'}
-    <MainApp profileUuid={activeProfile} on:logout={logout} />
+    <MainApp
+      profileUuid={activeProfile}
+      on:logout={() => {
+        activeProfile = null;
+        appState = 'select-profile';
+      }}
+    />
   {/if}
 </main>

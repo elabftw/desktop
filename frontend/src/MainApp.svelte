@@ -1,7 +1,7 @@
 <script>
   import { createEventDispatcher, onMount } from 'svelte';
   import { DateTime } from 'luxon';
-  import { ListEntries, SaveEntry, GetEntry } from '../wailsjs/go/main/App';
+  import { ListEntries, SaveEntry, GetEntry, LockProfile } from '../wailsjs/go/main/App';
 
   const dispatch = createEventDispatcher();
 
@@ -46,7 +46,8 @@
     view = 'index';
   }
 
-  function logout() {
+  async function logout() {
+    await LockProfile();
     dispatch('logout');
   }
 
@@ -71,6 +72,7 @@
 
 <h1>Index</h1>
 <button on:click={refreshEntries}> Refresh</button>
+<button on:click={logout}>Logout</button>
 
 <p>
   Profile unlocked: {profileUuid}
@@ -101,7 +103,6 @@
   {/if}
 
   <button on:click={openEditor}>Create entry</button>
-  <button on:click={logout}>Logout</button>
 
 {:else if view === 'editor'}
   <div>

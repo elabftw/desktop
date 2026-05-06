@@ -22,10 +22,18 @@ export function ListEntries(arg1) {
   return window['go']['main']['App']['ListEntries'](arg1);
 }
 
+export function LockProfile() {
+  return window['go']['main']['App']['LockProfile']();
+}
+
 export function Login(arg1) {
   return window['go']['main']['App']['Login'](arg1);
 }
 
 export function SaveEntry(arg1, arg2, arg3) {
   return window['go']['main']['App']['SaveEntry'](arg1, arg2, arg3);
+}
+
+export function UnlockProfile(arg1, arg2) {
+  return window['go']['main']['App']['UnlockProfile'](arg1, arg2);
 }

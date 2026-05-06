@@ -19,6 +19,7 @@ import (
 type App struct {
 	ctx            context.Context
 	index          *ProfileIndex
+	activeProfileUUID string
 	passphraseHash string
 }
 
@@ -37,6 +38,47 @@ func (a *App) startup(ctx context.Context) {
 	}
 
 	a.index = idx
+}
+
+func (a *App) UnlockProfile(profileUUID string, passphrase string) error {
+	profileUUID = strings.TrimSpace(profileUUID)
+	if profileUUID == "" {
+		return fmt.Errorf("profile uuid is empty")
+	}
+	if strings.TrimSpace(passphrase) == "" {
+		return fmt.Errorf("passphrase is empty")
+	}
+
+	if a.index == nil {
+		return fmt.Errorf("profile index is not loaded")
+	}
+
+	found := false
+	for _, profile := range a.index.Profiles {
+		if profile.UUID == profileUUID {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return fmt.Errorf("unknown profile uuid")
+	}
+
+	hash, err := hashPassphrase(passphrase)
+	if err != nil {
+		return err
+	}
+
+	a.activeProfileUUID = profileUUID
+	a.passphraseHash = hash
+
+	return nil
+}
+
+func (a *App) LockProfile() {
+	a.activeProfileUUID = ""
+	a.passphraseHash = ""
 }
 
 func (a *App) GetProfileIndex() *ProfileIndex {
