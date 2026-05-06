@@ -76,8 +76,6 @@
   Profile unlocked: {profileUuid}
 </p>
 
-<h2>Saved entries</h2>
-
 {#if view === 'index'}
   <h2>Saved entries</h2>
 
@@ -89,13 +87,13 @@
     <ul>
       {#each entries as e (e.id)}
         <li>
-          <a
+          <button
+            type='button'
             class='title'
-            href='#'
             on:click|preventDefault={() => openEntry(e.id)}
           >
             {e.title}
-          </a>
+          </button>
           <div>Last modification: {toRelativeTime(e.updatedAt)}</div>
         </li>
       {/each}
@@ -138,17 +136,19 @@
     list-style: none;
   }
 
-  a {
-    text-decoration: none;
-    color: #fab95b;
-  }
-
-  a:hover {
-    text-decoration: underline;
-  }
-
   .title {
+    color: #fab95b;
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+    text-align: left;
     font-size: 1.5rem;
+  }
+
+  .title:hover {
+    text-decoration: underline;
   }
 
   input,
