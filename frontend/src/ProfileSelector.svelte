@@ -98,7 +98,7 @@
     try {
       await UnlockProfile(activeProfile, passphrase);
       dispatch('unlocked', {uuid: activeProfile});
-    } catch(e) {
+    } catch (e) {
       addError = e?.message ?? String(e);
     }
   }
@@ -122,7 +122,7 @@
 </div>
 
 <div style='margin-top: 12px;'>
-  <button on:click={openAddProfile}>Add profile</button>
+  <button class='btn btn-primary' on:click={openAddProfile}>Add profile</button>
 </div>
 
 {#if showAddProfile}
@@ -157,8 +157,8 @@
     </div>
 
     <div class='modal-actions'>
-      <button on:click={closeAddProfile}>Cancel</button>
-      <button on:click={confirmAddProfile}>Add</button>
+      <button class='btn btn-primary' on:click={closeAddProfile}>Cancel</button>
+      <button class='btn btn-primary' on:click={confirmAddProfile}>Add</button>
     </div>
   </div>
 {/if}
@@ -166,17 +166,28 @@
 {#if activeProfile}
   <div class='input-box' id='input'>
     <label for='passphrase'>Enter your passphrase</label>
-    <input
-      autocomplete='off'
-      placeholder='Your passphrase...'
-      bind:value={passphrase}
-      class='input'
-      id='passphrase'
-      type='password'
-    />
-    <button class='btn' on:click={unlock}>Unlock</button>
-    <button class='btn' on:click={deleteSelectedProfile}>Delete profile</button>
-  </div>
+      <input
+        autocomplete='off'
+        placeholder='Your passphrase...'
+        bind:value={passphrase}
+        class='input'
+        id='passphrase'
+        type='password'
+      />
+      <div>
+        <button class='btn btn-primary' on:click={unlock}>
+          Unlock
+        </button>
+        <button class='btn btn-danger' on:click={deleteSelectedProfile}>
+          Delete profile
+        </button>
+      </div>
+    </div>
+    {#if addError}
+      <div class='alert alert-error'>
+        <strong>Error:</strong> {addError}
+      </div>
+    {/if}
 {/if}
 
 <style>

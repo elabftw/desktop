@@ -73,7 +73,7 @@
 </script>
 
 <h1>Index</h1>
-<button on:click={logout}>Logout</button>
+<button class='btn btn-danger' on:click={logout}>Logout</button>
 
 <p>
   Profile unlocked: {profileUuid}
@@ -103,8 +103,14 @@
     </ul>
   {/if}
 
-  <button on:click={openEditor}>Create entry</button>
+  <button class='btn btn-primary' on:click={openEditor}>Create entry</button>
 
+<!--  <p>Buttons</p>-->
+<!--  <button class='btn'>Btn</button>-->
+<!--  <button class='btn btn-primary'>primary</button>-->
+<!--  <button class='btn btn-secondary'>secondary</button>-->
+<!--  <button class='btn btn-danger'>danger</button>-->
+<!--  <button class='btn btn-sm'>sm</button>-->
 {:else if view === 'editor'}
   <div>
     <label for='entryTitle'>Entry title</label>
@@ -125,8 +131,8 @@
     ></textarea>
   </div>
 
-  <button on:click={saveEntry}>Save</button>
-  <button on:click={openIndex}>Back</button>
+  <button class='btn btn-primary' on:click={saveEntry}>Save</button>
+  <button class='btn btn-primary' on:click={openIndex}>Back</button>
 
   {#if status}
     <p>{status}</p>
