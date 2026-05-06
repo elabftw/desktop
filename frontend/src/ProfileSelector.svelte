@@ -179,7 +179,7 @@
           Unlock
         </button>
         <button class='btn btn-danger' on:click={deleteSelectedProfile}>
-          Delete profile
+          Delete profile (dev)
         </button>
       </div>
     </div>

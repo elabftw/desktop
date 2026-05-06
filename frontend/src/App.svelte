@@ -6,10 +6,6 @@
   let appState = 'select-profile';
   let activeProfile = null;
 
-  function logout() {
-    activeProfile = null;
-    appState = 'select-profile';
-  }
 </script>
 
 <main>
