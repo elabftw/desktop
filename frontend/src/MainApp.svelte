@@ -42,7 +42,8 @@
     }
   }
 
-  function openIndex() {
+  async function openIndex() {
+    await refreshEntries();
     view = 'index';
   }
 
@@ -62,6 +63,7 @@
     try {
       const id = await SaveEntry(profileUuid, entryTitle, entryMaintext);
       status = `Saved with id ${id}`;
+      await refreshEntries();
     } catch (e) {
       status = e?.message ?? String(e);
     }
@@ -71,7 +73,6 @@
 </script>
 
 <h1>Index</h1>
-<button on:click={refreshEntries}> Refresh</button>
 <button on:click={logout}>Logout</button>
 
 <p>
