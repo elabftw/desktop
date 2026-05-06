@@ -1,6 +1,6 @@
 <script>
   import { onMount, createEventDispatcher } from 'svelte';
-  import { GetProfileIndex, AddProfile, UnlockProfile } from '../wailsjs/go/main/App';
+  import { GetProfileIndex, AddProfile, UnlockProfile, DeleteProfile } from '../wailsjs/go/main/App';
 
   const dispatch = createEventDispatcher();
 
@@ -38,12 +38,8 @@
     }
 
     try {
-      // If your AddProfile returns updated index, assign it to your state here
       await AddProfile(name);
-
       closeAddProfile();
-
-      // Refresh your index/list if needed:
       await refreshIndex();
     } catch (e) {
       addError = e?.message ?? String(e);
@@ -59,8 +55,27 @@
     activeProfile = uuid;
   }
 
+  async function deleteSelectedProfile() {
+    if (!activeProfile) {
+      addError = 'Please select a profile to delete.';
+      return;
+    }
+
+    const ok = confirm('Delete this profile and all local entries? This cannot be undone.');
+    if (!ok) return;
+
+    try {
+      const index = await DeleteProfile(activeProfile);
+      profiles = index?.profiles ?? [];
+      activeProfile = null;
+      passphrase = '';
+    } catch (e) {
+      addError = e?.message ?? String(e);
+    }
+  }
+
+
   async function unlock() {
-    // dispatch('unlocked', {uuid: activeProfile});
     if (!activeProfile) {
       addError = 'Please select a profile.';
       return;
@@ -115,7 +130,9 @@
     <div class='modal-title'>Add profile</div>
     <div class='modal-body'>
       <label class='modal-label' for='profileName'>Profile name</label>
+      <!-- svelte-ignore a11y-autofocus : not going to have a full js function for every input that needs autofocus... -->
       <input
+        autofocus
         id='profileName'
         class='modal-input'
         bind:value={newProfileName}
@@ -145,6 +162,7 @@
       type='password'
     />
     <button class='btn' on:click={unlock}>Unlock</button>
+    <button class='btn' on:click={deleteSelectedProfile}>Delete profile</button>
   </div>
 {/if}
 

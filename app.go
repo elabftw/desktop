@@ -40,6 +40,7 @@ func (a *App) startup(ctx context.Context) {
 	a.index = idx
 }
 
+// Unlock a profile (login)
 func (a *App) UnlockProfile(profileUUID string, passphrase string) error {
 	profileUUID = strings.TrimSpace(profileUUID)
 	if profileUUID == "" {
@@ -76,9 +77,61 @@ func (a *App) UnlockProfile(profileUUID string, passphrase string) error {
 	return nil
 }
 
+// Log a profile (logout)
 func (a *App) LockProfile() {
 	a.activeProfileUUID = ""
 	a.passphraseHash = ""
+}
+
+// Delete a profile
+func (a *App) DeleteProfile(profileUUID string) (*ProfileIndex, error) {
+	profileUUID = strings.TrimSpace(profileUUID)
+	if profileUUID == "" {
+		return nil, fmt.Errorf("profile uuid is empty")
+	}
+
+	idx, err := loadProfileIndex()
+	if err != nil {
+		return nil, err
+	}
+
+	found := false
+	filtered := make([]ProfileEntry, 0, len(idx.Profiles))
+	// could be written as var filtered []ProfileEntry. This creates a sluice of ProfileEntry with length = 0 & capacity = len(idx.Profiles)
+
+	for _, profile := range idx.Profiles {
+		if profile.UUID == profileUUID {
+			found = true
+			continue
+		}
+		filtered = append(filtered, profile)
+	}
+
+	if !found {
+		return nil, fmt.Errorf("unknown profile uuid")
+	}
+
+	idx.Profiles = filtered
+
+	if err := saveProfileIndex(idx); err != nil {
+		return nil, err
+	}
+
+	dir, err := profileDir(profileUUID)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := os.RemoveAll(dir); err != nil {
+		return nil, fmt.Errorf("delete profile dir: %w", err)
+	}
+
+	if a.activeProfileUUID == profileUUID {
+		a.LockProfile()
+	}
+
+	a.index = idx
+	return a.index, nil
 }
 
 func (a *App) GetProfileIndex() *ProfileIndex {
