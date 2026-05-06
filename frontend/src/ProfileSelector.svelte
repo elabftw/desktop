@@ -95,7 +95,6 @@
     class='modal'
     role='dialog'
     aria-modal='true'
-    tabindex='0'
     on:keydown={onModalKeydown}
   >
     <div class='modal-title'>Add profile</div>

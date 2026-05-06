@@ -105,7 +105,7 @@
     <input
       id='entryTitle'
       type='text'
-      bind:value={entryTitle}rofileSelector.sv
+      bind:value={entryTitle}
       placeholder='Type something...'
     />
   </div>
