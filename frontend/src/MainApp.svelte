@@ -1,8 +1,9 @@
 <script>
-  import { onMount } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
   import { DateTime } from 'luxon';
-
   import { ListEntries, SaveEntry, GetEntry } from '../wailsjs/go/main/App';
+
+  const dispatch = createEventDispatcher();
 
   export let profileUuid;
   let entryTitle = '';
@@ -43,6 +44,10 @@
 
   function openIndex() {
     view = 'index';
+  }
+
+  function logout() {
+    dispatch('logout');
   }
 
   function openEditor() {
@@ -98,6 +103,7 @@
   {/if}
 
   <button on:click={openEditor}>Create entry</button>
+  <button on:click={logout}>Logout</button>
 
 {:else if view === 'editor'}
   <div>
@@ -126,7 +132,6 @@
     <p>{status}</p>
   {/if}
 {/if}
-
 
 <style>
   ul {
