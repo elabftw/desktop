@@ -28,8 +28,7 @@ export default [
     },
     rules: {
       ...svelte.configs.recommended.rules,
-        "no-unused-vars": "warn",
-        "no-undef": "warn", // some functions are used in other files but appear to eslint as never used.
+      'no-unused-vars': 'warn',
     },
   },
 ];

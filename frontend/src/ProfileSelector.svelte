@@ -13,6 +13,7 @@
 
   async function refreshIndex() {
     index = await GetProfileIndex();
+    profiles = index?.profiles ?? [];
   }
 
   let newProfileName = '';
@@ -43,7 +44,7 @@
       closeAddProfile();
 
       // Refresh your index/list if needed:
-      // await refreshIndex();
+      await refreshIndex();
     } catch (e) {
       addError = e?.message ?? String(e);
     }
@@ -52,13 +53,6 @@
   function onModalKeydown(e) {
     if (e.key === 'Escape') closeAddProfile();
     if (e.key === 'Enter') confirmAddProfile();
-  }
-
-  refreshIndex();
-
-  async function loadProfiles() {
-    const index = await GetProfileIndex();
-    profiles = index?.profiles ?? [];
   }
 
   function selectProfile(uuid) {
@@ -70,7 +64,7 @@
     dispatch('unlocked', {uuid: activeProfile});
   }
 
-  onMount(loadProfiles);
+  onMount(refreshIndex);
 </script>
 
 <h1>Select a profile</h1>
@@ -101,6 +95,7 @@
     class='modal'
     role='dialog'
     aria-modal='true'
+    tabindex='0'
     on:keydown={onModalKeydown}
   >
     <div class='modal-title'>Add profile</div>

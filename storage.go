@@ -24,12 +24,24 @@ type ProfileEntry struct {
 }
 
 func appRootDir() (string, error) {
-	base, err := os.UserConfigDir()
-	if err != nil {
-		return "", fmt.Errorf("os.UserConfigDir: %w", err)
-	}
-	return filepath.Join(base, AppName), nil
+    if dev := os.Getenv("ELABFTW_DEV_DIR"); dev != "" {
+        return dev, nil
+    }
+
+    base, err := os.UserConfigDir()
+    if err != nil {
+        return "", fmt.Errorf("os.UserConfigDir: %w", err)
+    }
+    return filepath.Join(base, AppName), nil
 }
+
+// func appRootDir() (string, error) {
+// 	base, err := os.UserConfigDir()
+// 	if err != nil {
+// 		return "", fmt.Errorf("os.UserConfigDir: %w", err)
+// 	}
+// 	return filepath.Join(base, AppName), nil
+// }
 
 func profilesDir() (string, error) {
 	root, err := appRootDir()
@@ -69,11 +81,11 @@ func ensureAppDirs() (string, error) {
 }
 
 func indexPath() (string, error) {
-	pdir, err := profilesDir()
+	root, err := appRootDir()
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(pdir, "index.json"), nil
+	return filepath.Join(root, "index.json"), nil
 }
 
 func loadProfileIndex() (*ProfileIndex, error) {

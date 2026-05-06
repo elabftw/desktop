@@ -27,7 +27,7 @@ jobs:
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: dist
-          path: frontend/dist # needed by go vet ./
+          path: frontend/dist # needed by go vet/build because Go embeds frontend/dist
 
   backend:
     name: backend (go)
