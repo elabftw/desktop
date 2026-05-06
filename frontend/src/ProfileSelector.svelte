@@ -17,10 +17,12 @@
   }
 
   let newProfileName = '';
+  let newProfilePassphrase = '';
   let addError = '';
 
   function openAddProfile() {
     newProfileName = '';
+    newProfilePassphrase = '';
     addError = '';
     showAddProfile = true;
   }
@@ -32,13 +34,20 @@
 
   async function confirmAddProfile() {
     const name = newProfileName.trim();
+    const passphrase = newProfilePassphrase.trim();
+
     if (!name) {
       addError = 'Please enter a profile name.';
       return;
     }
 
+    if (!passphrase) {
+      addError = 'Please enter a passphrase.';
+      return;
+    }
+
     try {
-      await AddProfile(name);
+      await AddProfile(name, passphrase);
       closeAddProfile();
       await refreshIndex();
     } catch (e) {
@@ -117,10 +126,6 @@
 </div>
 
 {#if showAddProfile}
-  <!-- Backdrop -->
-  <button class='modal-backdrop' on:click={closeAddProfile}>x</button>
-
-  <!-- Modal -->
   <div
     class='modal'
     role='dialog'
@@ -138,6 +143,14 @@
         bind:value={newProfileName}
       />
 
+      <label class='modal-label' for='profilePassphrase'>Passphrase</label>
+      <input
+        id='profilePassphrase'
+        class='modal-input'
+        type='password'
+        autocomplete='new-password'
+        bind:value={newProfilePassphrase}
+      />
       {#if addError}
         <div class='modal-error'>{addError}</div>
       {/if}

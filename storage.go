@@ -21,6 +21,7 @@ type ProfileEntry struct {
 	DisplayName string    `json:"display_name,omitempty"`
 	CreatedAt   time.Time `json:"created_at"`
 	LastUsedAt  time.Time `json:"last_used_at,omitempty"`
+	PassphraseHash string `json:"passphrase_hash,omitempty"`
 }
 
 func appRootDir() (string, error) {

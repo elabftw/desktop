@@ -54,25 +54,28 @@ func (a *App) UnlockProfile(profileUUID string, passphrase string) error {
 		return fmt.Errorf("profile index is not loaded")
 	}
 
-	found := false
-	for _, profile := range a.index.Profiles {
-		if profile.UUID == profileUUID {
-			found = true
+	var selected *ProfileEntry
+	for i := range a.index.Profiles {
+		if a.index.Profiles[i].UUID == profileUUID {
+			selected = &a.index.Profiles[i]
 			break
 		}
 	}
 
-	if !found {
+	if selected == nil {
 		return fmt.Errorf("unknown profile uuid")
 	}
 
-	hash, err := hashPassphrase(passphrase)
-	if err != nil {
-		return err
+	if selected.PassphraseHash == "" {
+		return fmt.Errorf("profile has no passphrase set")
+	}
+
+	if !verifyPassphrase(passphrase, selected.PassphraseHash) {
+		return fmt.Errorf("invalid passphrase")
 	}
 
 	a.activeProfileUUID = profileUUID
-	a.passphraseHash = hash
+	a.passphraseHash = selected.PassphraseHash
 
 	return nil
 }
@@ -214,18 +217,26 @@ func writeDiskIndex(path string, idx *diskProfileIndex) error {
 	return nil
 }
 
-func (a *App) AddProfile(displayName string) (*ProfileIndex, error) {
+// create a profile with a passphrase
+func (a *App) AddProfile(displayName string, passphrase string) (*ProfileIndex, error) {
+    // username
 	displayName = strings.TrimSpace(displayName)
 	if displayName == "" {
 		return nil, fmt.Errorf("display name is empty")
 	}
 
-	indexPath, err := indexJSONPath()
+    // passphrase
+    passphrase = strings.TrimSpace(passphrase)
+    if passphrase == "" {
+        return nil, fmt.Errorf("passphrase is empty")
+    }
+
+	hash, err := hashPassphrase(passphrase)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("hash passphrase: %w", err)
 	}
 
-	idx, err := loadDiskIndex(indexPath)
+	idx, err := loadProfileIndex()
 	if err != nil {
 		return nil, err
 	}
@@ -233,36 +244,26 @@ func (a *App) AddProfile(displayName string) (*ProfileIndex, error) {
 	newUUID := uuid.NewString()
 	now := time.Now()
 
-	idx.Profiles = append(idx.Profiles, diskProfile{
+	idx.Profiles = append(idx.Profiles, ProfileEntry{
 		UUID:        newUUID,
 		DisplayName: displayName,
 		CreatedAt:   now,
 		LastUsedAt:  time.Time{},
+		PassphraseHash: hash,
 	})
 
-	if err := writeDiskIndex(indexPath, idx); err != nil {
+	if err := saveProfileIndex(idx); err != nil {
 		return nil, err
 	}
 
-	// Ensure profile directory exists (DB will be created on first save)
-	cfgDir, err := os.UserConfigDir()
-	if err != nil {
-		return nil, fmt.Errorf("get config dir: %w", err)
-	}
-	profileDir := filepath.Join(cfgDir, "elabftw-desktop", "profiles", newUUID)
-	if err := os.MkdirAll(profileDir, 0o755); err != nil {
-		return nil, fmt.Errorf("create profile dir: %w", err)
-	}
-
-	// Reload the in-memory index using your existing loader
-	reloaded, err := loadProfileIndex()
-	if err != nil {
+	if _, err := ensureProfileDir(newUUID); err != nil {
 		return nil, err
 	}
-	a.index = reloaded
 
+	a.index = idx
 	return a.index, nil
 }
+
 func (a *App) SaveEntry(profileUUID string, title string, body string) (int64, error) {
 	fmt.Println("SaveEntry called")
 	profileUUID = strings.TrimSpace(profileUUID)
