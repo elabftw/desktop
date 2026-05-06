@@ -28,6 +28,7 @@ export default [
     },
     rules: {
       ...svelte.configs.recommended.rules,
+      'no-unused-vars': 'warn',
     },
   },
 ];

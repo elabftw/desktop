@@ -69,11 +69,11 @@ func ensureAppDirs() (string, error) {
 }
 
 func indexPath() (string, error) {
-	pdir, err := profilesDir()
+	root, err := appRootDir()
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(pdir, "index.json"), nil
+	return filepath.Join(root, "index.json"), nil
 }
 
 func loadProfileIndex() (*ProfileIndex, error) {
