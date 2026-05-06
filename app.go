@@ -17,10 +17,10 @@ import (
 
 // App struct
 type App struct {
-	ctx            context.Context
-	index          *ProfileIndex
+	ctx               context.Context
+	index             *ProfileIndex
 	activeProfileUUID string
-	passphraseHash string
+	passphraseHash    string
 }
 
 // NewApp creates a new App application struct
@@ -219,17 +219,17 @@ func writeDiskIndex(path string, idx *diskProfileIndex) error {
 
 // create a profile with a passphrase
 func (a *App) AddProfile(displayName string, passphrase string) (*ProfileIndex, error) {
-    // username
+	// username
 	displayName = strings.TrimSpace(displayName)
 	if displayName == "" {
 		return nil, fmt.Errorf("display name is empty")
 	}
 
-    // passphrase
-    passphrase = strings.TrimSpace(passphrase)
-    if passphrase == "" {
-        return nil, fmt.Errorf("passphrase is empty")
-    }
+	// passphrase
+	passphrase = strings.TrimSpace(passphrase)
+	if passphrase == "" {
+		return nil, fmt.Errorf("passphrase is empty")
+	}
 
 	hash, err := hashPassphrase(passphrase)
 	if err != nil {
@@ -245,10 +245,10 @@ func (a *App) AddProfile(displayName string, passphrase string) (*ProfileIndex, 
 	now := time.Now()
 
 	idx.Profiles = append(idx.Profiles, ProfileEntry{
-		UUID:        newUUID,
-		DisplayName: displayName,
-		CreatedAt:   now,
-		LastUsedAt:  time.Time{},
+		UUID:           newUUID,
+		DisplayName:    displayName,
+		CreatedAt:      now,
+		LastUsedAt:     time.Time{},
 		PassphraseHash: hash,
 	})
 
