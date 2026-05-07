@@ -3,16 +3,13 @@ package main
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
-	"reflect"
 	"strings"
 	"time"
 
+	"crypto/ed25519"
 	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
 )
 
 // App struct
@@ -20,7 +17,8 @@ type App struct {
 	ctx               context.Context
 	index             *ProfileIndex
 	activeProfileUUID string
-	passphraseHash    string
+	activeKey         []byte
+	activePrivateKey  ed25519.PrivateKey
 }
 
 // NewApp creates a new App application struct
@@ -46,7 +44,7 @@ func (a *App) requireUnlockedProfile(profileUUID string) error {
 	if profileUUID == "" {
 		return fmt.Errorf("profile uuid is empty")
 	}
-	if a.activeProfileUUID != profileUUID || a.passphraseHash == "" {
+	if a.activeProfileUUID != profileUUID || len(a.activeKey) == 0 {
 		return fmt.Errorf("profile is locked")
 	}
 	return nil
@@ -79,16 +77,16 @@ func (a *App) UnlockProfile(profileUUID string, passphrase string) error {
 		return fmt.Errorf("unknown profile uuid")
 	}
 
-	if selected.PassphraseHash == "" {
-		return fmt.Errorf("profile has no passphrase set")
+	key, privateKey, err := unlockProfileSecrets(selected, passphrase)
+	if err != nil {
+		return err
 	}
 
-	if !verifyPassphrase(passphrase, selected.PassphraseHash) {
-		return fmt.Errorf("invalid passphrase")
-	}
+	a.LockProfile()
 
 	a.activeProfileUUID = profileUUID
-	a.passphraseHash = selected.PassphraseHash
+	a.activeKey = key
+	a.activePrivateKey = privateKey
 
 	return nil
 }
@@ -96,7 +94,16 @@ func (a *App) UnlockProfile(profileUUID string, passphrase string) error {
 // Lock a profile (logout)
 func (a *App) LockProfile() {
 	a.activeProfileUUID = ""
-	a.passphraseHash = ""
+
+	if a.activeKey != nil {
+		zeroBytes(a.activeKey)
+	}
+	a.activeKey = nil
+
+	if a.activePrivateKey != nil {
+		zeroBytes(a.activePrivateKey)
+	}
+	a.activePrivateKey = nil
 }
 
 // DEV: Delete a profile (requires passphrase)
@@ -124,13 +131,12 @@ func (a *App) DeleteProfile(profileUUID string, passphrase string) (*ProfileInde
 		if profile.UUID == profileUUID {
 			found = true
 
-			if profile.PassphraseHash == "" {
-				return nil, fmt.Errorf("profile has no passphrase set")
+			key, privateKey, err := unlockProfileSecrets(&profile, passphrase)
+			if err != nil {
+				return nil, err
 			}
-
-			if !verifyPassphrase(passphrase, profile.PassphraseHash) {
-				return nil, fmt.Errorf("invalid passphrase")
-			}
+			zeroBytes(key)
+			zeroBytes(privateKey)
 
 			continue
 		}
@@ -169,20 +175,6 @@ func (a *App) GetProfileIndex() *ProfileIndex {
 	return a.index
 }
 
-func (a *App) GetHash() string {
-	return a.passphraseHash
-}
-
-func (a *App) Login(passphrase string) error {
-	hash, err := hashPassphrase(passphrase)
-	if err != nil {
-		return err
-	}
-
-	a.passphraseHash = hash
-	return nil
-}
-
 type diskProfileIndex struct {
 	Version  int           `json:"version"`
 	Profiles []diskProfile `json:"profiles"`
@@ -195,73 +187,21 @@ type diskProfile struct {
 	LastUsedAt  time.Time `json:"last_used_at"`
 }
 
-func indexJSONPath() (string, error) {
-	cfgDir, err := os.UserConfigDir()
-	if err != nil {
-		return "", fmt.Errorf("get config dir: %w", err)
-	}
-	return filepath.Join(cfgDir, "elabftw-desktop", "index.json"), nil
-}
-
-func loadDiskIndex(path string) (*diskProfileIndex, error) {
-	b, err := os.ReadFile(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return &diskProfileIndex{
-				Version:  1,
-				Profiles: []diskProfile{},
-			}, nil
-		}
-		return nil, fmt.Errorf("read index.json: %w", err)
-	}
-
-	var idx diskProfileIndex
-	if err := json.Unmarshal(b, &idx); err != nil {
-		return nil, fmt.Errorf("parse index.json: %w", err)
-	}
-	if idx.Version == 0 {
-		idx.Version = 1
-	}
-	if idx.Profiles == nil {
-		idx.Profiles = []diskProfile{}
-	}
-	return &idx, nil
-}
-
-func writeDiskIndex(path string, idx *diskProfileIndex) error {
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		return fmt.Errorf("create config dir: %w", err)
-	}
-
-	b, err := json.MarshalIndent(idx, "", "  ")
-	if err != nil {
-		return fmt.Errorf("marshal index.json: %w", err)
-	}
-	b = append(b, '\n')
-
-	if err := os.WriteFile(path, b, 0o644); err != nil {
-		return fmt.Errorf("write index.json: %w", err)
-	}
-	return nil
-}
-
-// create a profile with a passphrase
+// create a profile
 func (a *App) AddProfile(displayName string, passphrase string) (*ProfileIndex, error) {
-	// username
 	displayName = strings.TrimSpace(displayName)
 	if displayName == "" {
 		return nil, fmt.Errorf("display name is empty")
 	}
 
-	// passphrase
 	passphrase = strings.TrimSpace(passphrase)
 	if passphrase == "" {
 		return nil, fmt.Errorf("passphrase is empty")
 	}
 
-	hash, err := hashPassphrase(passphrase)
+	secrets, err := createProfileSecrets(passphrase)
 	if err != nil {
-		return nil, fmt.Errorf("hash passphrase: %w", err)
+		return nil, err
 	}
 
 	idx, err := loadProfileIndex()
@@ -273,11 +213,13 @@ func (a *App) AddProfile(displayName string, passphrase string) (*ProfileIndex, 
 	now := time.Now()
 
 	idx.Profiles = append(idx.Profiles, ProfileEntry{
-		UUID:           newUUID,
-		DisplayName:    displayName,
-		CreatedAt:      now,
-		LastUsedAt:     time.Time{},
-		PassphraseHash: hash,
+		UUID:                newUUID,
+		DisplayName:         displayName,
+		CreatedAt:           now,
+		LastUsedAt:          time.Time{},
+		PublicKey:           secrets.PublicKey,
+		KeySalt:             secrets.KeySalt,
+		EncryptedPrivateKey: secrets.EncryptedPrivateKey,
 	})
 
 	if _, err := ensureProfileDir(newUUID); err != nil {
@@ -302,41 +244,12 @@ func (a *App) SaveEntry(profileUUID string, title string, body string) (int64, e
 		return 0, err
 	}
 
-	// Optional: validate the uuid exists in the loaded index (without depending on field names)
-	if a.index != nil {
-		found := false
-		rv := reflect.ValueOf(a.index).Elem()
-		profiles := rv.FieldByName("Profiles")
-		if profiles.IsValid() && profiles.Kind() == reflect.Slice {
-			for i := 0; i < profiles.Len(); i++ {
-				pv := profiles.Index(i)
-				if pv.Kind() == reflect.Pointer {
-					pv = pv.Elem()
-				}
-				if pv.IsValid() && pv.Kind() == reflect.Struct {
-					f := pv.FieldByName("UUID")
-					if !f.IsValid() {
-						f = pv.FieldByName("Uuid")
-					}
-					if f.IsValid() && f.Kind() == reflect.String && strings.TrimSpace(f.String()) == profileUUID {
-						found = true
-						break
-					}
-				}
-			}
-		}
-		if !found {
-			return 0, fmt.Errorf("unknown profile uuid")
-		}
-	}
-
-	cfgDir, err := os.UserConfigDir()
+	pdir, err := profileDir(profileUUID)
 	if err != nil {
-		return 0, fmt.Errorf("get config dir: %w", err)
+		return 0, err
 	}
-	profileDir := filepath.Join(cfgDir, "elabftw-desktop", "profiles", profileUUID)
 
-	db, err := OpenProfileDB(profileDir)
+	db, err := OpenProfileDB(pdir)
 	if err != nil {
 		return 0, fmt.Errorf("open profile db: %w", err)
 	}
@@ -348,7 +261,22 @@ func (a *App) SaveEntry(profileUUID string, title string, body string) (int64, e
 		return 0, fmt.Errorf("title is empty")
 	}
 
-	res, err := db.Exec(`INSERT INTO entries (title, body) VALUES (?, ?)`, title, body)
+	encryptedTitle, err := encryptString(a.activeKey, title)
+	if err != nil {
+		return 0, fmt.Errorf("encrypt title: %w", err)
+	}
+
+	encryptedBody, err := encryptString(a.activeKey, body)
+	if err != nil {
+		return 0, fmt.Errorf("encrypt body: %w", err)
+	}
+
+	// 	res, err := db.Exec(`INSERT INTO entries (title, body) VALUES (?, ?)`, title, body)
+	res, err := db.Exec(
+		`INSERT INTO entries (title, body) VALUES (?, ?)`,
+		encryptedTitle,
+		encryptedBody,
+	)
 	if err != nil {
 		return 0, fmt.Errorf("insert entry: %w", err)
 	}
@@ -374,13 +302,12 @@ func (a *App) ListEntries(profileUUID string) ([]EntrySummary, error) {
 		return nil, err
 	}
 
-	cfgDir, err := os.UserConfigDir()
+	pdir, err := profileDir(profileUUID)
 	if err != nil {
-		return nil, fmt.Errorf("get config dir: %w", err)
+		return nil, err
 	}
-	profileDir := filepath.Join(cfgDir, "elabftw-desktop", "profiles", profileUUID)
 
-	db, err := OpenProfileDB(profileDir)
+	db, err := OpenProfileDB(pdir)
 	if err != nil {
 		return nil, fmt.Errorf("open profile db: %w", err)
 	}
@@ -402,6 +329,11 @@ func (a *App) ListEntries(profileUUID string) ([]EntrySummary, error) {
 		if err := rows.Scan(&e.ID, &e.Title, &e.CreatedAt, &e.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("scan entry: %w", err)
 		}
+		title, err := decryptString(a.activeKey, e.Title)
+		if err != nil {
+			return nil, fmt.Errorf("decrypt entry title: %w", err)
+		}
+		e.Title = title
 		out = append(out, e)
 	}
 	if err := rows.Err(); err != nil {
@@ -428,13 +360,12 @@ func (a *App) GetEntry(profileUUID string, id int64) (*Entry, error) {
 		return nil, fmt.Errorf("invalid id")
 	}
 
-	cfgDir, err := os.UserConfigDir()
+	pdir, err := profileDir(profileUUID)
 	if err != nil {
-		return nil, fmt.Errorf("get config dir: %w", err)
+		return nil, err
 	}
-	profileDir := filepath.Join(cfgDir, "elabftw-desktop", "profiles", profileUUID)
 
-	db, err := OpenProfileDB(profileDir)
+	db, err := OpenProfileDB(pdir)
 	if err != nil {
 		return nil, fmt.Errorf("open profile db: %w", err)
 	}
@@ -454,24 +385,18 @@ func (a *App) GetEntry(profileUUID string, id int64) (*Entry, error) {
 		return nil, fmt.Errorf("query entry: %w", err)
 	}
 
-	return &e, nil
-}
-func hashPassphrase(passphrase string) (string, error) {
-	hashedBytes, err := bcrypt.GenerateFromPassword(
-		[]byte(passphrase),
-		bcrypt.DefaultCost,
-	)
+	title, err := decryptString(a.activeKey, e.Title)
 	if err != nil {
-		return "", err
+		return nil, fmt.Errorf("decrypt entry title: %w", err)
 	}
 
-	return string(hashedBytes), nil
-}
+	body, err := decryptString(a.activeKey, e.Body)
+	if err != nil {
+		return nil, fmt.Errorf("decrypt entry body: %w", err)
+	}
 
-func verifyPassphrase(passphrase, storedHash string) bool {
-	err := bcrypt.CompareHashAndPassword(
-		[]byte(storedHash),
-		[]byte(passphrase),
-	)
-	return err == nil
+	e.Title = title
+	e.Body = body
+
+	return &e, nil
 }

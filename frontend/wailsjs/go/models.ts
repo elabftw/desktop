@@ -45,7 +45,9 @@ export namespace main {
 	    created_at: any;
 	    // Go type: time
 	    last_used_at?: any;
-	    passphrase_hash?: string;
+	    public_key?: string;
+	    key_salt?: string;
+	    encrypted_private_key?: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new ProfileEntry(source);
@@ -57,7 +59,9 @@ export namespace main {
 	        this.display_name = source["display_name"];
 	        this.created_at = this.convertValues(source["created_at"], null);
 	        this.last_used_at = this.convertValues(source["last_used_at"], null);
-	        this.passphrase_hash = source["passphrase_hash"];
+	        this.public_key = source["public_key"];
+	        this.key_salt = source["key_salt"];
+	        this.encrypted_private_key = source["encrypted_private_key"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

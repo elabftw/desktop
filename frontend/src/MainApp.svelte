@@ -141,7 +141,9 @@
     </div>
 
     {#if status}
-      <p>{status}</p>
+      <div class='alert alert-success'>
+        <p>{status}</p>
+      </div>
     {/if}
     {#if addError}
       <div class='alert alert-error'>

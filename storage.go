@@ -17,11 +17,14 @@ type ProfileIndex struct {
 }
 
 type ProfileEntry struct {
-	UUID           string    `json:"uuid"`
-	DisplayName    string    `json:"display_name,omitempty"`
-	CreatedAt      time.Time `json:"created_at"`
-	LastUsedAt     time.Time `json:"last_used_at,omitempty"`
-	PassphraseHash string    `json:"passphrase_hash,omitempty"`
+	UUID        string    `json:"uuid"`
+	DisplayName string    `json:"display_name,omitempty"`
+	CreatedAt   time.Time `json:"created_at"`
+	LastUsedAt  time.Time `json:"last_used_at,omitempty"`
+
+	PublicKey           string `json:"public_key,omitempty"`
+	KeySalt             string `json:"key_salt,omitempty"`
+	EncryptedPrivateKey string `json:"encrypted_private_key,omitempty"`
 }
 
 func appRootDir() (string, error) {
