@@ -16,8 +16,16 @@ import (
 type App struct {
 	ctx               context.Context
 	index             *ProfileIndex
+    // activeProfileUUID identifies the currently unlocked profile.
+	// Profile-scoped APIs must check this before reading/writing data!
 	activeProfileUUID string
+
+	// activeKey is the passphrase-derived symmetric key kept only in memory
+	// while a profile is unlocked. It is cleared on LockProfile.
 	activeKey         []byte
+
+	// activePrivateKey is the decrypted Ed25519 private key for the active
+	// profile. It is cleared on LockProfile.
 	activePrivateKey  ed25519.PrivateKey
 }
 
