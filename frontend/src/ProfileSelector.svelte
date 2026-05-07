@@ -29,6 +29,7 @@
     newProfilePassphrase = '';
     addError = '';
     showAddProfile = true;
+    activeProfile = null;
   }
 
   function closeAddProfile() {
@@ -65,6 +66,7 @@
   }
 
   function selectProfile(uuid) {
+    showAddProfile = false;
     activeProfile = uuid;
   }
 
