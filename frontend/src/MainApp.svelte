@@ -51,8 +51,13 @@
   }
 
   async function logout() {
-    await LockProfile();
-    dispatch('logout');
+    try {
+      await LockProfile();
+      dispatch('logout');
+    } catch (e) {
+      status = '';
+      addError = e?.message ?? String(e);
+    }
   }
 
   function openEditor() {

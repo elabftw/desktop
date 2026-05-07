@@ -62,6 +62,7 @@
 
   function selectProfile(uuid) {
     showAddProfile = false;
+    addError = '';
     activeProfile = uuid;
   }
 
