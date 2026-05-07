@@ -118,75 +118,76 @@
   onMount(refreshIndex);
 </script>
 
-<h1>Select a profile</h1>
+<div class='container'>
+  <h1>Select a profile</h1>
+  <div class='profiles'>
+    {#each profiles as profile (profile.uuid)}
+      <button
+        class='profile-box'
+        class:active={activeProfile === profile.uuid}
+        class:masked={activeProfile !== null && activeProfile !== profile.uuid}
+        on:click={() => selectProfile(profile.uuid)}
+      >
+        {profile.display_name || profile.uuid}
+      </button>
+    {/each}
+  </div>
 
-<button class='btn btn-primary' on:click={openAddProfile}>Add profile</button>
+  <button class='btn btn-primary' on:click={openAddProfile}>Add profile</button>
 
-<div class='profiles'>
-  {#each profiles as profile (profile.uuid)}
-    <button
-      class='profile-box'
-      class:active={activeProfile === profile.uuid}
-      class:masked={activeProfile !== null && activeProfile !== profile.uuid}
-      on:click={() => selectProfile(profile.uuid)}
-    >
-      {profile.display_name || profile.uuid}
-    </button>
-  {/each}
+  {#if showAddProfile}
+    <div class='container-sm'>
+      <label for='profileName'>Profile name</label>
+      <!-- svelte-ignore a11y-autofocus : not going to have a full js function for every input that needs autofocus... -->
+      <input autofocus placeholder='your profile name...' class='input' id='profileName' bind:value={newProfileName}/>
+
+      <label for='profilePassphrase'>Passphrase</label>
+      <input
+        id='profilePassphrase'
+        class='input'
+        placeholder='your passphrase...'
+        type='password'
+        autocomplete='new-password'
+        bind:value={newProfilePassphrase}
+      />
+      {#if addError}
+        <div class='alert alert-error'>
+          <strong>Error:</strong> {addError}
+        </div>
+      {/if}
+      <div class='button-row'>
+        <button class='btn btn-secondary' on:click={closeAddProfile}>Cancel</button>
+        <button class='btn btn-primary' on:click={confirmAddProfile}>Add</button>
+      </div>
+    </div>
+  {/if}
+
+  {#if activeProfile}
+    <div class='container-sm'>
+      <label for='passphrase'>Enter your passphrase</label>
+      <input
+        autocomplete='off'
+        placeholder='Your passphrase...'
+        bind:value={passphrase}
+        class='input'
+        id='passphrase'
+        type='password'
+      />
+      <div class='button-row'>
+        <button class='btn btn-secondary' on:click={clearProfileSelection}>Cancel</button>
+        <button class='btn btn-primary' on:click={unlock}>Unlock</button>
+      </div>
+      <br>
+      <button class='btn btn-danger' on:click={deleteSelectedProfile}>Delete profile (dev)</button>
+
+      {#if addError}
+        <div class='alert alert-error'>
+          <strong>Error:</strong> {addError}
+        </div>
+      {/if}
+    </div>
+  {/if}
 </div>
-
-
-{#if showAddProfile}
-  <div class='input-box' aria-modal='true'>
-    <label for='profileName'>Profile name</label>
-    <!-- svelte-ignore a11y-autofocus : not going to have a full js function for every input that needs autofocus... -->
-    <input autofocus placeholder='your profile name...' class='input' id='profileName' bind:value={newProfileName}/>
-
-    <label for='profilePassphrase'>Passphrase</label>
-    <input
-      id='profilePassphrase'
-      class='input'
-      placeholder='your passphrase...'
-      type='password'
-      autocomplete='new-password'
-      bind:value={newProfilePassphrase}
-    />
-    {#if addError}
-      <div class='alert alert-error'>
-        <strong>Error:</strong> {addError}
-      </div>
-    {/if}
-    <div>
-      <button class='btn btn-secondary' on:click={closeAddProfile}>Cancel</button>
-      <button class='btn btn-primary' on:click={confirmAddProfile}>Add</button>
-    </div>
-  </div>
-{/if}
-
-{#if activeProfile}
-  <div class='input-box' id='input'>
-    <label for='passphrase'>Enter your passphrase</label>
-    <input
-      autocomplete='off'
-      placeholder='Your passphrase...'
-      bind:value={passphrase}
-      class='input'
-      id='passphrase'
-      type='password'
-    />
-    <div>
-      <button class='btn btn-secondary' on:click={clearProfileSelection}>Cancel</button>
-      <button class='btn btn-primary' on:click={unlock}>Unlock</button>
-    </div>
-    <button class='btn btn-danger' on:click={deleteSelectedProfile}>Delete profile (dev)</button>
-
-    {#if addError}
-      <div class='alert alert-error'>
-        <strong>Error:</strong> {addError}
-      </div>
-    {/if}
-  </div>
-{/if}
 
 <style>
   .profiles {

@@ -12,6 +12,8 @@
   let entries = [];
   let listStatus = '';
   let view = 'index'; // 'index' | 'editor'
+  let addError = '';
+
 
   function toRelativeTime(iso, locale = 'en') {
     return DateTime.fromISO(iso).setLocale(locale).toRelative() ?? 'now';
@@ -19,6 +21,7 @@
 
   async function openEntry(id) {
     status = '';
+    addError = '';
     try {
       const e = await GetEntry(profileUuid, id);
       entryTitle = e.title;
@@ -26,8 +29,8 @@
       view = 'editor';
       status = `Loaded entry ${e.id}`;
     } catch (e) {
-      console.error(e);
-      status = e?.message ?? String(e);
+      status = '';
+      addError = e?.message ?? String(e);
     }
   }
 
@@ -60,12 +63,14 @@
 
   async function saveEntry() {
     status = 'Saving...';
+    addError = '';
     try {
       const id = await SaveEntry(profileUuid, entryTitle, entryMaintext);
       status = `Saved with id ${id}`;
       await refreshEntries();
     } catch (e) {
-      status = e?.message ?? String(e);
+      status = '';
+      addError = e?.message ?? String(e);
     }
   }
 
@@ -106,32 +111,41 @@
   <button class='btn btn-primary' on:click={openEditor}>Create entry</button>
 
 {:else if view === 'editor'}
-  <div class='input-box'>
-    <label for='entryTitle'>Entry title</label>
-    <input
-      id='entryTitle'
-      type='text'
-      class='input'
-      bind:value={entryTitle}
-      placeholder='Type something...'
-    />
+  <div class='container-md'>
+    <div class='input-box'>
+      <label for='entryTitle'>Entry title</label>
+      <input
+        id='entryTitle'
+        type='text'
+        class='input'
+        bind:value={entryTitle}
+        placeholder='Type something...'
+      />
+    </div>
+
+    <div class='input-box'>
+      <label for='entryMaintext'>Entry main text</label>
+      <textarea
+        id='entryMaintext'
+        bind:value={entryMaintext}
+        placeholder='Your main content...'
+      ></textarea>
+    </div>
+
+    <div class='button-row'>
+      <button class='btn btn-secondary' on:click={openIndex}>Back</button>
+      <button class='btn btn-primary' on:click={saveEntry}>Save</button>
+    </div>
+
+    {#if status}
+      <p>{status}</p>
+    {/if}
+    {#if addError}
+      <div class='alert alert-error'>
+        <strong>Error:</strong> {addError}
+      </div>
+    {/if}
   </div>
-
-  <div>
-    <label for='entryMaintext'>Entry main text</label>
-    <textarea
-      id='entryMaintext'
-      bind:value={entryMaintext}
-      placeholder='Your main content...'
-    ></textarea>
-  </div>
-
-  <button class='btn btn-secondary' on:click={openIndex}>Back</button>
-  <button class='btn btn-primary' on:click={saveEntry}>Save</button>
-
-  {#if status}
-    <p>{status}</p>
-  {/if}
 {/if}
 
 <style>
