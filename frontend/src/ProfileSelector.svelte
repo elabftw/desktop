@@ -8,17 +8,21 @@
   let profiles = [];
   let activeProfile = null;
   let passphrase = '';
-
   let index = null;
-
-  async function refreshIndex() {
-    index = await GetProfileIndex();
-    profiles = index?.profiles ?? [];
-  }
-
   let newProfileName = '';
   let newProfilePassphrase = '';
   let addError = '';
+
+  async function refreshIndex() {
+    addError = '';
+    try {
+      index = await GetProfileIndex();
+      profiles = index?.profiles ?? [];
+    } catch (e) {
+      profiles = [];
+      addError = e?.message ?? String(e);
+    }
+  }
 
   function openAddProfile() {
     newProfileName = '';
@@ -48,8 +52,8 @@
 
     try {
       await AddProfile(name, passphrase);
-      closeAddProfile();
       await refreshIndex();
+      closeAddProfile();
     } catch (e) {
       addError = e?.message ?? String(e);
     }
