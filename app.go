@@ -279,11 +279,15 @@ func (a *App) AddProfile(displayName string, passphrase string) (*ProfileIndex, 
 		PassphraseHash: hash,
 	})
 
-	if err := saveProfileIndex(idx); err != nil {
+	if _, err := ensureProfileDir(newUUID); err != nil {
 		return nil, err
 	}
 
-	if _, err := ensureProfileDir(newUUID); err != nil {
+	if err := saveProfileIndex(idx); err != nil {
+		dir, derr := profileDir(newUUID)
+		if derr == nil {
+			_ = os.RemoveAll(dir)
+		}
 		return nil, err
 	}
 
