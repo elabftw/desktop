@@ -118,7 +118,7 @@ func (a *App) DeleteProfile(profileUUID string, passphrase string) (*ProfileInde
 	found := false
 	filtered := make([]ProfileEntry, 0, len(idx.Profiles))
 
-    // check passphrase is correct
+	// check passphrase is correct
 	for _, profile := range idx.Profiles {
 		if profile.UUID == profileUUID {
 			found = true
@@ -292,7 +292,7 @@ func (a *App) AddProfile(displayName string, passphrase string) (*ProfileIndex, 
 }
 
 func (a *App) SaveEntry(profileUUID string, title string, body string) (int64, error) {
-    profileUUID = strings.TrimSpace(profileUUID)
+	profileUUID = strings.TrimSpace(profileUUID)
 	if err := a.requireUnlockedProfile(profileUUID); err != nil {
 		return 0, err
 	}
