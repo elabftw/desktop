@@ -1,15 +1,11 @@
 <script>
-  import { preventDefault } from 'svelte/legacy';
-
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { onMount } from 'svelte';
   import { DateTime } from 'luxon';
   import { ListEntries, SaveEntry, GetEntry, LockProfile } from '../wailsjs/go/main/App';
 
-  const dispatch = createEventDispatcher();
-
-  let { profileUuid } = $props();
+  let { profileUuid, onLogout } = $props();
   let entryTitle = $state('');
-  let entryMaintext = $state('');
+  let entryMainText = $state('');
   let status = $state('');
   let entries = $state([]);
   let listStatus = $state('');
@@ -27,7 +23,7 @@
     try {
       const e = await GetEntry(profileUuid, id);
       entryTitle = e.title;
-      entryMaintext = e.body;
+      entryMainText = e.body;
       view = 'editor';
       status = `Loaded entry ${e.id}`;
     } catch (e) {
@@ -55,7 +51,7 @@
   async function logout() {
     try {
       await LockProfile();
-      dispatch('logout');
+      onLogout?.();
     } catch (e) {
       status = '';
       addError = e?.message ?? String(e);
@@ -65,14 +61,14 @@
   function openEditor() {
     view = 'editor';
     entryTitle = '';
-    entryMaintext = '';
+    entryMainText = '';
   }
 
   async function saveEntry() {
     status = 'Saving...';
     addError = '';
     try {
-      const id = await SaveEntry(profileUuid, entryTitle, entryMaintext);
+      const id = await SaveEntry(profileUuid, entryTitle, entryMainText);
       status = `Saved with id ${id}`;
       await refreshEntries();
     } catch (e) {
@@ -105,7 +101,7 @@
           <button
             type='button'
             class='title'
-            onclick={preventDefault(() => openEntry(e.id))}
+            onclick={() => openEntry(e.id)}
           >
             {e.title}
           </button>
@@ -131,10 +127,10 @@
     </div>
 
     <div class='input-box'>
-      <label for='entryMaintext'>Entry main text</label>
+      <label for='entryMainText'>Entry main text</label>
       <textarea
-        id='entryMaintext'
-        bind:value={entryMaintext}
+        id='entryMainText'
+        bind:value={entryMainText}
         placeholder='Your main content...'
       ></textarea>
     </div>

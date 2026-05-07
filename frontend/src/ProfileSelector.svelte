@@ -1,8 +1,6 @@
 <script>
-  import { onMount, createEventDispatcher } from 'svelte';
+  import { onMount } from 'svelte';
   import { GetProfileIndex, AddProfile, UnlockProfile, DeleteProfile } from '../wailsjs/go/main/App';
-
-  const dispatch = createEventDispatcher();
 
   let showAddProfile = $state(false);
   let profiles = $state([]);
@@ -12,6 +10,7 @@
   let newProfileName = $state('');
   let newProfilePassphrase = $state('');
   let addError = $state('');
+  let {onUnlocked} = $props();
 
   async function refreshIndex() {
     addError = '';
@@ -110,7 +109,7 @@
 
     try {
       await UnlockProfile(activeProfile, passphrase);
-      dispatch('unlocked', {uuid: activeProfile});
+      onUnlocked?.(activeProfile);
     } catch (e) {
       addError = e?.message ?? String(e);
     }
