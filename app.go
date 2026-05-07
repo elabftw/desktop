@@ -40,6 +40,18 @@ func (a *App) startup(ctx context.Context) {
 	a.index = idx
 }
 
+// require unlocked profile to perform any authentified actions
+func (a *App) requireUnlockedProfile(profileUUID string) error {
+	profileUUID = strings.TrimSpace(profileUUID)
+	if profileUUID == "" {
+		return fmt.Errorf("profile uuid is empty")
+	}
+	if a.activeProfileUUID != profileUUID || a.passphraseHash == "" {
+		return fmt.Errorf("profile is locked")
+	}
+	return nil
+}
+
 // Unlock a profile (login)
 func (a *App) UnlockProfile(profileUUID string, passphrase string) error {
 	profileUUID = strings.TrimSpace(profileUUID)
@@ -80,17 +92,22 @@ func (a *App) UnlockProfile(profileUUID string, passphrase string) error {
 	return nil
 }
 
-// Log a profile (logout)
+// Lock a profile (logout)
 func (a *App) LockProfile() {
 	a.activeProfileUUID = ""
 	a.passphraseHash = ""
 }
 
-// Delete a profile
-func (a *App) DeleteProfile(profileUUID string) (*ProfileIndex, error) {
+// DEV: Delete a profile (requires passphrase)
+func (a *App) DeleteProfile(profileUUID string, passphrase string) (*ProfileIndex, error) {
 	profileUUID = strings.TrimSpace(profileUUID)
 	if profileUUID == "" {
 		return nil, fmt.Errorf("profile uuid is empty")
+	}
+
+	passphrase = strings.TrimSpace(passphrase)
+	if passphrase == "" {
+		return nil, fmt.Errorf("passphrase is empty")
 	}
 
 	idx, err := loadProfileIndex()
@@ -100,13 +117,23 @@ func (a *App) DeleteProfile(profileUUID string) (*ProfileIndex, error) {
 
 	found := false
 	filtered := make([]ProfileEntry, 0, len(idx.Profiles))
-	// could be written as var filtered []ProfileEntry. This creates a sluice of ProfileEntry with length = 0 & capacity = len(idx.Profiles)
 
+    // check passphrase is correct
 	for _, profile := range idx.Profiles {
 		if profile.UUID == profileUUID {
 			found = true
+
+			if profile.PassphraseHash == "" {
+				return nil, fmt.Errorf("profile has no passphrase set")
+			}
+
+			if !verifyPassphrase(passphrase, profile.PassphraseHash) {
+				return nil, fmt.Errorf("invalid passphrase")
+			}
+
 			continue
 		}
+
 		filtered = append(filtered, profile)
 	}
 
@@ -265,10 +292,9 @@ func (a *App) AddProfile(displayName string, passphrase string) (*ProfileIndex, 
 }
 
 func (a *App) SaveEntry(profileUUID string, title string, body string) (int64, error) {
-	fmt.Println("SaveEntry called")
-	profileUUID = strings.TrimSpace(profileUUID)
-	if profileUUID == "" {
-		return 0, fmt.Errorf("profile uuid is empty")
+    profileUUID = strings.TrimSpace(profileUUID)
+	if err := a.requireUnlockedProfile(profileUUID); err != nil {
+		return 0, err
 	}
 
 	// Optional: validate the uuid exists in the loaded index (without depending on field names)
@@ -339,8 +365,8 @@ type EntrySummary struct {
 
 func (a *App) ListEntries(profileUUID string) ([]EntrySummary, error) {
 	profileUUID = strings.TrimSpace(profileUUID)
-	if profileUUID == "" {
-		return nil, fmt.Errorf("profile uuid is empty")
+	if err := a.requireUnlockedProfile(profileUUID); err != nil {
+		return nil, err
 	}
 
 	cfgDir, err := os.UserConfigDir()
@@ -390,8 +416,8 @@ type Entry struct {
 
 func (a *App) GetEntry(profileUUID string, id int64) (*Entry, error) {
 	profileUUID = strings.TrimSpace(profileUUID)
-	if profileUUID == "" {
-		return nil, fmt.Errorf("profile uuid is empty")
+	if err := a.requireUnlockedProfile(profileUUID); err != nil {
+		return nil, err
 	}
 	if id <= 0 {
 		return nil, fmt.Errorf("invalid id")

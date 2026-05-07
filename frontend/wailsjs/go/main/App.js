@@ -6,8 +6,8 @@ export function AddProfile(arg1, arg2) {
   return window['go']['main']['App']['AddProfile'](arg1, arg2);
 }
 
-export function DeleteProfile(arg1) {
-  return window['go']['main']['App']['DeleteProfile'](arg1);
+export function DeleteProfile(arg1, arg2) {
+  return window['go']['main']['App']['DeleteProfile'](arg1, arg2);
 }
 
 export function GetEntry(arg1, arg2) {

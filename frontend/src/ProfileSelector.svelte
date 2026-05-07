@@ -76,16 +76,23 @@
       return;
     }
 
+    if (!passphrase.trim()) {
+      addError = 'Please enter the profile passphrase before deleting.';
+      return;
+    }
+
     const ok = confirm('Delete this profile and all local entries? This cannot be undone.');
     if (!ok) return;
 
     try {
-      const index = await DeleteProfile(activeProfile);
+      const index = await DeleteProfile(activeProfile, passphrase);
       profiles = index?.profiles ?? [];
       activeProfile = null;
       passphrase = '';
+      addError = '';
     } catch (e) {
-      addError = e?.message ?? String(e);
+      console.error('Delete failed:', e);
+      addError = e?.message || e?.toString?.() || String(e);
     }
   }
 
