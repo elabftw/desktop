@@ -39,14 +39,14 @@
 
   async function confirmAddProfile() {
     const name = newProfileName.trim();
-    const passphrase = newProfilePassphrase.trim();
+    const passphrase = newProfilePassphrase;
 
     if (!name) {
       addError = 'Please enter a profile name.';
       return;
     }
 
-    if (!passphrase) {
+    if (!passphrase.trim()) {
       addError = 'Please enter a passphrase.';
       return;
     }
