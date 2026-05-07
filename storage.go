@@ -22,8 +22,16 @@ type ProfileEntry struct {
 	CreatedAt   time.Time `json:"created_at"`
 	LastUsedAt  time.Time `json:"last_used_at,omitempty"`
 
-	PublicKey           string `json:"public_key,omitempty"`
-	KeySalt             string `json:"key_salt,omitempty"`
+	// PublicKey is the profile's Ed25519 public key.
+	// it is not secret and can be stored in the profile index.
+	PublicKey string `json:"public_key,omitempty"`
+
+	// KeySalt is a random per-profile salt used with the user's passphrase
+	// to derive the symmetric encryption key. It is not secret.
+	KeySalt string `json:"key_salt,omitempty"`
+
+	// EncryptedPrivateKey contains the Ed25519 private key encrypted with
+	// the passphrase-derived key. It is stored as base64(nonce || ciphertext).
 	EncryptedPrivateKey string `json:"encrypted_private_key,omitempty"`
 }
 
