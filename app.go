@@ -141,27 +141,27 @@ func (a *App) DeleteProfile(profileUUID string, passphrase string) (*ProfileInde
 		return nil, fmt.Errorf("unknown profile uuid")
 	}
 
-	idx.Profiles = filtered
+    dir, err := profileDir(profileUUID)
+    if err != nil {
+        return nil, err
+    }
 
-	if err := saveProfileIndex(idx); err != nil {
-		return nil, err
-	}
+    if err := os.RemoveAll(dir); err != nil {
+        return nil, fmt.Errorf("delete profile dir: %w", err)
+    }
 
-	dir, err := profileDir(profileUUID)
-	if err != nil {
-		return nil, err
-	}
+    idx.Profiles = filtered
 
-	if err := os.RemoveAll(dir); err != nil {
-		return nil, fmt.Errorf("delete profile dir: %w", err)
-	}
+    if err := saveProfileIndex(idx); err != nil {
+        return nil, err
+    }
 
-	if a.activeProfileUUID == profileUUID {
-		a.LockProfile()
-	}
+    if a.activeProfileUUID == profileUUID {
+        a.LockProfile()
+    }
 
-	a.index = idx
-	return a.index, nil
+    a.index = idx
+    return a.index, nil
 }
 
 func (a *App) GetProfileIndex() *ProfileIndex {
