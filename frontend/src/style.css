@@ -7,19 +7,18 @@ html {
 body {
   margin: 0;
   color: white;
-  font-family:
-    Nunito,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    'Fira Sans',
-    'Droid Sans',
-    'Helvetica Neue',
-    sans-serif;
+  font-family: Nunito,
+  -apple-system,
+  BlinkMacSystemFont,
+  'Segoe UI',
+  Roboto,
+  Oxygen,
+  Ubuntu,
+  Cantarell,
+  'Fira Sans',
+  'Droid Sans',
+  'Helvetica Neue',
+  sans-serif;
 }
 
 @font-face {
@@ -27,9 +26,8 @@ body {
   font-style: normal;
   font-weight: 400;
   font-size: 1.1em;
-  src:
-    local(''),
-    url('assets/fonts/nunito-v16-latin-regular.woff2') format('woff2');
+  src: local(''),
+  url('assets/fonts/nunito-v16-latin-regular.woff2') format('woff2');
 }
 
 #app {
@@ -39,14 +37,8 @@ body {
 
 #logo {
   display: block;
-  width: 50%;
-  height: 50%;
   margin: auto;
   padding: 10% 0 0;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
-  background-origin: content-box;
 }
 
 textarea {
@@ -56,23 +48,10 @@ textarea {
   border-radius: 5px;
 }
 
-.btn {
-  line-height: 30px;
-  border-radius: 4px;
-  border: none;
-  margin: 20px 0 0 20px;
-  padding: 0 8px;
-  cursor: pointer;
-}
 .input-box label {
   display: block;
   margin-top: 24px;
   font-size: 1.4em;
-}
-
-.input-box .btn:hover {
-  background-image: linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%);
-  color: #333333;
 }
 
 .input-box .input {
@@ -96,55 +75,29 @@ textarea {
   background-color: rgba(255, 255, 255, 1);
 }
 
-.profile-box {
-  width: 20vw;
-  margin: 10px auto;
-  padding: 12px;
-  border: 1px solid white;
-}
-.profile-box.active {
-  background-color: white;
-  color: black;
-}
-.profile-box.masked {
-  opacity: 0.25;
-  filter: blur(1px);
-}
-
-.profile-box:hover {
-  background-color: white;
-  color: black;
-  cursor: pointer;
-}
-
-/*
- * BUTTONS
- */
+/* BUTTONS */
 button {
   font: inherit;
 }
 
 .btn {
+  margin: 20px 0 0 20px;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-
   padding: 0.6rem 1rem;
   border-radius: 8px;
   border: 1px solid transparent;
-
-  font-size: 0.95rem;
   font-weight: 600;
   line-height: 1;
+  transition: background-color 0.18s ease,
+  border-color 0.18s ease,
+  color 0.18s ease,
+  box-shadow 0.18s ease,
+  transform 0.12s ease;
 
-  cursor: pointer;
-  transition:
-          background-color 0.18s ease,
-          border-color 0.18s ease,
-          color 0.18s ease,
-          box-shadow 0.18s ease,
-          transform 0.12s ease;
 }
 
 .btn:disabled {
@@ -161,28 +114,26 @@ button {
   box-shadow: 0 0 0 3px rgba(120, 180, 255, 0.25);
 }
 
+
 /* Primary button */
 .btn-primary {
-  background: #f4f7fb;
-  color: #1e2f45;
-  border-color: #c9d6e3;
+  background: #ececec;
+  color: #24364b;
 }
 
 .btn-primary:hover {
-  background: #e9f1f8;
-  border-color: #aac1d6;
+  background: #ffffff;
 }
 
 /* Secondary / neutral button */
 .btn-secondary {
-  background: #ffffff;
-  color: #24364b;
-  border-color: #d7e0ea;
+  background: #1e2f45;
+  color: #f4f7fb;
+  border-color: #c9d6e3;
 }
 
 .btn-secondary:hover {
-  background: #f5f8fb;
-  border-color: #bfcddb;
+  background: #0f1c31;
 }
 
 /* Danger button */
@@ -193,7 +144,7 @@ button {
 }
 
 .btn-danger:hover {
-  background: #f3dddd;
+  background: #e0bbbb;
   border-color: #dca8a8;
 }
 
@@ -203,9 +154,7 @@ button {
   font-size: 0.88rem;
 }
 
-/*
- * ALERTS
- */
+/* ALERTS */
 .alert {
   margin-top: 0.75rem;
   padding: 0.9rem 1rem;
@@ -245,7 +194,6 @@ button {
 }
 
 /* Layout helpers */
-
 .input-box {
   max-width: 500px;
   margin: 1rem auto 0;

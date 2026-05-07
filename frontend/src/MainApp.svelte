@@ -105,18 +105,13 @@
 
   <button class='btn btn-primary' on:click={openEditor}>Create entry</button>
 
-<!--  <p>Buttons</p>-->
-<!--  <button class='btn'>Btn</button>-->
-<!--  <button class='btn btn-primary'>primary</button>-->
-<!--  <button class='btn btn-secondary'>secondary</button>-->
-<!--  <button class='btn btn-danger'>danger</button>-->
-<!--  <button class='btn btn-sm'>sm</button>-->
 {:else if view === 'editor'}
-  <div>
+  <div class='input-box'>
     <label for='entryTitle'>Entry title</label>
     <input
       id='entryTitle'
       type='text'
+      class='input'
       bind:value={entryTitle}
       placeholder='Type something...'
     />
@@ -131,8 +126,8 @@
     ></textarea>
   </div>
 
+  <button class='btn btn-secondary' on:click={openIndex}>Back</button>
   <button class='btn btn-primary' on:click={saveEntry}>Save</button>
-  <button class='btn btn-primary' on:click={openIndex}>Back</button>
 
   {#if status}
     <p>{status}</p>
@@ -157,10 +152,5 @@
 
   .title:hover {
     text-decoration: underline;
-  }
-
-  input,
-  button {
-    padding: 0.5rem 0.75rem;
   }
 </style>
