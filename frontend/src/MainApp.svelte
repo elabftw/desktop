@@ -1,18 +1,20 @@
 <script>
+  import { preventDefault } from 'svelte/legacy';
+
   import { createEventDispatcher, onMount } from 'svelte';
   import { DateTime } from 'luxon';
   import { ListEntries, SaveEntry, GetEntry, LockProfile } from '../wailsjs/go/main/App';
 
   const dispatch = createEventDispatcher();
 
-  export let profileUuid;
-  let entryTitle = '';
-  let entryMaintext = '';
-  let status = '';
-  let entries = [];
-  let listStatus = '';
-  let view = 'index'; // 'index' | 'editor'
-  let addError = '';
+  let { profileUuid } = $props();
+  let entryTitle = $state('');
+  let entryMaintext = $state('');
+  let status = $state('');
+  let entries = $state([]);
+  let listStatus = $state('');
+  let view = $state('index'); // 'index' | 'editor'
+  let addError = $state('');
 
 
   function toRelativeTime(iso, locale = 'en') {
@@ -83,7 +85,7 @@
 </script>
 
 <h1>Index</h1>
-<button class='btn btn-danger' on:click={logout}>Logout</button>
+<button class='btn btn-danger' onclick={logout}>Logout</button>
 
 <p>
   Profile unlocked: {profileUuid}
@@ -103,7 +105,7 @@
           <button
             type='button'
             class='title'
-            on:click|preventDefault={() => openEntry(e.id)}
+            onclick={preventDefault(() => openEntry(e.id))}
           >
             {e.title}
           </button>
@@ -113,7 +115,7 @@
     </ul>
   {/if}
 
-  <button class='btn btn-primary' on:click={openEditor}>Create entry</button>
+  <button class='btn btn-primary' onclick={openEditor}>Create entry</button>
 
 {:else if view === 'editor'}
   <div class='container-md'>
@@ -138,8 +140,8 @@
     </div>
 
     <div class='button-row'>
-      <button class='btn btn-secondary' on:click={openIndex}>Back</button>
-      <button class='btn btn-primary' on:click={saveEntry}>Save</button>
+      <button class='btn btn-secondary' onclick={openIndex}>Back</button>
+      <button class='btn btn-primary' onclick={saveEntry}>Save</button>
     </div>
 
     {#if status}

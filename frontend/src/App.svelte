@@ -3,8 +3,8 @@
   import MainApp from './MainApp.svelte';
   import logo from './assets/images/elabftw-logo-white-800px.png';
 
-  let appState = 'select-profile';
-  let activeProfile = null;
+  let appState = $state('select-profile');
+  let activeProfile = $state(null);
 
 </script>
 
