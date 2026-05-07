@@ -58,7 +58,7 @@ func (a *App) UnlockProfile(profileUUID string, passphrase string) error {
 	if profileUUID == "" {
 		return fmt.Errorf("profile uuid is empty")
 	}
-    passphrase = strings.TrimSpace(passphrase)
+	passphrase = strings.TrimSpace(passphrase)
 	if passphrase == "" {
 		return fmt.Errorf("passphrase is empty")
 	}
