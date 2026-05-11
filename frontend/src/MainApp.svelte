@@ -18,16 +18,13 @@
   }
 
   async function openEntry(id) {
-    status = '';
     addError = '';
     try {
       const e = await GetEntry(profileUuid, id);
       entryTitle = e.title;
       entryMainText = e.body;
       view = 'editor';
-      status = `Loaded entry ${e.id}`;
     } catch (e) {
-      status = '';
       addError = e?.message ?? String(e);
     }
   }
@@ -45,6 +42,8 @@
 
   async function openIndex() {
     await refreshEntries();
+    status = '';
+    addError = '';
     view = 'index';
   }
 

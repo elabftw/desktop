@@ -17,7 +17,7 @@ type App struct {
 	ctx   context.Context
 	index *ProfileIndex
 	// activeProfileUUID identifies the currently unlocked profile.
-	// Profile-scoped APIs must check this before reading/writing data!
+	// Profile-scoped actions must check this before reading/writing data!
 	activeProfileUUID string
 
 	// activeKey is the passphrase-derived symmetric key kept only in memory
@@ -111,6 +111,7 @@ func (a *App) LockProfile() {
 	a.activeProfileUUID = ""
 
 	if a.activeKey != nil {
+	    // overwrite in memory
 		zeroBytes(a.activeKey)
 	}
 	a.activeKey = nil
@@ -122,7 +123,7 @@ func (a *App) LockProfile() {
 }
 
 // DEV: Delete a profile (requires passphrase but not profile to already be unlocked)
-// TODO: remove when done with dev! or for prod env (maybe configure dev env)
+// TODO: remove when done with dev
 func (a *App) DeleteProfile(profileUUID string, passphrase string) (*ProfileIndex, error) {
 	profileUUID = strings.TrimSpace(profileUUID)
 	if profileUUID == "" {
