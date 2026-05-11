@@ -87,8 +87,6 @@
   Profile unlocked: {profileUuid}
 </p>
 
-<h2>Saved entries</h2>
-
 {#if view === 'index'}
   <h2>Saved entries</h2>
 
