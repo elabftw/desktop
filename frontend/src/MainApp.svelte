@@ -1,18 +1,16 @@
 <script>
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { onMount } from 'svelte';
   import { DateTime } from 'luxon';
   import { ListEntries, SaveEntry, GetEntry, LockProfile } from '../wailsjs/go/main/App';
 
-  const dispatch = createEventDispatcher();
-
-  export let profileUuid;
-  let entryTitle = '';
-  let entryMaintext = '';
-  let status = '';
-  let entries = [];
-  let listStatus = '';
-  let view = 'index'; // 'index' | 'editor'
-  let addError = '';
+  let { profileUuid, onLogout } = $props();
+  let entryTitle = $state('');
+  let entryMainText = $state('');
+  let status = $state('');
+  let entries = $state([]);
+  let listStatus = $state('');
+  let view = $state('index'); // 'index' | 'editor'
+  let addError = $state('');
 
 
   function toRelativeTime(iso, locale = 'en') {
@@ -25,7 +23,7 @@
     try {
       const e = await GetEntry(profileUuid, id);
       entryTitle = e.title;
-      entryMaintext = e.body;
+      entryMainText = e.body;
       view = 'editor';
       status = `Loaded entry ${e.id}`;
     } catch (e) {
@@ -53,7 +51,7 @@
   async function logout() {
     try {
       await LockProfile();
-      dispatch('logout');
+      onLogout?.();
     } catch (e) {
       status = '';
       addError = e?.message ?? String(e);
@@ -63,14 +61,14 @@
   function openEditor() {
     view = 'editor';
     entryTitle = '';
-    entryMaintext = '';
+    entryMainText = '';
   }
 
   async function saveEntry() {
     status = 'Saving...';
     addError = '';
     try {
-      const id = await SaveEntry(profileUuid, entryTitle, entryMaintext);
+      const id = await SaveEntry(profileUuid, entryTitle, entryMainText);
       status = `Saved with id ${id}`;
       await refreshEntries();
     } catch (e) {
@@ -83,7 +81,7 @@
 </script>
 
 <h1>Index</h1>
-<button class='btn btn-danger' on:click={logout}>Logout</button>
+<button class='btn btn-danger' onclick={logout}>Logout</button>
 
 <p>
   Profile unlocked: {profileUuid}
@@ -103,7 +101,7 @@
           <button
             type='button'
             class='title'
-            on:click|preventDefault={() => openEntry(e.id)}
+            onclick={() => openEntry(e.id)}
           >
             {e.title}
           </button>
@@ -113,7 +111,7 @@
     </ul>
   {/if}
 
-  <button class='btn btn-primary' on:click={openEditor}>Create entry</button>
+  <button class='btn btn-primary' onclick={openEditor}>Create entry</button>
 
 {:else if view === 'editor'}
   <div class='container-md'>
@@ -129,17 +127,17 @@
     </div>
 
     <div class='input-box'>
-      <label for='entryMaintext'>Entry main text</label>
+      <label for='entryMainText'>Entry main text</label>
       <textarea
-        id='entryMaintext'
-        bind:value={entryMaintext}
+        id='entryMainText'
+        bind:value={entryMainText}
         placeholder='Your main content...'
       ></textarea>
     </div>
 
     <div class='button-row'>
-      <button class='btn btn-secondary' on:click={openIndex}>Back</button>
-      <button class='btn btn-primary' on:click={saveEntry}>Save</button>
+      <button class='btn btn-secondary' onclick={openIndex}>Back</button>
+      <button class='btn btn-primary' onclick={saveEntry}>Save</button>
     </div>
 
     {#if status}
@@ -152,6 +150,7 @@
     {/if}
   </div>
 {/if}
+
 
 <style>
   ul {

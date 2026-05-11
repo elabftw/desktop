@@ -1,17 +1,16 @@
 <script>
-  import { onMount, createEventDispatcher } from 'svelte';
+  import { onMount } from 'svelte';
   import { GetProfileIndex, AddProfile, UnlockProfile, DeleteProfile } from '../wailsjs/go/main/App';
 
-  const dispatch = createEventDispatcher();
-
-  let showAddProfile = false;
-  let profiles = [];
-  let activeProfile = null;
-  let passphrase = '';
+  let showAddProfile = $state(false);
+  let profiles = $state([]);
+  let activeProfile = $state(null);
+  let passphrase = $state('');
   let index = null;
-  let newProfileName = '';
-  let newProfilePassphrase = '';
-  let addError = '';
+  let newProfileName = $state('');
+  let newProfilePassphrase = $state('');
+  let addError = $state('');
+  let {onUnlocked} = $props();
 
   async function refreshIndex() {
     addError = '';
@@ -110,7 +109,7 @@
 
     try {
       await UnlockProfile(activeProfile, passphrase);
-      dispatch('unlocked', {uuid: activeProfile});
+      onUnlocked?.(activeProfile);
     } catch (e) {
       addError = e?.message ?? String(e);
     }
@@ -127,19 +126,19 @@
         class='profile-box'
         class:active={activeProfile === profile.uuid}
         class:masked={activeProfile !== null && activeProfile !== profile.uuid}
-        on:click={() => selectProfile(profile.uuid)}
+        onclick={() => selectProfile(profile.uuid)}
       >
         {profile.display_name || profile.uuid}
       </button>
     {/each}
   </div>
 
-  <button class='btn btn-primary' on:click={openAddProfile}>Add profile</button>
+  <button class='btn btn-primary' onclick={openAddProfile}>Add profile</button>
 
   {#if showAddProfile}
     <div class='container-sm'>
       <label for='profileName'>Profile name</label>
-      <!-- svelte-ignore a11y-autofocus : not going to have a full js function for every input that needs autofocus... -->
+      <!-- svelte-ignore a11y_autofocus : not going to have a full js function for every input that needs autofocus... -->
       <input autofocus placeholder='your profile name...' class='input' id='profileName' bind:value={newProfileName}/>
 
       <label for='profilePassphrase'>Passphrase</label>
@@ -157,8 +156,8 @@
         </div>
       {/if}
       <div class='button-row'>
-        <button class='btn btn-secondary' on:click={closeAddProfile}>Cancel</button>
-        <button class='btn btn-primary' on:click={confirmAddProfile}>Add</button>
+        <button class='btn btn-secondary' onclick={closeAddProfile}>Cancel</button>
+        <button class='btn btn-primary' onclick={confirmAddProfile}>Add</button>
       </div>
     </div>
   {/if}
@@ -175,11 +174,11 @@
         type='password'
       />
       <div class='button-row'>
-        <button class='btn btn-secondary' on:click={clearProfileSelection}>Cancel</button>
-        <button class='btn btn-primary' on:click={unlock}>Unlock</button>
+        <button class='btn btn-secondary' onclick={clearProfileSelection}>Cancel</button>
+        <button class='btn btn-primary' onclick={unlock}>Unlock</button>
       </div>
       <br>
-      <button class='btn btn-danger' on:click={deleteSelectedProfile}>Delete profile (dev)</button>
+      <button class='btn btn-danger' onclick={deleteSelectedProfile}>Delete profile (dev)</button>
 
       {#if addError}
         <div class='alert alert-error'>
