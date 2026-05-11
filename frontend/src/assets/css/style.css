@@ -2,18 +2,66 @@
 @import 'alerts.css';
 @import 'inputs.css';
 
+:root {
+  /* base */
+  --page-bg: #1b2636;
+  --text: #ffffff;
+
+  /* dark surfaces */
+  --dark-blue: #24364b;
+  --dark-blue-2: #1e2f45;
+  --dark-blue-3: #0f1c31;
+
+  /* light */
+  --light-gray: #e0e0e0;
+  --white: #ffffff;
+  --soft-white: #f4f7fb;
+
+  /* Borders */
+  --border: #c9d6e3;
+  --focus-border: #89acd0;
+
+  /* focus */
+  --shadow-focus-blue: 0 0 0 3px rgba(120, 180, 255, 0.25);
+  --shadow-input-focus: 0 0 0 3px rgba(137, 172, 208, 0.2);
+
+  /* Danger */
+  --danger-bg: #f9ecec;
+  --danger-text: #9f3a38;
+  --danger-border: #e8c7c7;
+  --danger-hover-bg: #e0bbbb;
+  --danger-hover-border: #dca8a8;
+
+  /* Alerts */
+  --info-bg: #d9edf7;
+  --info-border: #bcdff1;
+  --info-text: #31708f;
+
+  --error-bg: #f2dede;
+  --error-border: #ebccd1;
+  --error-text: #a94442;
+
+  --success-bg: #dff0d8;
+  --success-border: #c8e5bc;
+  --success-text: #3c763d;
+
+  --warning-bg: #fcf8e3;
+  --warning-border: #f2e3a3;
+  --warning-text: #8a6d3b;
+}
+
 * {
   box-sizing: border-box;
 }
 
 html {
-  background-color: rgba(27, 38, 54, 1);
-  color: white;
+  background-color: var(--page-bg);
+  color: var(--text);
 }
 
 body {
   margin: 0;
-  color: white;
+  color: var(--text);
   font-family: Nunito,
   -apple-system,
   BlinkMacSystemFont,
@@ -32,7 +80,6 @@ body {
   font-family: Nunito;
   font-style: normal;
   font-weight: 400;
-  font-size: 1.1em;
   src: local(''),
   url('../fonts/nunito-v16-latin-regular.woff2') format('woff2');
 }
@@ -62,4 +109,3 @@ body {
   margin: auto;
   padding: 10% 0 0;
 }
-

@@ -4,7 +4,7 @@ textarea {
   width: 100%;
   padding: 0.65rem 0.85rem;
   border-radius: 8px;
-  border: 1px solid #c9d6e3;
+  border: 1px solid var(--border);
   font: inherit;
   box-sizing: border-box;
 }
@@ -14,10 +14,11 @@ textarea {
   resize: vertical;
 }
 
-.input:focus {
+.input:focus,
+textarea:focus {
   outline: none;
-  border-color: #89acd0;
-  box-shadow: 0 0 0 3px rgba(137, 172, 208, 0.2);
+  border-color: var(--focus-border);
+  box-shadow: var(--shadow-input-focus);
 }
 
 .input-box {

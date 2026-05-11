@@ -40,40 +40,40 @@ button {
 
 .btn:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(120, 180, 255, 0.25);
+  box-shadow: var(--shadow-focus-blue);
 }
 
 /* Primary button */
 .btn-primary {
-  background: #e0e0e0;
-  color: #24364b;
+  background: var(--light-gray);
+  color: var(--dark-blue);
 }
 
 .btn-primary:hover {
-  background: #ffffff;
+  background: var(--white);
 }
 
 /* Secondary / neutral button */
 .btn-secondary {
-  background: #1e2f45;
-  color: #f4f7fb;
-  border-color: #c9d6e3;
+  background: var(--dark-blue-2);
+  color: var(--soft-white);
+  border-color: var(--border);
 }
 
 .btn-secondary:hover {
-  background: #0f1c31;
+  background: var(--dark-blue-3);
 }
 
 /* Danger button */
 .btn-danger {
-  background: #f9ecec;
-  color: #9f3a38;
-  border-color: #e8c7c7;
+  background: var(--danger-bg);
+  color: var(--danger-text);
+  border-color: var(--danger-border);
 }
 
 .btn-danger:hover {
-  background: #e0bbbb;
-  border-color: #dca8a8;
+  background: var(--danger-hover-bg);
+  border-color: var(--danger-hover-border);
 }
 
 /* Small button */
