@@ -46,7 +46,10 @@ func (a *App) startup(ctx context.Context) {
 	a.index = idx
 }
 
-// require unlocked profile to perform any authentified actions
+// requireUnlockedProfile gates authentified actions
+// Frontend can call exported Wails methods directly, so UI checks are not
+// enough. Every method that reads or writes profile data must verify that
+// the requested profile is currently unlocked.
 func (a *App) requireUnlockedProfile(profileUUID string) error {
 	profileUUID = strings.TrimSpace(profileUUID)
 	if profileUUID == "" {
@@ -58,7 +61,9 @@ func (a *App) requireUnlockedProfile(profileUUID string) error {
 	return nil
 }
 
-// Unlock a profile (login)
+// Unlock a Profile - verifies the passphrase by attempting to decrypt the profile's
+// encrypted private key. On success, the derived key is kept in memory and used
+// to encrypt/decrypt entry contents for this profile only
 func (a *App) UnlockProfile(profileUUID string, passphrase string) error {
 	profileUUID = strings.TrimSpace(profileUUID)
 	if profileUUID == "" {
@@ -99,7 +104,9 @@ func (a *App) UnlockProfile(profileUUID string, passphrase string) error {
 	return nil
 }
 
-// Lock a profile (logout)
+// Lock a profile (logout) - clears the in-memory session state.
+// After this, profile-scoped actions reject reads/writes until UnlockProfile
+// succeeds again.
 func (a *App) LockProfile() {
 	a.activeProfileUUID = ""
 
@@ -114,7 +121,8 @@ func (a *App) LockProfile() {
 	a.activePrivateKey = nil
 }
 
-// DEV: Delete a profile (requires passphrase)
+// DEV: Delete a profile (requires passphrase but not profile to already be unlocked)
+// TODO: remove when done with dev! or for prod env (maybe configure dev env)
 func (a *App) DeleteProfile(profileUUID string, passphrase string) (*ProfileIndex, error) {
 	profileUUID = strings.TrimSpace(profileUUID)
 	if profileUUID == "" {
@@ -269,6 +277,9 @@ func (a *App) SaveEntry(profileUUID string, title string, body string) (int64, e
 		return 0, fmt.Errorf("title is empty")
 	}
 
+	// Here is encryption done
+	// Encrypt sensitive entry content before writing to SQLite.
+	// The DB remains readable as SQLite, but title/body are ciphertext.
 	encryptedTitle, err := encryptString(a.activeKey, title)
 	if err != nil {
 		return 0, fmt.Errorf("encrypt title: %w", err)
@@ -304,6 +315,7 @@ type EntrySummary struct {
 	UpdatedAt string `json:"updatedAt"`
 }
 
+// Titles are stored encrypted, so decrypt them before returning the summaries to frontend.
 func (a *App) ListEntries(profileUUID string) ([]EntrySummary, error) {
 	profileUUID = strings.TrimSpace(profileUUID)
 	if err := a.requireUnlockedProfile(profileUUID); err != nil {
@@ -337,6 +349,7 @@ func (a *App) ListEntries(profileUUID string) ([]EntrySummary, error) {
 		if err := rows.Scan(&e.ID, &e.Title, &e.CreatedAt, &e.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("scan entry: %w", err)
 		}
+		// the row stores encrypted title/body values. Decrypt them before returning the entry to frontend.
 		title, err := decryptString(a.activeKey, e.Title)
 		if err != nil {
 			return nil, fmt.Errorf("decrypt entry title: %w", err)
