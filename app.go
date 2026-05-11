@@ -17,9 +17,10 @@ import (
 
 // App struct
 type App struct {
-	ctx            context.Context
-	index          *ProfileIndex
-	passphraseHash string
+	ctx               context.Context
+	index             *ProfileIndex
+	activeProfileUUID string
+	passphraseHash    string
 }
 
 // NewApp creates a new App application struct
@@ -37,6 +38,131 @@ func (a *App) startup(ctx context.Context) {
 	}
 
 	a.index = idx
+}
+
+// require unlocked profile to perform any authentified actions
+func (a *App) requireUnlockedProfile(profileUUID string) error {
+	profileUUID = strings.TrimSpace(profileUUID)
+	if profileUUID == "" {
+		return fmt.Errorf("profile uuid is empty")
+	}
+	if a.activeProfileUUID != profileUUID || a.passphraseHash == "" {
+		return fmt.Errorf("profile is locked")
+	}
+	return nil
+}
+
+// Unlock a profile (login)
+func (a *App) UnlockProfile(profileUUID string, passphrase string) error {
+	profileUUID = strings.TrimSpace(profileUUID)
+	if profileUUID == "" {
+		return fmt.Errorf("profile uuid is empty")
+	}
+	passphrase = strings.TrimSpace(passphrase)
+	if passphrase == "" {
+		return fmt.Errorf("passphrase is empty")
+	}
+
+	if a.index == nil {
+		return fmt.Errorf("profile index is not loaded")
+	}
+
+	var selected *ProfileEntry
+	for i := range a.index.Profiles {
+		if a.index.Profiles[i].UUID == profileUUID {
+			selected = &a.index.Profiles[i]
+			break
+		}
+	}
+
+	if selected == nil {
+		return fmt.Errorf("unknown profile uuid")
+	}
+
+	if selected.PassphraseHash == "" {
+		return fmt.Errorf("profile has no passphrase set")
+	}
+
+	if !verifyPassphrase(passphrase, selected.PassphraseHash) {
+		return fmt.Errorf("invalid passphrase")
+	}
+
+	a.activeProfileUUID = profileUUID
+	a.passphraseHash = selected.PassphraseHash
+
+	return nil
+}
+
+// Lock a profile (logout)
+func (a *App) LockProfile() {
+	a.activeProfileUUID = ""
+	a.passphraseHash = ""
+}
+
+// DEV: Delete a profile (requires passphrase)
+func (a *App) DeleteProfile(profileUUID string, passphrase string) (*ProfileIndex, error) {
+	profileUUID = strings.TrimSpace(profileUUID)
+	if profileUUID == "" {
+		return nil, fmt.Errorf("profile uuid is empty")
+	}
+
+	passphrase = strings.TrimSpace(passphrase)
+	if passphrase == "" {
+		return nil, fmt.Errorf("passphrase is empty")
+	}
+
+	idx, err := loadProfileIndex()
+	if err != nil {
+		return nil, err
+	}
+
+	found := false
+	filtered := make([]ProfileEntry, 0, len(idx.Profiles))
+
+	// check passphrase is correct
+	for _, profile := range idx.Profiles {
+		if profile.UUID == profileUUID {
+			found = true
+
+			if profile.PassphraseHash == "" {
+				return nil, fmt.Errorf("profile has no passphrase set")
+			}
+
+			if !verifyPassphrase(passphrase, profile.PassphraseHash) {
+				return nil, fmt.Errorf("invalid passphrase")
+			}
+
+			continue
+		}
+
+		filtered = append(filtered, profile)
+	}
+
+	if !found {
+		return nil, fmt.Errorf("unknown profile uuid")
+	}
+
+	dir, err := profileDir(profileUUID)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := os.RemoveAll(dir); err != nil {
+		return nil, fmt.Errorf("delete profile dir: %w", err)
+	}
+
+	idx.Profiles = filtered
+
+	if err := saveProfileIndex(idx); err != nil {
+		return nil, err
+	}
+
+	if a.activeProfileUUID == profileUUID {
+		a.LockProfile()
+	}
+
+	a.index = idx
+	return a.index, nil
 }
 
 func (a *App) GetProfileIndex() *ProfileIndex {
@@ -119,18 +245,26 @@ func writeDiskIndex(path string, idx *diskProfileIndex) error {
 	return nil
 }
 
-func (a *App) AddProfile(displayName string) (*ProfileIndex, error) {
+// create a profile with a passphrase
+func (a *App) AddProfile(displayName string, passphrase string) (*ProfileIndex, error) {
+	// username
 	displayName = strings.TrimSpace(displayName)
 	if displayName == "" {
 		return nil, fmt.Errorf("display name is empty")
 	}
 
-	indexPath, err := indexJSONPath()
-	if err != nil {
-		return nil, err
+	// passphrase
+	passphrase = strings.TrimSpace(passphrase)
+	if passphrase == "" {
+		return nil, fmt.Errorf("passphrase is empty")
 	}
 
-	idx, err := loadDiskIndex(indexPath)
+	hash, err := hashPassphrase(passphrase)
+	if err != nil {
+		return nil, fmt.Errorf("hash passphrase: %w", err)
+	}
+
+	idx, err := loadProfileIndex()
 	if err != nil {
 		return nil, err
 	}
@@ -138,41 +272,34 @@ func (a *App) AddProfile(displayName string) (*ProfileIndex, error) {
 	newUUID := uuid.NewString()
 	now := time.Now()
 
-	idx.Profiles = append(idx.Profiles, diskProfile{
-		UUID:        newUUID,
-		DisplayName: displayName,
-		CreatedAt:   now,
-		LastUsedAt:  time.Time{},
+	idx.Profiles = append(idx.Profiles, ProfileEntry{
+		UUID:           newUUID,
+		DisplayName:    displayName,
+		CreatedAt:      now,
+		LastUsedAt:     time.Time{},
+		PassphraseHash: hash,
 	})
 
-	if err := writeDiskIndex(indexPath, idx); err != nil {
+	if _, err := ensureProfileDir(newUUID); err != nil {
 		return nil, err
 	}
 
-	// Ensure profile directory exists (DB will be created on first save)
-	cfgDir, err := os.UserConfigDir()
-	if err != nil {
-		return nil, fmt.Errorf("get config dir: %w", err)
-	}
-	profileDir := filepath.Join(cfgDir, "elabftw-desktop", "profiles", newUUID)
-	if err := os.MkdirAll(profileDir, 0o755); err != nil {
-		return nil, fmt.Errorf("create profile dir: %w", err)
-	}
-
-	// Reload the in-memory index using your existing loader
-	reloaded, err := loadProfileIndex()
-	if err != nil {
+	if err := saveProfileIndex(idx); err != nil {
+		dir, derr := profileDir(newUUID)
+		if derr == nil {
+			_ = os.RemoveAll(dir)
+		}
 		return nil, err
 	}
-	a.index = reloaded
 
+	a.index = idx
 	return a.index, nil
 }
+
 func (a *App) SaveEntry(profileUUID string, title string, body string) (int64, error) {
-	fmt.Println("SaveEntry called")
 	profileUUID = strings.TrimSpace(profileUUID)
-	if profileUUID == "" {
-		return 0, fmt.Errorf("profile uuid is empty")
+	if err := a.requireUnlockedProfile(profileUUID); err != nil {
+		return 0, err
 	}
 
 	// Optional: validate the uuid exists in the loaded index (without depending on field names)
@@ -243,8 +370,8 @@ type EntrySummary struct {
 
 func (a *App) ListEntries(profileUUID string) ([]EntrySummary, error) {
 	profileUUID = strings.TrimSpace(profileUUID)
-	if profileUUID == "" {
-		return nil, fmt.Errorf("profile uuid is empty")
+	if err := a.requireUnlockedProfile(profileUUID); err != nil {
+		return nil, err
 	}
 
 	cfgDir, err := os.UserConfigDir()
@@ -294,8 +421,8 @@ type Entry struct {
 
 func (a *App) GetEntry(profileUUID string, id int64) (*Entry, error) {
 	profileUUID = strings.TrimSpace(profileUUID)
-	if profileUUID == "" {
-		return nil, fmt.Errorf("profile uuid is empty")
+	if err := a.requireUnlockedProfile(profileUUID); err != nil {
+		return nil, err
 	}
 	if id <= 0 {
 		return nil, fmt.Errorf("invalid id")

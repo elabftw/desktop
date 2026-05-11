@@ -5,6 +5,7 @@
 
   let appState = 'select-profile';
   let activeProfile = null;
+
 </script>
 
 <main>
@@ -17,6 +18,12 @@
       }}
     />
   {:else if appState === 'unlocked'}
-    <MainApp profileUuid={activeProfile}/>
+    <MainApp
+      profileUuid={activeProfile}
+      on:logout={() => {
+        activeProfile = null;
+        appState = 'select-profile';
+      }}
+    />
   {/if}
 </main>

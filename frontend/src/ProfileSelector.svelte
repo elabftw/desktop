@@ -1,6 +1,6 @@
 <script>
   import { onMount, createEventDispatcher } from 'svelte';
-  import { GetProfileIndex, AddProfile } from '../wailsjs/go/main/App';
+  import { GetProfileIndex, AddProfile, UnlockProfile, DeleteProfile } from '../wailsjs/go/main/App';
 
   const dispatch = createEventDispatcher();
 
@@ -8,21 +8,28 @@
   let profiles = [];
   let activeProfile = null;
   let passphrase = '';
-
   let index = null;
+  let newProfileName = '';
+  let newProfilePassphrase = '';
+  let addError = '';
 
   async function refreshIndex() {
-    index = await GetProfileIndex();
-    profiles = index?.profiles ?? [];
+    addError = '';
+    try {
+      index = await GetProfileIndex();
+      profiles = index?.profiles ?? [];
+    } catch (e) {
+      profiles = [];
+      addError = e?.message ?? String(e);
+    }
   }
-
-  let newProfileName = '';
-  let addError = '';
 
   function openAddProfile() {
     newProfileName = '';
+    newProfilePassphrase = '';
     addError = '';
     showAddProfile = true;
+    activeProfile = null;
   }
 
   function closeAddProfile() {
@@ -32,108 +39,162 @@
 
   async function confirmAddProfile() {
     const name = newProfileName.trim();
+    const passphrase = newProfilePassphrase;
+
     if (!name) {
       addError = 'Please enter a profile name.';
       return;
     }
 
+    if (!passphrase.trim()) {
+      addError = 'Please enter a passphrase.';
+      return;
+    }
+
     try {
-      // If your AddProfile returns updated index, assign it to your state here
-      await AddProfile(name);
-
-      closeAddProfile();
-
-      // Refresh your index/list if needed:
+      await AddProfile(name, passphrase);
       await refreshIndex();
+      closeAddProfile();
     } catch (e) {
       addError = e?.message ?? String(e);
     }
   }
 
-  function onModalKeydown(e) {
-    if (e.key === 'Escape') closeAddProfile();
-    if (e.key === 'Enter') confirmAddProfile();
-  }
-
   function selectProfile(uuid) {
+    showAddProfile = false;
+    addError = '';
     activeProfile = uuid;
   }
 
-  function unlock() {
-    // encryption skipped for now
-    dispatch('unlocked', {uuid: activeProfile});
+  async function deleteSelectedProfile() {
+    if (!activeProfile) {
+      addError = 'Please select a profile to delete.';
+      return;
+    }
+
+    if (!passphrase.trim()) {
+      addError = 'Please enter the profile passphrase before deleting.';
+      return;
+    }
+
+    const ok = confirm('Delete this profile and all local entries? This cannot be undone.');
+    if (!ok) return;
+
+    try {
+      const index = await DeleteProfile(activeProfile, passphrase);
+      profiles = index?.profiles ?? [];
+      clearProfileSelection();
+    } catch (e) {
+      console.error('Delete failed:', e);
+      addError = e?.message || e?.toString?.() || String(e);
+    }
+  }
+
+  function clearProfileSelection() {
+    activeProfile = null;
+    passphrase = '';
+    addError = '';
+  }
+
+
+  async function unlock() {
+    if (!activeProfile) {
+      addError = 'Please select a profile.';
+      return;
+    }
+
+    if (!passphrase.trim()) {
+      addError = 'Please enter your passphrase.';
+      return;
+    }
+
+    try {
+      await UnlockProfile(activeProfile, passphrase);
+      dispatch('unlocked', {uuid: activeProfile});
+    } catch (e) {
+      addError = e?.message ?? String(e);
+    }
   }
 
   onMount(refreshIndex);
 </script>
 
-<h1>Select a profile</h1>
+<div class='container'>
+  <h1>Select a profile</h1>
+  <div class='profiles'>
+    {#each profiles as profile (profile.uuid)}
+      <button
+        class='profile-box'
+        class:active={activeProfile === profile.uuid}
+        class:masked={activeProfile !== null && activeProfile !== profile.uuid}
+        on:click={() => selectProfile(profile.uuid)}
+      >
+        {profile.display_name || profile.uuid}
+      </button>
+    {/each}
+  </div>
 
-<div class='profiles'>
-  {#each profiles as profile (profile.uuid)}
-    <button
-      class='profile-box'
-      class:active={activeProfile === profile.uuid}
-      class:masked={activeProfile !== null && activeProfile !== profile.uuid}
-      on:click={() => selectProfile(profile.uuid)}
-    >
-      {profile.display_name || profile.uuid}
-    </button>
-  {/each}
-</div>
+  <button class='btn btn-primary' on:click={openAddProfile}>Add profile</button>
 
-<div style='margin-top: 12px;'>
-  <button on:click={openAddProfile}>Add profile</button>
-</div>
+  {#if showAddProfile}
+    <div class='container-sm'>
+      <label for='profileName'>Profile name</label>
+      <!-- svelte-ignore a11y-autofocus : not going to have a full js function for every input that needs autofocus... -->
+      <input autofocus placeholder='your profile name...' class='input' id='profileName' bind:value={newProfileName}/>
 
-{#if showAddProfile}
-  <!-- Backdrop -->
-  <button class='modal-backdrop' on:click={closeAddProfile}>x</button>
-
-  <!-- Modal -->
-  <div
-    class='modal'
-    role='dialog'
-    aria-modal='true'
-    on:keydown={onModalKeydown}
-  >
-    <div class='modal-title'>Add profile</div>
-    <div class='modal-body'>
-      <label class='modal-label' for='profileName'>Profile name</label>
+      <label for='profilePassphrase'>Passphrase</label>
       <input
-        id='profileName'
-        class='modal-input'
-        bind:value={newProfileName}
+        id='profilePassphrase'
+        class='input'
+        placeholder='your passphrase...'
+        type='password'
+        autocomplete='new-password'
+        bind:value={newProfilePassphrase}
       />
+      {#if addError}
+        <div class='alert alert-error'>
+          <strong>Error:</strong> {addError}
+        </div>
+      {/if}
+      <div class='button-row'>
+        <button class='btn btn-secondary' on:click={closeAddProfile}>Cancel</button>
+        <button class='btn btn-primary' on:click={confirmAddProfile}>Add</button>
+      </div>
+    </div>
+  {/if}
+
+  {#if activeProfile}
+    <div class='container-sm'>
+      <label for='passphrase'>Enter your passphrase</label>
+      <input
+        autocomplete='off'
+        placeholder='Your passphrase...'
+        bind:value={passphrase}
+        class='input'
+        id='passphrase'
+        type='password'
+      />
+      <div class='button-row'>
+        <button class='btn btn-secondary' on:click={clearProfileSelection}>Cancel</button>
+        <button class='btn btn-primary' on:click={unlock}>Unlock</button>
+      </div>
+      <br>
+      <button class='btn btn-danger' on:click={deleteSelectedProfile}>Delete profile (dev)</button>
 
       {#if addError}
-        <div class='modal-error'>{addError}</div>
+        <div class='alert alert-error'>
+          <strong>Error:</strong> {addError}
+        </div>
       {/if}
     </div>
-
-    <div class='modal-actions'>
-      <button on:click={closeAddProfile}>Cancel</button>
-      <button on:click={confirmAddProfile}>Add</button>
-    </div>
-  </div>
-{/if}
-
-{#if activeProfile}
-  <div class='input-box' id='input'>
-    <label for='passphrase'>Enter your passphrase</label>
-    <input
-      autocomplete='off'
-      placeholder='Your passphrase...'
-      bind:value={passphrase}
-      class='input'
-      id='passphrase'
-      type='password'
-    />
-    <button class='btn' on:click={unlock}>Unlock</button>
-  </div>
-{/if}
+  {/if}
+</div>
 
 <style>
+  .profiles {
+    margin-top: 12px;
+  }
+
   .profile-box {
     cursor: pointer;
     width: 20vw;
