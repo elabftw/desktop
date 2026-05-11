@@ -1,0 +1,65 @@
+@import 'buttons.css';
+@import 'alerts.css';
+@import 'inputs.css';
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background-color: rgba(27, 38, 54, 1);
+  color: white;
+}
+
+body {
+  margin: 0;
+  color: white;
+  font-family: Nunito,
+  -apple-system,
+  BlinkMacSystemFont,
+  'Segoe UI',
+  Roboto,
+  Oxygen,
+  Ubuntu,
+  Cantarell,
+  'Fira Sans',
+  'Droid Sans',
+  'Helvetica Neue',
+  sans-serif;
+}
+
+@font-face {
+  font-family: Nunito;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 1.1em;
+  src: local(''),
+  url('../fonts/nunito-v16-latin-regular.woff2') format('woff2');
+}
+
+#app {
+  height: 100vh;
+  text-align: center;
+}
+
+.container {
+  width: min(900px, calc(100vw - 4rem));
+  margin: 0 auto;
+}
+
+.container-md {
+  width: min(640px, calc(100vw - 3rem));
+  margin: 0 auto;
+}
+
+.container-sm {
+  width: min(420px, calc(100vw - 2rem));
+  margin: 0 auto;
+}
+
+#logo {
+  display: block;
+  margin: auto;
+  padding: 10% 0 0;
+}
+

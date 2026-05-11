@@ -1,0 +1,38 @@
+/* ALERTS */
+.alert {
+  margin-top: 0.75rem;
+  padding: 0.9rem 1rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  text-align: left;
+}
+
+/* Blue info alert */
+.alert-info {
+  background: #d9edf7;
+  border-color: #bcdff1;
+  color: #31708f;
+}
+
+/* Red error alert */
+.alert-error {
+  background: #f2dede;
+  border-color: #ebccd1;
+  color: #a94442;
+}
+
+/* Green success alert */
+.alert-success {
+  background: #dff0d8;
+  border-color: #c8e5bc;
+  color: #3c763d;
+}
+
+/* Yellow warning alert */
+.alert-warning {
+  background: #fcf8e3;
+  border-color: #f2e3a3;
+  color: #8a6d3b;
+}

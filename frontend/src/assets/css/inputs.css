@@ -1,0 +1,30 @@
+/* inputs */
+.input,
+textarea {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid #c9d6e3;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+textarea {
+  min-height: 220px;
+  resize: vertical;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #89acd0;
+  box-shadow: 0 0 0 3px rgba(137, 172, 208, 0.2);
+}
+
+.input-box {
+  margin: 1rem 0 0;
+  text-align: left;
+}
+
+.input-box label {
+  font-size: 1.4em;
+}
