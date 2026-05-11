@@ -111,7 +111,7 @@ func (a *App) LockProfile() {
 	a.activeProfileUUID = ""
 
 	if a.activeKey != nil {
-	    // overwrite in memory
+		// overwrite in memory
 		zeroBytes(a.activeKey)
 	}
 	a.activeKey = nil
