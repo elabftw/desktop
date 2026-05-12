@@ -3,7 +3,7 @@
   import { DateTime } from 'luxon';
   import { ListEntries, SaveEntry, GetEntry, LockProfile } from '../../wailsjs/go/main/App';
   import { autofocus } from '../utils/autofocus';
-  import AlertError from './AlertError.svelte';
+  import Alert from './Alert.svelte';
 
   let {profileUuid, onLogout} = $props();
   let entryTitle = $state('');
@@ -147,7 +147,7 @@
         <p>{status}</p>
       </div>
     {/if}
-    <AlertError message={addError}/>
+    <Alert type='error' message={addError} />
   </form>
 {/if}
 

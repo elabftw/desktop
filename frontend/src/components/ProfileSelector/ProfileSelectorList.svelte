@@ -1,5 +1,5 @@
 <script>
-  import AlertError from '../AlertError.svelte';
+  import Alert from '../Alert.svelte';
 
   let {addError, profiles, activeProfile, openAddProfile, selectProfile} = $props();
 </script>
@@ -18,4 +18,4 @@
     </button>
   {/each}
 </div>
-<AlertError message={addError}/>
+<Alert type='error' message={addError} />
