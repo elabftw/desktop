@@ -1,4 +1,6 @@
 <script>
+  import { autofocus } from '../../utils/autofocus';
+
   let { addError, clearProfileSelection, unlock, deleteSelectedProfile } = $props();
   let passphrase = $state('');
 </script>
@@ -6,8 +8,9 @@
 <form class='container-sm' onsubmit={(e) => (e.preventDefault(), unlock(passphrase))}>
   <label for='passphrase' class='label'>Enter your passphrase</label>
   <input
+    use:autofocus
     autocomplete='off'
-    placeholder='Enter your passphrase'
+    placeholder='Passphrase'
     bind:value={passphrase}
     class='input'
     id='passphrase'

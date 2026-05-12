@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { DateTime } from 'luxon';
   import { ListEntries, SaveEntry, GetEntry, LockProfile } from '../../wailsjs/go/main/App';
+  import { autofocus } from '../utils/autofocus';
 
   let {profileUuid, onLogout} = $props();
   let entryTitle = $state('');
@@ -117,11 +118,12 @@
     <div class='input-box'>
       <label for='entryTitle'>Entry title</label>
       <input
+        use:autofocus
         id='entryTitle'
         type='text'
         class='input'
         bind:value={entryTitle}
-        placeholder='Type something...'
+        placeholder='Title of your entry'
       />
     </div>
 
@@ -130,7 +132,7 @@
       <textarea
         id='entryMainText'
         bind:value={entryMainText}
-        placeholder='Your main content...'
+        placeholder='The main text...'
       ></textarea>
     </div>
 
