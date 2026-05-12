@@ -1,8 +1,8 @@
 <script>
-  let { profiles, activeProfile, onAddProfile, onSelectProfile } = $props();
+  let { profiles, activeProfile, openAddProfile, selectProfile } = $props();
 </script>
 
-<button class='btn btn-primary' onclick={onAddProfile}>Add profile</button>
+<button class='btn btn-primary' onclick={openAddProfile}>Add profile</button>
 <h1>Select a profile</h1>
 <div class='profiles'>
   {#each profiles as profile (profile.uuid)}
@@ -10,7 +10,7 @@
       class='profile-box'
       class:active={activeProfile === profile.uuid}
       class:masked={activeProfile !== null && activeProfile !== profile.uuid}
-      onclick={() => onSelectProfile(profile.uuid)}
+      onclick={() => selectProfile(profile.uuid)}
     >
       {profile.display_name || profile.uuid}
     </button>

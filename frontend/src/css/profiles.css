@@ -1,0 +1,30 @@
+.profiles {
+  margin-top: 12px;
+}
+
+.profile-box {
+  background: var(--light-gray);
+  color: var(--dark-blue);
+  cursor: pointer;
+  width: 20vw;
+  margin: 10px 8px;
+  padding: 0.5rem;
+  border: 1px solid var(--white);
+  border-radius: 3px;
+}
+
+.profile-box.active {
+  background: white;
+  color: black;
+}
+
+.profile-box.masked {
+  opacity: 0.25;
+  filter: blur(1px);
+}
+
+.profile-box:hover {
+  background-color: white;
+  color: black;
+  cursor: pointer;
+}

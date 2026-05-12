@@ -7,6 +7,7 @@ textarea {
   border: 1px solid var(--border);
   font: inherit;
   box-sizing: border-box;
+  margin-top: .5em;
 }
 
 textarea {
@@ -26,6 +27,6 @@ textarea:focus {
   text-align: left;
 }
 
-.input-box label {
-  font-size: 1.4em;
+label {
+  font-size: 1.3em;
 }

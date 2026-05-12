@@ -1,15 +1,14 @@
 <script>
   import { onMount } from 'svelte';
-  import { GetProfileIndex, AddProfile, UnlockProfile, DeleteProfile } from '../../../wailsjs/go/main/App.d.ts';
+  import { GetProfileIndex, AddProfile, UnlockProfile, DeleteProfile } from '../../../wailsjs/go/main/App';
   import ProfileSelectorList from './ProfileSelectorList.svelte';
+  import ProfileSelectorCreateForm from './ProfileSelectorCreateForm.svelte';
+  import ProfileSelectorUnlockForm from './ProfileSelectorUnlockForm.svelte';
 
   let showAddProfile = $state(false);
   let profiles = $state([]);
   let activeProfile = $state(null);
-  let passphrase = $state('');
   let index = null;
-  let newProfileName = $state('');
-  let newProfilePassphrase = $state('');
   let addError = $state('');
   let {onUnlocked} = $props();
 
@@ -25,8 +24,6 @@
   }
 
   function openAddProfile() {
-    newProfileName = '';
-    newProfilePassphrase = '';
     addError = '';
     showAddProfile = true;
     activeProfile = null;
@@ -37,10 +34,8 @@
     addError = '';
   }
 
-  async function confirmAddProfile() {
-    const name = newProfileName.trim();
-    const passphrase = newProfilePassphrase;
-
+  async function confirmAddProfile(name, passphrase) {
+    name = name.trim();
     if (!name) {
       addError = 'Please enter a profile name.';
       return;
@@ -66,7 +61,7 @@
     activeProfile = uuid;
   }
 
-  async function deleteSelectedProfile() {
+  async function deleteSelectedProfile(passphrase) {
     if (!activeProfile) {
       addError = 'Please select a profile to delete.';
       return;
@@ -92,12 +87,10 @@
 
   function clearProfileSelection() {
     activeProfile = null;
-    passphrase = '';
     addError = '';
   }
 
-
-  async function unlock() {
+  async function unlock(passphrase) {
     if (!activeProfile) {
       addError = 'Please select a profile.';
       return;
@@ -121,88 +114,14 @@
 
 <div class='container'>
   {#if !showAddProfile}
-    <ProfileSelectorList {profiles} {activeProfile} onAddProfile={openAddProfile} onSelectProfile={selectProfile} />
+    <ProfileSelectorList {profiles} {activeProfile} {openAddProfile} {selectProfile}/>
   {/if}
 
   {#if showAddProfile}
-    <form class='container-sm' onsubmit={(e) => (e.preventDefault(), confirmAddProfile())}>
-      <label for='profileName'>Profile name</label>
-      <!-- svelte-ignore a11y_autofocus : todo implement autoFocusOnLoad -->
-      <input autofocus placeholder='your profile name...' class='input' id='profileName' bind:value={newProfileName}/>
-      <label for='profilePassphrase'>Passphrase</label>
-      <input
-        id='profilePassphrase'
-        class='input'
-        placeholder='your passphrase...'
-        type='password'
-        autocomplete='new-password'
-        bind:value={newProfilePassphrase}
-      />
-      {#if addError}
-        <div class='alert alert-error'>
-          <strong>Error:</strong> {addError}
-        </div>
-      {/if}
-      <div class='button-row'>
-        <button type='button' class='btn btn-secondary' onclick={closeAddProfile}>Cancel</button>
-        <button type='submit' class='btn btn-primary'>Add</button>
-      </div>
-    </form>
+    <ProfileSelectorCreateForm {addError} {closeAddProfile} {confirmAddProfile}/>
   {/if}
 
   {#if activeProfile}
-    <form class='container-sm' onsubmit={(e) => (e.preventDefault(), unlock())}>
-      <label for='passphrase' class='label'>Enter your passphrase</label>
-      <input
-        autocomplete='off'
-        placeholder='Enter your passphrase'
-        bind:value={passphrase}
-        class='input'
-        id='passphrase'
-        type='password'
-      />
-      <div class='button-row'>
-        <button class='btn btn-secondary' type='button' onclick={clearProfileSelection}>Cancel</button>
-        <button class='btn btn-primary' type='submit'>Unlock</button>
-      </div>
-      <br>
-      <button class='btn btn-danger' type='button' onclick={deleteSelectedProfile}>Delete profile (dev)</button>
-
-      {#if addError}
-        <div class='alert alert-error'>
-          <strong>Error:</strong> {addError}
-        </div>
-      {/if}
-    </form>
+    <ProfileSelectorUnlockForm {addError} {clearProfileSelection} {unlock} {deleteSelectedProfile}/>
   {/if}
 </div>
-
-<style>
-  .profiles {
-    margin-top: 12px;
-  }
-
-  .profile-box {
-    cursor: pointer;
-    width: 20vw;
-    margin: 10px auto;
-    padding: 0.5rem;
-    border: 1px solid white;
-  }
-
-  .profile-box.active {
-    background: white;
-    color: black;
-  }
-
-  .profile-box.masked {
-    opacity: 0.25;
-    filter: blur(1px);
-  }
-
-  .profile-box:hover {
-    background-color: white;
-    color: black;
-    cursor: pointer;
-  }
-</style>
