@@ -1,5 +1,6 @@
 <script>
   import { autofocus } from '../../utils/autofocus';
+  import AlertError from '../AlertError.svelte';
 
   let {addError, closeAddProfile, confirmAddProfile} = $props();
   let name = $state('');
@@ -18,11 +19,7 @@
     autocomplete='new-password'
     bind:value={passphrase}
   />
-  {#if addError}
-    <div class='alert alert-error'>
-      <strong>addError:</strong> {addError}
-    </div>
-  {/if}
+  <AlertError message={addError}/>
   <div class='button-row'>
     <button type='button' class='btn btn-secondary' onclick={closeAddProfile}>Cancel</button>
     <button type='submit' class='btn btn-primary'>Add</button>

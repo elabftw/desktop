@@ -1,5 +1,6 @@
 <script>
   import { autofocus } from '../../utils/autofocus';
+  import AlertError from '../AlertError.svelte';
 
   let { addError, clearProfileSelection, unlock, deleteSelectedProfile } = $props();
   let passphrase = $state('');
@@ -23,9 +24,5 @@
   <br>
   <button class='btn btn-danger' type='button' onclick={deleteSelectedProfile}>Delete profile (dev)</button>
 
-  {#if addError}
-    <div class='alert alert-error'>
-      <strong>Error:</strong> {addError}
-    </div>
-  {/if}
+  <AlertError message={addError}/>
 </form>
