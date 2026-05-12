@@ -1,6 +1,6 @@
 <script>
-  import ProfileSelector from './ProfileSelector.svelte';
-  import MainApp from './MainApp.svelte';
+  import ProfileSelector from './components/ProfileSelector/ProfileSelector.svelte';
+  import MainApp from './components/MainApp.svelte';
   import logo from './assets/images/elabftw-logo-white-800px.png';
 
   let appState = $state('select-profile');

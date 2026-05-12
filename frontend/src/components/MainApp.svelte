@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { DateTime } from 'luxon';
-  import { ListEntries, SaveEntry, GetEntry, LockProfile } from '../wailsjs/go/main/App';
+  import { ListEntries, SaveEntry, GetEntry, LockProfile } from '../../wailsjs/go/main/App.d.ts';
 
   let { profileUuid, onLogout } = $props();
   let entryTitle = $state('');
