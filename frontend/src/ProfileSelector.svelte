@@ -119,6 +119,8 @@
 </script>
 
 <div class='container'>
+  <button class='btn btn-primary' onclick={openAddProfile}>Add profile</button>
+
   <h1>Select a profile</h1>
   <div class='profiles'>
     {#each profiles as profile (profile.uuid)}
@@ -132,8 +134,6 @@
       </button>
     {/each}
   </div>
-
-  <button class='btn btn-primary' onclick={openAddProfile}>Add profile</button>
 
   {#if showAddProfile}
     <div class='container-sm'>
@@ -164,7 +164,7 @@
 
   {#if activeProfile}
     <div class='container-sm'>
-      <label for='passphrase'>Enter your passphrase</label>
+      <label for='passphrase' class='label'>Enter your passphrase</label>
       <input
         autocomplete='off'
         placeholder='Your passphrase...'
