@@ -20,7 +20,6 @@ type ProfileEntry struct {
 	UUID        string    `json:"uuid"`
 	DisplayName string    `json:"display_name,omitempty"`
 	CreatedAt   time.Time `json:"created_at"`
-	LastUsedAt  time.Time `json:"last_used_at,omitempty"`
 
 	// PublicKey is the profile's Ed25519 public key.
 	// it is not secret and can be stored in the profile index.

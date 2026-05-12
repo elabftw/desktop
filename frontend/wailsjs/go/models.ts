@@ -43,8 +43,6 @@ export namespace main {
 	    display_name?: string;
 	    // Go type: time
 	    created_at: any;
-	    // Go type: time
-	    last_used_at?: any;
 	    public_key?: string;
 	    key_salt?: string;
 	    encrypted_private_key?: string;
@@ -58,7 +56,6 @@ export namespace main {
 	        this.uuid = source["uuid"];
 	        this.display_name = source["display_name"];
 	        this.created_at = this.convertValues(source["created_at"], null);
-	        this.last_used_at = this.convertValues(source["last_used_at"], null);
 	        this.public_key = source["public_key"];
 	        this.key_salt = source["key_salt"];
 	        this.encrypted_private_key = source["encrypted_private_key"];

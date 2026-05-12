@@ -201,7 +201,6 @@ type diskProfile struct {
 	UUID        string    `json:"uuid"`
 	DisplayName string    `json:"display_name"`
 	CreatedAt   time.Time `json:"created_at"`
-	LastUsedAt  time.Time `json:"last_used_at"`
 }
 
 // create a profile
@@ -233,7 +232,6 @@ func (a *App) AddProfile(displayName string, passphrase string) (*ProfileIndex, 
 		UUID:                newUUID,
 		DisplayName:         displayName,
 		CreatedAt:           now,
-		LastUsedAt:          time.Time{},
 		PublicKey:           secrets.PublicKey,
 		KeySalt:             secrets.KeySalt,
 		EncryptedPrivateKey: secrets.EncryptedPrivateKey,
