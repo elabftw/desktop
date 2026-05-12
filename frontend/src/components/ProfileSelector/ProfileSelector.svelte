@@ -114,7 +114,7 @@
 
 <div class='container'>
   {#if !showAddProfile}
-    <ProfileSelectorList {addError} {profiles} {activeProfile} {openAddProfile} {selectProfile}/>
+    <ProfileSelectorList {profiles} {activeProfile} {openAddProfile} {selectProfile}/>
   {/if}
 
   {#if showAddProfile}

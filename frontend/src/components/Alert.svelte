@@ -1,8 +1,10 @@
 <script lang='ts'>
-  let {type = 'success', message = ''}: {
-    type?: 'success' | 'error' | 'warning' | 'info';
+  type AlertType = 'success' | 'error' | 'warning' | 'info';
+  type AlertProps = {
+    type?: AlertType;
     message?: string;
-  } = $props();
+  };
+  let { type = 'success', message = '' }: AlertProps = $props();
 </script>
 
 {#if message}

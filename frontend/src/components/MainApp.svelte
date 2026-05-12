@@ -143,9 +143,7 @@
     </div>
 
     {#if status}
-      <div class='alert alert-success'>
-        <p>{status}</p>
-      </div>
+      <Alert type='success' message={status} />
     {/if}
     <Alert type='error' message={addError} />
   </form>
