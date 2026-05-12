@@ -113,7 +113,7 @@
   <button class='btn btn-primary' onclick={openEditor}>Create entry</button>
 
 {:else if view === 'editor'}
-  <div class='container-md'>
+  <form class='container-md' onsubmit={(e) => (e.preventDefault(), saveEntry())}>
     <div class='input-box'>
       <label for='entryTitle'>Entry title</label>
       <input
@@ -135,8 +135,8 @@
     </div>
 
     <div class='button-row'>
-      <button class='btn btn-secondary' onclick={openIndex}>Back</button>
-      <button class='btn btn-primary' onclick={saveEntry}>Save</button>
+      <button class='btn btn-secondary' type='button' onclick={openIndex}>Back</button>
+      <button class='btn btn-primary' type='submit'>Save</button>
     </div>
 
     {#if status}
@@ -149,7 +149,7 @@
         <strong>Error:</strong> {addError}
       </div>
     {/if}
-  </div>
+  </form>
 {/if}
 
 <style>

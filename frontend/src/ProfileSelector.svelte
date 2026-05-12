@@ -119,28 +119,28 @@
 </script>
 
 <div class='container'>
-  <button class='btn btn-primary' onclick={openAddProfile}>Add profile</button>
-
-  <h1>Select a profile</h1>
-  <div class='profiles'>
-    {#each profiles as profile (profile.uuid)}
-      <button
-        class='profile-box'
-        class:active={activeProfile === profile.uuid}
-        class:masked={activeProfile !== null && activeProfile !== profile.uuid}
-        onclick={() => selectProfile(profile.uuid)}
-      >
-        {profile.display_name || profile.uuid}
-      </button>
-    {/each}
-  </div>
+  {#if !showAddProfile}
+    <button class='btn btn-primary' onclick={openAddProfile}>Add profile</button>
+    <h1>Select a profile</h1>
+    <div class='profiles'>
+      {#each profiles as profile (profile.uuid)}
+        <button
+          class='profile-box'
+          class:active={activeProfile === profile.uuid}
+          class:masked={activeProfile !== null && activeProfile !== profile.uuid}
+          onclick={() => selectProfile(profile.uuid)}
+        >
+          {profile.display_name || profile.uuid}
+        </button>
+      {/each}
+    </div>
+  {/if}
 
   {#if showAddProfile}
-    <div class='container-sm'>
+    <form class='container-sm' onsubmit={(e) => (e.preventDefault(), confirmAddProfile())}>
       <label for='profileName'>Profile name</label>
-      <!-- svelte-ignore a11y_autofocus : not going to have a full js function for every input that needs autofocus... -->
+      <!-- svelte-ignore a11y_autofocus : todo implement autoFocusOnLoad -->
       <input autofocus placeholder='your profile name...' class='input' id='profileName' bind:value={newProfileName}/>
-
       <label for='profilePassphrase'>Passphrase</label>
       <input
         id='profilePassphrase'
@@ -156,36 +156,36 @@
         </div>
       {/if}
       <div class='button-row'>
-        <button class='btn btn-secondary' onclick={closeAddProfile}>Cancel</button>
-        <button class='btn btn-primary' onclick={confirmAddProfile}>Add</button>
+        <button type='button' class='btn btn-secondary' onclick={closeAddProfile}>Cancel</button>
+        <button type='submit' class='btn btn-primary'>Add</button>
       </div>
-    </div>
+    </form>
   {/if}
 
   {#if activeProfile}
-    <div class='container-sm'>
+    <form class='container-sm' onsubmit={(e) => (e.preventDefault(), unlock())}>
       <label for='passphrase' class='label'>Enter your passphrase</label>
       <input
         autocomplete='off'
-        placeholder='Your passphrase...'
+        placeholder='Enter your passphrase'
         bind:value={passphrase}
         class='input'
         id='passphrase'
         type='password'
       />
       <div class='button-row'>
-        <button class='btn btn-secondary' onclick={clearProfileSelection}>Cancel</button>
-        <button class='btn btn-primary' onclick={unlock}>Unlock</button>
+        <button class='btn btn-secondary' type='button' onclick={clearProfileSelection}>Cancel</button>
+        <button class='btn btn-primary' type='submit'>Unlock</button>
       </div>
       <br>
-      <button class='btn btn-danger' onclick={deleteSelectedProfile}>Delete profile (dev)</button>
+      <button class='btn btn-danger' type='button' onclick={deleteSelectedProfile}>Delete profile (dev)</button>
 
       {#if addError}
         <div class='alert alert-error'>
           <strong>Error:</strong> {addError}
         </div>
       {/if}
-    </div>
+    </form>
   {/if}
 </div>
 
