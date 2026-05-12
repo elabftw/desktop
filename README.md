@@ -1,7 +1,14 @@
 # eLabFTW Desktop
 
-> ⚠️ This project is experimental and not the primary way to run eLabFTW.
-> The recommended production setup is the Docker-based web application. See [official documentation](https://doc.elabftw.net/).
+> ⚠️ [WARNING]
+>
+> This project is an **early experimental preview**.
+>
+> It is public for development visibility only and is **not ready for use**.
+> Do **not** use it for real work, testing workflows, or production data.
+>
+> The recommended and supported way to run eLabFTW is the Docker-based web application.
+> See the [official documentation](https://doc.elabftw.net/).
 
 ## Development Setup
 
