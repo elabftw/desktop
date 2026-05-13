@@ -71,6 +71,12 @@ sudo dnf install gtk3-devel webkit2gtk4.1-devel pkgconf-pkg-config gcc gcc-c++
 sudo apt install libgtk-3-dev libwebkit2gtk-4.1-dev pkg-config
 ```
 
+### Archlinux
+
+```bash
+sudo pacman -Syu webkit2gtk-4.1
+```
+
 ---
 
 ## Setup
