@@ -7,6 +7,7 @@
     DeleteProfile
   } from '../../../wailsjs/go/main/App';
   import type { main } from '../../../wailsjs/go/models';
+  import { errorMessage } from "../../utils/helpers";
 
   import ProfileSelectorList from './ProfileSelectorList.svelte';
   import ProfileSelectorCreateForm from './ProfileSelectorCreateForm.svelte';
@@ -23,10 +24,6 @@
   let addError = $state('');
 
   let {onUnlocked}: Props = $props();
-
-  function errorMessage(e: unknown): string {
-    return e instanceof Error ? e.message : String(e);
-  }
 
   async function refreshIndex(): Promise<void> {
     addError = '';

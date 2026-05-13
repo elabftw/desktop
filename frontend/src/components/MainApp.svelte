@@ -3,7 +3,7 @@
   import { DateTime } from 'luxon';
   import { ListEntries, SaveEntry, GetEntry, LockProfile } from '../../wailsjs/go/main/App';
   import type { main } from '../../wailsjs/go/models';
-  import { autofocus } from '../utils/helpers';
+  import { autofocus, errorMessage, preventDefaultSubmit } from '../utils/helpers';
   import Alert from './Alert.svelte';
 
   type Props = {
@@ -22,10 +22,6 @@
   let listStatus = $state('');
   let view = $state<View>('index');
   let addError = $state('');
-
-  function errorMessage(e: unknown): string {
-    return e instanceof Error ? e.message : String(e);
-  }
 
   function toRelativeTime(iso: string, locale = 'en'): string {
     return DateTime.fromISO(iso).setLocale(locale).toRelative() ?? 'now';
@@ -91,10 +87,7 @@
     }
   }
 
-  function handleSubmit(e: SubmitEvent): void {
-    e.preventDefault();
-    void saveEntry();
-  }
+  const handleSubmit = preventDefaultSubmit(saveEntry);
 
   onMount(() => {
     void refreshEntries();

@@ -1,5 +1,5 @@
 <script lang='ts'>
-  import { autofocus } from '../../utils/helpers';
+  import { autofocus, preventDefaultSubmit } from '../../utils/helpers';
   import Alert from '../Alert.svelte';
 
   type Props = {
@@ -18,10 +18,7 @@
 
   let passphrase = $state('');
 
-  function handleSubmit(e: SubmitEvent): void {
-    e.preventDefault();
-    void unlock(passphrase);
-  }
+  const handleSubmit = preventDefaultSubmit(() => unlock(passphrase));
 </script>
 
 <form class='container-sm' onsubmit={handleSubmit}>
