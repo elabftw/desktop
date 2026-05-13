@@ -3,24 +3,12 @@
   import { DateTime } from 'luxon';
   import { ListEntries, SaveEntry, GetEntry, LockProfile } from '../../wailsjs/go/main/App';
   import { autofocus } from '../utils/autofocus';
+  import type { main } from '../../wailsjs/go/models';
   import Alert from './Alert.svelte';
 
   type Props = {
     profileUuid: string;
     onLogout?: () => void;
-  };
-
-  type EntrySummary = {
-    id: string;
-    title: string;
-    updatedAt: string;
-  };
-
-  type Entry = {
-    id?: number;
-    title: string;
-    body: string;
-    updatedAt?: string;
   };
 
   type View = 'index' | 'editor';
@@ -30,11 +18,10 @@
   let entryTitle = $state('');
   let entryMainText = $state('');
   let status = $state('');
-  let entries = $state<EntrySummary[]>([]);
+  let entries = $state<main.EntrySummary[]>([]);
   let listStatus = $state('');
   let view = $state<View>('index');
   let addError = $state('');
-
 
   function errorMessage(e: unknown): string {
     return e instanceof Error ? e.message : String(e);
@@ -47,7 +34,7 @@
   async function openEntry(id: number): Promise<void> {
     addError = '';
     try {
-      const e: Entry = await GetEntry(profileUuid, id);
+      const e: main.Entry = await GetEntry(profileUuid, id);
       entryTitle = e.title;
       entryMainText = e.body;
       view = 'editor';
@@ -179,4 +166,3 @@
     <Alert type='error' message={addError}/>
   </form>
 {/if}
-
