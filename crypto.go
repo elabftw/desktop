@@ -43,7 +43,7 @@ var base64Encoding = base64.RawStdEncoding
 
 type profileSecrets struct {
 	PublicKey           string
-	Salt             string
+	Salt                string
 	EncryptedPrivateKey string
 }
 
@@ -161,7 +161,7 @@ func createProfileSecrets(passphrase string) (*profileSecrets, error) {
 
 	return &profileSecrets{
 		PublicKey:           base64Encoding.EncodeToString(publicKey),
-		Salt:             base64Encoding.EncodeToString(salt),
+		Salt:                base64Encoding.EncodeToString(salt),
 		EncryptedPrivateKey: encryptedPrivateKey,
 	}, nil
 }
@@ -183,7 +183,7 @@ func unlockProfileSecrets(profile *ProfileEntry, passphrase string) ([]byte, ed2
 
 	salt, err := base64Encoding.DecodeString(profile.Salt)
 	if err != nil {
-		return nil, nil, fmt.Errorf("decode key salt: %w", err)
+		return nil, nil, fmt.Errorf("decode salt: %w", err)
 	}
 
 	key := deriveProfileKey(passphrase, salt)

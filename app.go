@@ -233,7 +233,7 @@ func (a *App) AddProfile(displayName string, passphrase string) (*ProfileIndex, 
 		DisplayName:         displayName,
 		CreatedAt:           now,
 		PublicKey:           secrets.PublicKey,
-		Salt:             secrets.Salt,
+		Salt:                secrets.Salt,
 		EncryptedPrivateKey: secrets.EncryptedPrivateKey,
 	})
 
