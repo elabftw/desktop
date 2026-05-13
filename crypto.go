@@ -1,12 +1,12 @@
 // This file contains local profile encryption helpers.
 //
 // The user's passphrase is never stored directly. When a profile is created,
-// we derive a symmetric key from the passphrase using Argon2id and a random
-// per-profile salt.
+// we derive a symmetric key from the passphrase using Argon2id and use that key
+// to encrypt the generated Ed25519 private key.
 //
 // Unlocking a profile means deriving the same key again and successfully
-// decrypting a small encrypted verifier stored in the profile index. If
-// decryption fails, the passphrase is wrong.
+// decrypting the encrypted private key. If decryption fails, the passphrase is
+// wrong.
 //
 // Entry title/body encryption also uses the active passphrase-derived key.
 // The SQLite database remains a normal SQLite file, but sensitive entry content
@@ -15,6 +15,8 @@
 package main
 
 import (
+	"bytes"
+	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
@@ -26,19 +28,21 @@ import (
 const (
 	profileSaltSize = 16
 
+	// Argon2id parameters for deriving a profile encryption key from the user's passphrase.
+	//
+	// argonMemory is in KiB, so 64 * 1024 means 64 MiB.
 	argonTime    = 3
 	argonMemory  = 64 * 1024
 	argonThreads = 4
 	argonKeySize = chacha20poly1305.KeySize
-
-	profileVerifierPlaintext = "elabftw-desktop profile verifier v1"
 )
 
 var base64Encoding = base64.RawStdEncoding
 
-type profileSecrets struct {
-	Salt              string
-	EncryptedVerifier string
+type profileCryptoParams struct {
+	PublicKey           string
+	Salt                string
+	EncryptedPrivateKey string
 }
 
 func randomBytes(size int) ([]byte, error) {
@@ -60,7 +64,15 @@ func deriveProfileKey(passphrase string, salt []byte) []byte {
 	)
 }
 
+func profilePrivateKeyAAD(profileUUID string) []byte {
+	return []byte("elabftw-desktop profile private key v1:" + profileUUID)
+}
+
 func encryptBytes(key []byte, plaintext []byte) (string, error) {
+	return encryptBytesWithAAD(key, plaintext, nil)
+}
+
+func encryptBytesWithAAD(key []byte, plaintext []byte, additionalData []byte) (string, error) {
 	// XChaCha20-Poly1305 requires a unique nonce for each encryption.
 	// The nonce is not secret, so we store it next to the ciphertext.
 	// Stored format:
@@ -75,7 +87,7 @@ func encryptBytes(key []byte, plaintext []byte) (string, error) {
 		return "", err
 	}
 
-	ciphertext := aead.Seal(nil, nonce, plaintext, nil)
+	ciphertext := aead.Seal(nil, nonce, plaintext, additionalData)
 
 	payload := make([]byte, 0, len(nonce)+len(ciphertext))
 	payload = append(payload, nonce...)
@@ -85,8 +97,12 @@ func encryptBytes(key []byte, plaintext []byte) (string, error) {
 }
 
 func decryptBytes(key []byte, encoded string) ([]byte, error) {
-	// The encrypted payload is stored as base64(nonce || ciphertext)
-	// Split the nonce back out before opening the ciphertext
+	return decryptBytesWithAAD(key, encoded, nil)
+}
+
+func decryptBytesWithAAD(key []byte, encoded string, additionalData []byte) ([]byte, error) {
+	// The encrypted payload is stored as base64(nonce || ciphertext).
+	// Split the nonce back out before opening the ciphertext.
 	payload, err := base64Encoding.DecodeString(encoded)
 	if err != nil {
 		return nil, fmt.Errorf("decode ciphertext: %w", err)
@@ -105,7 +121,7 @@ func decryptBytes(key []byte, encoded string) ([]byte, error) {
 	nonce := payload[:nonceSize]
 	ciphertext := payload[nonceSize:]
 
-	plaintext, err := aead.Open(nil, nonce, ciphertext, nil)
+	plaintext, err := aead.Open(nil, nonce, ciphertext, additionalData)
 	if err != nil {
 		return nil, fmt.Errorf("decrypt: %w", err)
 	}
@@ -131,7 +147,20 @@ func zeroBytes(b []byte) {
 	}
 }
 
-func createProfileSecrets(passphrase string) (*profileSecrets, error) {
+func createProfileCryptoParams(profileUUID string, passphrase string) (*profileCryptoParams, error) {
+	if profileUUID == "" {
+		return nil, fmt.Errorf("profile uuid is empty")
+	}
+
+	// Each profile gets its own Ed25519 identity keypair.
+	// The public key is stored as metadata; the private key is encrypted
+	// with a key derived from the user's passphrase.
+	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		return nil, fmt.Errorf("generate ed25519 keypair: %w", err)
+	}
+	defer zeroBytes(privateKey)
+
 	salt, err := randomBytes(profileSaltSize)
 	if err != nil {
 		return nil, err
@@ -140,42 +169,72 @@ func createProfileSecrets(passphrase string) (*profileSecrets, error) {
 	key := deriveProfileKey(passphrase, salt)
 	defer zeroBytes(key)
 
-	encryptedVerifier, err := encryptBytes(key, []byte(profileVerifierPlaintext))
+	encryptedPrivateKey, err := encryptBytesWithAAD(
+		key,
+		privateKey,
+		profilePrivateKeyAAD(profileUUID),
+	)
 	if err != nil {
-		return nil, fmt.Errorf("encrypt verifier: %w", err)
+		return nil, fmt.Errorf("encrypt private key: %w", err)
 	}
 
-	return &profileSecrets{
-		Salt:              base64Encoding.EncodeToString(salt),
-		EncryptedVerifier: encryptedVerifier,
+	return &profileCryptoParams{
+		PublicKey:           base64Encoding.EncodeToString(publicKey),
+		Salt:                base64Encoding.EncodeToString(salt),
+		EncryptedPrivateKey: encryptedPrivateKey,
 	}, nil
 }
 
-func unlockProfileSecrets(profile *ProfileEntry, passphrase string) ([]byte, error) {
+func unlockProfileCryptoParams(profile *ProfileEntry, passphrase string) ([]byte, ed25519.PrivateKey, error) {
+	// Re-derive profile key from the passphrase and stored salt.
+	// If the passphrase is wrong, decryptBytesWithAAD will fail authentication.
 	if profile == nil {
-		return nil, fmt.Errorf("profile is nil")
+		return nil, nil, fmt.Errorf("profile is nil")
 	}
-	if profile.Salt == "" || profile.EncryptedVerifier == "" {
-		return nil, fmt.Errorf("profile has no encrypted key metadata")
+	if profile.UUID == "" {
+		return nil, nil, fmt.Errorf("profile uuid is empty")
+	}
+	if profile.PublicKey == "" || profile.Salt == "" || profile.EncryptedPrivateKey == "" {
+		return nil, nil, fmt.Errorf("profile has no encrypted key metadata")
+	}
+
+	publicKey, err := base64Encoding.DecodeString(profile.PublicKey)
+	if err != nil {
+		return nil, nil, fmt.Errorf("decode public key: %w", err)
 	}
 
 	salt, err := base64Encoding.DecodeString(profile.Salt)
 	if err != nil {
-		return nil, fmt.Errorf("decode salt: %w", err)
+		return nil, nil, fmt.Errorf("decode salt: %w", err)
 	}
 
 	key := deriveProfileKey(passphrase, salt)
 
-	verifier, err := decryptBytes(key, profile.EncryptedVerifier)
+	privateKeyBytes, err := decryptBytesWithAAD(
+		key,
+		profile.EncryptedPrivateKey,
+		profilePrivateKeyAAD(profile.UUID),
+	)
 	if err != nil {
 		zeroBytes(key)
-		return nil, fmt.Errorf("invalid passphrase")
+		return nil, nil, fmt.Errorf("invalid passphrase")
 	}
 
-	if string(verifier) != profileVerifierPlaintext {
+	privateKey := ed25519.PrivateKey(privateKeyBytes)
+	if len(privateKey) != ed25519.PrivateKeySize {
 		zeroBytes(key)
-		return nil, fmt.Errorf("invalid passphrase")
+		zeroBytes(privateKey)
+		return nil, nil, fmt.Errorf("invalid private key size")
 	}
 
-	return key, nil
+	// Sanity-check that the decrypted private key matches the stored public key.
+	// This detects corrupted metadata or accidental key mismatch.
+	derivedPublicKey, ok := privateKey.Public().(ed25519.PublicKey)
+	if !ok || !bytes.Equal(derivedPublicKey, publicKey) {
+		zeroBytes(key)
+		zeroBytes(privateKey)
+		return nil, nil, fmt.Errorf("invalid profile key metadata")
+	}
+
+	return key, privateKey, nil
 }

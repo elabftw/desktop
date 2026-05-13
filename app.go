@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/ed25519"
 	"database/sql"
 	"fmt"
 	"os"
@@ -11,17 +12,19 @@ import (
 	"github.com/google/uuid"
 )
 
-// App struct
 type App struct {
 	ctx   context.Context
 	index *ProfileIndex
-	// activeProfileUUID identifies the currently unlocked profile.
-	// Profile-scoped actions must check this before reading/writing data!
+
 	activeProfileUUID string
 
 	// activeKey is the passphrase-derived symmetric key kept only in memory
 	// while a profile is unlocked. It is cleared on LockProfile.
 	activeKey []byte
+
+	// activePrivateKey is the decrypted Ed25519 private key for the active
+	// profile. It is cleared on LockProfile.
+	activePrivateKey ed25519.PrivateKey
 }
 
 // NewApp creates a new App application struct
@@ -85,7 +88,7 @@ func (a *App) UnlockProfile(profileUUID string, passphrase string) error {
 		return fmt.Errorf("unknown profile uuid")
 	}
 
-	key, err := unlockProfileSecrets(selected, passphrase)
+	key, privateKey, err := unlockProfileCryptoParams(selected, passphrase)
 	if err != nil {
 		return err
 	}
@@ -94,6 +97,7 @@ func (a *App) UnlockProfile(profileUUID string, passphrase string) error {
 
 	a.activeProfileUUID = profileUUID
 	a.activeKey = key
+	a.activePrivateKey = privateKey
 
 	return nil
 }
@@ -108,6 +112,11 @@ func (a *App) LockProfile() {
 		zeroBytes(a.activeKey)
 	}
 	a.activeKey = nil
+
+	if a.activePrivateKey != nil {
+		zeroBytes(a.activePrivateKey)
+	}
+	a.activePrivateKey = nil
 }
 
 // DEV: Delete a profile (requires passphrase but not profile to already be unlocked)
@@ -136,11 +145,12 @@ func (a *App) DeleteProfile(profileUUID string, passphrase string) (*ProfileInde
 		if profile.UUID == profileUUID {
 			found = true
 
-			key, err := unlockProfileSecrets(&profile, passphrase)
+			key, privateKey, err := unlockProfileCryptoParams(&profile, passphrase)
 			if err != nil {
 				return nil, err
 			}
 			zeroBytes(key)
+			zeroBytes(privateKey)
 
 			continue
 		}
@@ -202,7 +212,9 @@ func (a *App) AddProfile(displayName string, passphrase string) (*ProfileIndex, 
 		return nil, fmt.Errorf("passphrase is empty")
 	}
 
-	secrets, err := createProfileSecrets(passphrase)
+	newUUID := uuid.NewString()
+
+	cryptoParams, err := createProfileCryptoParams(newUUID, passphrase)
 	if err != nil {
 		return nil, err
 	}
@@ -212,15 +224,15 @@ func (a *App) AddProfile(displayName string, passphrase string) (*ProfileIndex, 
 		return nil, err
 	}
 
-	newUUID := uuid.NewString()
 	now := time.Now()
 
 	idx.Profiles = append(idx.Profiles, ProfileEntry{
-		UUID:              newUUID,
-		DisplayName:       displayName,
-		CreatedAt:         now,
-		Salt:              secrets.Salt,
-		EncryptedVerifier: secrets.EncryptedVerifier,
+		UUID:                newUUID,
+		DisplayName:         displayName,
+		CreatedAt:           now,
+		PublicKey:           cryptoParams.PublicKey,
+		Salt:                cryptoParams.Salt,
+		EncryptedPrivateKey: cryptoParams.EncryptedPrivateKey,
 	})
 
 	if _, err := ensureProfileDir(newUUID); err != nil {

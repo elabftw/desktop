@@ -21,13 +21,17 @@ type ProfileEntry struct {
 	DisplayName string    `json:"display_name,omitempty"`
 	CreatedAt   time.Time `json:"created_at"`
 
+	// PublicKey is the profile's Ed25519 public key.
+	// not secret, can be stored in the profile index.
+	PublicKey string `json:"public_key,omitempty"`
+
 	// Salt is a random per-profile salt used with the user's passphrase
 	// to derive the symmetric encryption key. It is not secret.
 	Salt string `json:"salt,omitempty"`
 
-	// EncryptedVerifier is a small known plaintext encrypted with the
-	// passphrase-derived key. It is used only to verify the passphrase.
-	EncryptedVerifier string `json:"encrypted_verifier,omitempty"`
+	// EncryptedPrivateKey contains the Ed25519 private key encrypted with
+	// the passphrase-derived key. It is stored as base64(nonce || ciphertext).
+	EncryptedPrivateKey string `json:"encrypted_private_key,omitempty"`
 }
 
 func appRootDir() (string, error) {
