@@ -16,7 +16,7 @@ export function errorMessage(e: unknown): string {
 }
 
 /*
- * Creates a form submit handler that prevents the browser'''s default submit behavior.
+ * Creates a form submit handler that prevents the browser's default submit behavior.
  * Useful in Svelte 5 as a replacement for the old `on:submit|preventDefault`
  * event modifier pattern.
  */
