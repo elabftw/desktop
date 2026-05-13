@@ -1,12 +1,12 @@
 // This file contains local profile encryption helpers.
 //
 // The user's passphrase is never stored directly. When a profile is created,
-// we derive a symmetric key from the passphrase using Argon2id and use that key
-// to encrypt the generated Ed25519 private key.
+// we derive a symmetric key from the passphrase using Argon2id and a random
+// per-profile salt.
 //
 // Unlocking a profile means deriving the same key again and successfully
-// decrypting the encrypted private key. If decryption fails, the passphrase is
-// wrong.
+// decrypting a small encrypted verifier stored in the profile index. If
+// decryption fails, the passphrase is wrong.
 //
 // Entry title/body encryption also uses the active passphrase-derived key.
 // The SQLite database remains a normal SQLite file, but sensitive entry content
@@ -15,8 +15,6 @@
 package main
 
 import (
-	"bytes"
-	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
@@ -28,23 +26,19 @@ import (
 const (
 	profileSaltSize = 16
 
-	// Argon2id parameters for deriving a profile encryption key from the user's passphrase.
-	//
-	// argonMemory is in KiB, so 64 * 1024 means 64 MiB.
-	// These values are a 'reasonable' desktop-app starting point and can be adapted
-	// later if unlock becomes too slow or too fast (lol)
 	argonTime    = 3
 	argonMemory  = 64 * 1024
 	argonThreads = 4
 	argonKeySize = chacha20poly1305.KeySize
+
+	profileVerifierPlaintext = "elabftw-desktop profile verifier v1"
 )
 
 var base64Encoding = base64.RawStdEncoding
 
 type profileSecrets struct {
-	PublicKey           string
-	Salt                string
-	EncryptedPrivateKey string
+	Salt              string
+	EncryptedVerifier string
 }
 
 func randomBytes(size int) ([]byte, error) {
@@ -138,14 +132,6 @@ func zeroBytes(b []byte) {
 }
 
 func createProfileSecrets(passphrase string) (*profileSecrets, error) {
-	// Each profile gets its own Ed25519 identity keypair.
-	// The public key is stored as metadata; the private key is encrypted
-	// with a key derived from the user's passphrase.
-	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
-	if err != nil {
-		return nil, fmt.Errorf("generate ed25519 keypair: %w", err)
-	}
-
 	salt, err := randomBytes(profileSaltSize)
 	if err != nil {
 		return nil, err
@@ -154,61 +140,42 @@ func createProfileSecrets(passphrase string) (*profileSecrets, error) {
 	key := deriveProfileKey(passphrase, salt)
 	defer zeroBytes(key)
 
-	encryptedPrivateKey, err := encryptBytes(key, privateKey)
+	encryptedVerifier, err := encryptBytes(key, []byte(profileVerifierPlaintext))
 	if err != nil {
-		return nil, fmt.Errorf("encrypt private key: %w", err)
+		return nil, fmt.Errorf("encrypt verifier: %w", err)
 	}
 
 	return &profileSecrets{
-		PublicKey:           base64Encoding.EncodeToString(publicKey),
-		Salt:                base64Encoding.EncodeToString(salt),
-		EncryptedPrivateKey: encryptedPrivateKey,
+		Salt:              base64Encoding.EncodeToString(salt),
+		EncryptedVerifier: encryptedVerifier,
 	}, nil
 }
 
-func unlockProfileSecrets(profile *ProfileEntry, passphrase string) ([]byte, ed25519.PrivateKey, error) {
-	// Re-derive profile key from the passphrase and stored salt.
-	// If the passphrase is wrong, decryptBytes will fail authentication.
+func unlockProfileSecrets(profile *ProfileEntry, passphrase string) ([]byte, error) {
 	if profile == nil {
-		return nil, nil, fmt.Errorf("profile is nil")
+		return nil, fmt.Errorf("profile is nil")
 	}
-	if profile.PublicKey == "" || profile.Salt == "" || profile.EncryptedPrivateKey == "" {
-		return nil, nil, fmt.Errorf("profile has no encrypted key metadata")
-	}
-
-	publicKey, err := base64Encoding.DecodeString(profile.PublicKey)
-	if err != nil {
-		return nil, nil, fmt.Errorf("decode public key: %w", err)
+	if profile.Salt == "" || profile.EncryptedVerifier == "" {
+		return nil, fmt.Errorf("profile has no encrypted key metadata")
 	}
 
 	salt, err := base64Encoding.DecodeString(profile.Salt)
 	if err != nil {
-		return nil, nil, fmt.Errorf("decode salt: %w", err)
+		return nil, fmt.Errorf("decode salt: %w", err)
 	}
 
 	key := deriveProfileKey(passphrase, salt)
 
-	privateKeyBytes, err := decryptBytes(key, profile.EncryptedPrivateKey)
+	verifier, err := decryptBytes(key, profile.EncryptedVerifier)
 	if err != nil {
 		zeroBytes(key)
-		return nil, nil, fmt.Errorf("invalid passphrase")
+		return nil, fmt.Errorf("invalid passphrase")
 	}
 
-	privateKey := ed25519.PrivateKey(privateKeyBytes)
-	if len(privateKey) != ed25519.PrivateKeySize {
+	if string(verifier) != profileVerifierPlaintext {
 		zeroBytes(key)
-		zeroBytes(privateKey)
-		return nil, nil, fmt.Errorf("invalid private key size")
+		return nil, fmt.Errorf("invalid passphrase")
 	}
 
-	// Sanity-check that the decrypted private key matches the stored public key.
-	// This helps detect corrupted metadata or accidental key mismatch.
-	derivedPublicKey, ok := privateKey.Public().(ed25519.PublicKey)
-	if !ok || !bytes.Equal(derivedPublicKey, publicKey) {
-		zeroBytes(key)
-		zeroBytes(privateKey)
-		return nil, nil, fmt.Errorf("invalid profile key metadata")
-	}
-
-	return key, privateKey, nil
+	return key, nil
 }
