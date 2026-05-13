@@ -1,40 +1,56 @@
-<script>
+<script lang='ts'>
   import { onMount } from 'svelte';
-  import { GetProfileIndex, AddProfile, UnlockProfile, DeleteProfile } from '../../../wailsjs/go/main/App';
+  import {
+    GetProfileIndex,
+    AddProfile,
+    UnlockProfile,
+    DeleteProfile
+  } from '../../../wailsjs/go/main/App';
+  import type { main } from '../../../wailsjs/go/models';
+
   import ProfileSelectorList from './ProfileSelectorList.svelte';
   import ProfileSelectorCreateForm from './ProfileSelectorCreateForm.svelte';
   import ProfileSelectorUnlockForm from './ProfileSelectorUnlockForm.svelte';
 
-  let showAddProfile = $state(false);
-  let profiles = $state([]);
-  let activeProfile = $state(null);
-  let index = null;
-  let addError = $state('');
-  let {onUnlocked} = $props();
+  type Props = {
+    onUnlocked?: (profileUuid: string) => void;
+  };
 
-  async function refreshIndex() {
+  let showAddProfile = $state(false);
+  let profiles = $state<main.ProfileEntry[]>([]);
+  let activeProfile = $state<string | null>(null);
+  let index = $state<main.ProfileIndex | null>(null);
+  let addError = $state('');
+
+  let {onUnlocked}: Props = $props();
+
+  function errorMessage(e: unknown): string {
+    return e instanceof Error ? e.message : String(e);
+  }
+
+  async function refreshIndex(): Promise<void> {
     addError = '';
     try {
       index = await GetProfileIndex();
       profiles = index?.profiles ?? [];
-    } catch (e) {
+    } catch (e: unknown) {
       profiles = [];
-      addError = e?.message ?? String(e);
+      addError = errorMessage(e);
     }
   }
 
-  function openAddProfile() {
+  function openAddProfile(): void {
     addError = '';
     showAddProfile = true;
     activeProfile = null;
   }
 
-  function closeAddProfile() {
+  function closeAddProfile(): void {
     showAddProfile = false;
     addError = '';
   }
 
-  async function confirmAddProfile(name, passphrase) {
+  async function confirmAddProfile(name: string, passphrase: string): Promise<void> {
     name = name.trim();
     if (!name) {
       addError = 'Please enter a profile name.';
@@ -50,18 +66,18 @@
       await AddProfile(name, passphrase);
       await refreshIndex();
       closeAddProfile();
-    } catch (e) {
-      addError = e?.message ?? String(e);
+    } catch (e: unknown) {
+      addError = errorMessage(e);
     }
   }
 
-  function selectProfile(uuid) {
+  function selectProfile(uuid: string): void {
     showAddProfile = false;
     addError = '';
     activeProfile = uuid;
   }
 
-  async function deleteSelectedProfile(passphrase) {
+  async function deleteSelectedProfile(passphrase: string): Promise<void> {
     if (!activeProfile) {
       addError = 'Please select a profile to delete.';
       return;
@@ -76,21 +92,21 @@
     if (!ok) return;
 
     try {
-      const index = await DeleteProfile(activeProfile, passphrase);
+      index = await DeleteProfile(activeProfile, passphrase);
       profiles = index?.profiles ?? [];
       clearProfileSelection();
-    } catch (e) {
+    } catch (e: unknown) {
       console.error('Delete failed:', e);
-      addError = e?.message || e?.toString?.() || String(e);
+      addError = errorMessage(e);
     }
   }
 
-  function clearProfileSelection() {
+  function clearProfileSelection(): void {
     activeProfile = null;
     addError = '';
   }
 
-  async function unlock(passphrase) {
+  async function unlock(passphrase: string): Promise<void> {
     if (!activeProfile) {
       addError = 'Please select a profile.';
       return;
@@ -104,12 +120,14 @@
     try {
       await UnlockProfile(activeProfile, passphrase);
       onUnlocked?.(activeProfile);
-    } catch (e) {
-      addError = e?.message ?? String(e);
+    } catch (e: unknown) {
+      addError = errorMessage(e);
     }
   }
 
-  onMount(refreshIndex);
+  onMount(() => {
+    void refreshIndex();
+  });
 </script>
 
 <div class='container'>
@@ -122,6 +140,11 @@
   {/if}
 
   {#if activeProfile}
-    <ProfileSelectorUnlockForm {addError} {clearProfileSelection} {unlock} {deleteSelectedProfile}/>
+    <ProfileSelectorUnlockForm
+      {addError}
+      {clearProfileSelection}
+      {unlock}
+      {deleteSelectedProfile}
+    />
   {/if}
 </div>

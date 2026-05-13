@@ -1,25 +1,48 @@
-<script>
-  import { autofocus } from '../../utils/autofocus';
+<script lang='ts'>
+  import { autofocus } from '../../utils/helpers';
   import Alert from '../Alert.svelte';
 
-  let {addError, closeAddProfile, confirmAddProfile} = $props();
+  type Props = {
+    addError: string;
+    closeAddProfile: () => void;
+    confirmAddProfile: (name: string, passphrase: string) => void | Promise<void>;
+  };
+
+  let {addError, closeAddProfile, confirmAddProfile}: Props = $props();
+
   let name = $state('');
   let passphrase = $state('');
+
+  function handleSubmit(e: SubmitEvent): void {
+    e.preventDefault();
+    void confirmAddProfile(name, passphrase);
+  }
 </script>
 
-<form class='container-sm' onsubmit={(e) => (e.preventDefault(), confirmAddProfile(name, passphrase))}>
+<form class='container-sm' onsubmit={handleSubmit}>
   <label for='profileName'>Profile name</label>
-  <input use:autofocus placeholder='Username' class='input' id='profileName' bind:value={name}/>
-  <label for='passphrase'>Passphrase</label>
+
   <input
-    id='passphrase'
+    use:autofocus
+    placeholder='Username'
+    class='input'
+    id='profileName'
+    bind:value={name}
+  />
+
+  <label for='profilePassphrase'>Passphrase</label>
+
+  <input
+    id='profilePassphrase'
     class='input'
     placeholder='Passphrase'
     type='password'
     autocomplete='new-password'
     bind:value={passphrase}
   />
-  <Alert type='error' message={addError} />
+
+  <Alert type='error' message={addError}/>
+
   <div class='button-row'>
     <button type='button' class='btn btn-secondary' onclick={closeAddProfile}>Cancel</button>
     <button type='submit' class='btn btn-primary'>Add</button>

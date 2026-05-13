@@ -2,8 +2,8 @@
   import { onMount } from 'svelte';
   import { DateTime } from 'luxon';
   import { ListEntries, SaveEntry, GetEntry, LockProfile } from '../../wailsjs/go/main/App';
-  import { autofocus } from '../utils/autofocus';
   import type { main } from '../../wailsjs/go/models';
+  import { autofocus } from '../utils/helpers';
   import Alert from './Alert.svelte';
 
   type Props = {
@@ -96,7 +96,9 @@
     void saveEntry();
   }
 
-  onMount(refreshEntries);
+  onMount(() => {
+    void refreshEntries();
+  });
 </script>
 
 <h1>Index</h1>
