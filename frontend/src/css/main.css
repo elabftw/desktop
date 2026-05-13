@@ -110,3 +110,24 @@ body {
   margin: auto;
   padding: 10% 0 0;
 }
+
+/* Main page - entry titles */
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+.title {
+  color: #fab95b;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+  font-size: 1.5rem;
+}
+
+.title:hover {
+  text-decoration: underline;
+}

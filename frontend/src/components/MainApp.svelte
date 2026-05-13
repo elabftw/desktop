@@ -1,81 +1,112 @@
-<script>
+<script lang='ts'>
   import { onMount } from 'svelte';
   import { DateTime } from 'luxon';
   import { ListEntries, SaveEntry, GetEntry, LockProfile } from '../../wailsjs/go/main/App';
   import { autofocus } from '../utils/autofocus';
   import Alert from './Alert.svelte';
 
-  let {profileUuid, onLogout} = $props();
+  type Props = {
+    profileUuid: string;
+    onLogout?: () => void;
+  };
+
+  type EntrySummary = {
+    id: string;
+    title: string;
+    updatedAt: string;
+  };
+
+  type Entry = {
+    id?: number;
+    title: string;
+    body: string;
+    updatedAt?: string;
+  };
+
+  type View = 'index' | 'editor';
+
+  let {profileUuid, onLogout}: Props = $props();
+
   let entryTitle = $state('');
   let entryMainText = $state('');
   let status = $state('');
-  let entries = $state([]);
+  let entries = $state<EntrySummary[]>([]);
   let listStatus = $state('');
-  let view = $state('index'); // 'index' | 'editor'
+  let view = $state<View>('index');
   let addError = $state('');
 
 
-  function toRelativeTime(iso, locale = 'en') {
+  function errorMessage(e: unknown): string {
+    return e instanceof Error ? e.message : String(e);
+  }
+
+  function toRelativeTime(iso: string, locale = 'en'): string {
     return DateTime.fromISO(iso).setLocale(locale).toRelative() ?? 'now';
   }
 
-  async function openEntry(id) {
+  async function openEntry(id: number): Promise<void> {
     addError = '';
     try {
-      const e = await GetEntry(profileUuid, id);
+      const e: Entry = await GetEntry(profileUuid, id);
       entryTitle = e.title;
       entryMainText = e.body;
       view = 'editor';
-    } catch (e) {
-      addError = e?.message ?? String(e);
+    } catch (e: unknown) {
+      addError = errorMessage(e);
     }
   }
 
-  async function refreshEntries() {
+  async function refreshEntries(): Promise<void> {
     listStatus = 'Loading...';
     try {
       entries = await ListEntries(profileUuid);
       listStatus = '';
-    } catch (e) {
+    } catch (e: unknown) {
       console.error(e);
-      listStatus = e?.message ?? String(e);
+      listStatus = errorMessage(e);
     }
   }
 
-  async function openIndex() {
+  async function openIndex(): Promise<void> {
     await refreshEntries();
     status = '';
     addError = '';
     view = 'index';
   }
 
-  async function logout() {
+  async function logout(): Promise<void> {
     try {
       await LockProfile();
       onLogout?.();
-    } catch (e) {
+    } catch (e: unknown) {
       status = '';
-      addError = e?.message ?? String(e);
+      addError = errorMessage(e);
     }
   }
 
-  function openEditor() {
+  function openEditor(): void {
     view = 'editor';
     entryTitle = '';
     entryMainText = '';
   }
 
-  async function saveEntry() {
+  async function saveEntry(): Promise<void> {
     status = 'Saving...';
     addError = '';
+
     try {
       const id = await SaveEntry(profileUuid, entryTitle, entryMainText);
       status = `Saved with id ${id}`;
       await refreshEntries();
-    } catch (e) {
+    } catch (e: unknown) {
       status = '';
-      addError = e?.message ?? String(e);
+      addError = errorMessage(e);
     }
+  }
+
+  function handleSubmit(e: SubmitEvent): void {
+    e.preventDefault();
+    void saveEntry();
   }
 
   onMount(refreshEntries);
@@ -115,7 +146,7 @@
   <button class='btn btn-primary' onclick={openEditor}>Create entry</button>
 
 {:else if view === 'editor'}
-  <form class='container-md' onsubmit={(e) => (e.preventDefault(), saveEntry())}>
+  <form class='container-md' onsubmit={handleSubmit}>
     <div class='input-box'>
       <label for='entryTitle'>Entry title</label>
       <input
@@ -143,30 +174,9 @@
     </div>
 
     {#if status}
-      <Alert type='success' message={status} />
+      <Alert type='success' message={status}/>
     {/if}
-    <Alert type='error' message={addError} />
+    <Alert type='error' message={addError}/>
   </form>
 {/if}
 
-<style>
-  ul {
-    list-style: none;
-    padding: 0;
-  }
-
-  .title {
-    color: #fab95b;
-    background: none;
-    border: 0;
-    padding: 0;
-    font: inherit;
-    cursor: pointer;
-    text-align: left;
-    font-size: 1.5rem;
-  }
-
-  .title:hover {
-    text-decoration: underline;
-  }
-</style>
