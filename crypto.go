@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	profileKeySaltSize = 16
+	profileSaltSize = 16
 
 	// Argon2id parameters for deriving a profile encryption key from the user's passphrase.
 	//
@@ -43,7 +43,7 @@ var base64Encoding = base64.RawStdEncoding
 
 type profileSecrets struct {
 	PublicKey           string
-	KeySalt             string
+	Salt             string
 	EncryptedPrivateKey string
 }
 
@@ -146,12 +146,12 @@ func createProfileSecrets(passphrase string) (*profileSecrets, error) {
 		return nil, fmt.Errorf("generate ed25519 keypair: %w", err)
 	}
 
-	keySalt, err := randomBytes(profileKeySaltSize)
+	salt, err := randomBytes(profileSaltSize)
 	if err != nil {
 		return nil, err
 	}
 
-	key := deriveProfileKey(passphrase, keySalt)
+	key := deriveProfileKey(passphrase, salt)
 	defer zeroBytes(key)
 
 	encryptedPrivateKey, err := encryptBytes(key, privateKey)
@@ -161,7 +161,7 @@ func createProfileSecrets(passphrase string) (*profileSecrets, error) {
 
 	return &profileSecrets{
 		PublicKey:           base64Encoding.EncodeToString(publicKey),
-		KeySalt:             base64Encoding.EncodeToString(keySalt),
+		Salt:             base64Encoding.EncodeToString(salt),
 		EncryptedPrivateKey: encryptedPrivateKey,
 	}, nil
 }
@@ -172,7 +172,7 @@ func unlockProfileSecrets(profile *ProfileEntry, passphrase string) ([]byte, ed2
 	if profile == nil {
 		return nil, nil, fmt.Errorf("profile is nil")
 	}
-	if profile.PublicKey == "" || profile.KeySalt == "" || profile.EncryptedPrivateKey == "" {
+	if profile.PublicKey == "" || profile.Salt == "" || profile.EncryptedPrivateKey == "" {
 		return nil, nil, fmt.Errorf("profile has no encrypted key metadata")
 	}
 
@@ -181,12 +181,12 @@ func unlockProfileSecrets(profile *ProfileEntry, passphrase string) ([]byte, ed2
 		return nil, nil, fmt.Errorf("decode public key: %w", err)
 	}
 
-	keySalt, err := base64Encoding.DecodeString(profile.KeySalt)
+	salt, err := base64Encoding.DecodeString(profile.Salt)
 	if err != nil {
 		return nil, nil, fmt.Errorf("decode key salt: %w", err)
 	}
 
-	key := deriveProfileKey(passphrase, keySalt)
+	key := deriveProfileKey(passphrase, salt)
 
 	privateKeyBytes, err := decryptBytes(key, profile.EncryptedPrivateKey)
 	if err != nil {
