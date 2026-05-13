@@ -22,7 +22,7 @@
     <button class='btn btn-primary' type='submit'>Unlock</button>
   </div>
   <br>
-  <button class='btn btn-danger' type='button' onclick={deleteSelectedProfile}>Delete profile (dev)</button>
+  <button class='btn btn-danger' type='button' onclick={deleteSelectedProfile(passphrase)}>Delete profile (dev)</button>
 
   <Alert type='error' message={addError} />
 </form>
