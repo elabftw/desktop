@@ -74,7 +74,7 @@ sudo apt install libgtk-3-dev libwebkit2gtk-4.1-dev pkg-config
 ### Archlinux
 
 ```bash
-sudo pacman -Sy webkit2gtk-4.1
+sudo pacman -Syu webkit2gtk-4.1
 ```
 
 ---
