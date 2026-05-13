@@ -1,16 +1,16 @@
 export namespace main {
-	
+
 	export class Entry {
 	    id: number;
 	    title: string;
 	    body: string;
 	    createdAt: string;
 	    updatedAt: string;
-	
+
 	    static createFrom(source: any = {}) {
 	        return new Entry(source);
 	    }
-	
+
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.id = source["id"];
@@ -25,11 +25,11 @@ export namespace main {
 	    title: string;
 	    createdAt: string;
 	    updatedAt: string;
-	
+
 	    static createFrom(source: any = {}) {
 	        return new EntrySummary(source);
 	    }
-	
+
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.id = source["id"];
@@ -44,23 +44,23 @@ export namespace main {
 	    // Go type: time
 	    created_at: any;
 	    public_key?: string;
-	    key_salt?: string;
+	    salt?: string;
 	    encrypted_private_key?: string;
-	
+
 	    static createFrom(source: any = {}) {
 	        return new ProfileEntry(source);
 	    }
-	
+
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.uuid = source["uuid"];
 	        this.display_name = source["display_name"];
 	        this.created_at = this.convertValues(source["created_at"], null);
 	        this.public_key = source["public_key"];
-	        this.key_salt = source["key_salt"];
+	        this.salt = source["salt"];
 	        this.encrypted_private_key = source["encrypted_private_key"];
 	    }
-	
+
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
 		    if (!a) {
 		        return a;
@@ -82,17 +82,17 @@ export namespace main {
 	export class ProfileIndex {
 	    version: number;
 	    profiles: ProfileEntry[];
-	
+
 	    static createFrom(source: any = {}) {
 	        return new ProfileIndex(source);
 	    }
-	
+
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.version = source["version"];
 	        this.profiles = this.convertValues(source["profiles"], ProfileEntry);
 	    }
-	
+
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
 		    if (!a) {
 		        return a;

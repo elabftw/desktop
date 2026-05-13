@@ -27,7 +27,7 @@ type ProfileEntry struct {
 
 	// Salt is a random per-profile salt used with the user's passphrase
 	// to derive the symmetric encryption key. It is not secret.
-	Salt string `json:"key_salt,omitempty"`
+	Salt string `json:"salt,omitempty"`
 
 	// EncryptedPrivateKey contains the Ed25519 private key encrypted with
 	// the passphrase-derived key. It is stored as base64(nonce || ciphertext).
