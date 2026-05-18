@@ -10,6 +10,10 @@ export function DeleteProfile(arg1, arg2) {
   return window['go']['main']['App']['DeleteProfile'](arg1, arg2);
 }
 
+export function ForceDeleteProfile(arg1) {
+  return window['go']['main']['App']['ForceDeleteProfile'](arg1);
+}
+
 export function GetEntry(arg1, arg2) {
   return window['go']['main']['App']['GetEntry'](arg1, arg2);
 }

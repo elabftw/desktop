@@ -7,13 +7,15 @@
     clearProfileSelection: () => void;
     unlock: (passphrase: string) => void | Promise<void>;
     deleteSelectedProfile: (passphrase: string) => void | Promise<void>;
+    forceDeleteProfile: () => void | Promise<void>;
   };
 
   let {
     addError,
     clearProfileSelection,
     unlock,
-    deleteSelectedProfile
+    deleteSelectedProfile,
+    forceDeleteProfile
   }: Props = $props();
 
   let passphrase = $state('');
@@ -46,6 +48,7 @@
   >
     Delete profile (dev)
   </button>
+  <button class='btn btn-danger' type='button' onclick={forceDeleteProfile}>Force delete</button>
 
   <Alert type='error' message={addError}/>
 </form>

@@ -119,17 +119,32 @@ func (a *App) LockProfile() {
 	a.activePrivateKey = nil
 }
 
-// DEV: Delete a profile (requires passphrase but not profile to already be unlocked)
-// TODO: remove when done with dev
+// DeleteProfile deletes a profile after verifying its passphrase.
+// It does not require the profile to already be unlocked.
 func (a *App) DeleteProfile(profileUUID string, passphrase string) (*ProfileIndex, error) {
+	return a.deleteProfile(profileUUID, passphrase, false)
+}
+
+// ForceDeleteProfile deletes a profile without checking its passphrase.
+//
+// DEV ONLY: this should not be exposed in production builds unless intentionally
+// supported by the product, because anyone with access to the app method can
+// delete local encrypted data.
+func (a *App) ForceDeleteProfile(profileUUID string) (*ProfileIndex, error) {
+	return a.deleteProfile(profileUUID, "", true)
+}
+
+func (a *App) deleteProfile(profileUUID string, passphrase string, force bool) (*ProfileIndex, error) {
 	profileUUID = strings.TrimSpace(profileUUID)
 	if profileUUID == "" {
 		return nil, fmt.Errorf("profile uuid is empty")
 	}
 
-	passphrase = strings.TrimSpace(passphrase)
-	if passphrase == "" {
-		return nil, fmt.Errorf("passphrase is empty")
+	if !force {
+		passphrase = strings.TrimSpace(passphrase)
+		if passphrase == "" {
+			return nil, fmt.Errorf("passphrase is empty")
+		}
 	}
 
 	idx, err := loadProfileIndex()
@@ -140,17 +155,18 @@ func (a *App) DeleteProfile(profileUUID string, passphrase string) (*ProfileInde
 	found := false
 	filtered := make([]ProfileEntry, 0, len(idx.Profiles))
 
-	// check passphrase is correct
 	for _, profile := range idx.Profiles {
 		if profile.UUID == profileUUID {
 			found = true
 
-			key, privateKey, err := unlockProfileCryptoParams(&profile, passphrase)
-			if err != nil {
-				return nil, err
+			if !force {
+				key, privateKey, err := unlockProfileCryptoParams(&profile, passphrase)
+				if err != nil {
+					return nil, err
+				}
+				zeroBytes(key)
+				zeroBytes(privateKey)
 			}
-			zeroBytes(key)
-			zeroBytes(privateKey)
 
 			continue
 		}
