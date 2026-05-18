@@ -18,7 +18,6 @@
 
 <form class='container-sm' onsubmit={handleSubmit}>
   <label for='profileName'>Profile name</label>
-
   <input
     use:autofocus
     placeholder='Username'
@@ -28,13 +27,11 @@
   />
 
   <label for='profilePassphrase'>Passphrase</label>
-
   <input
     id='profilePassphrase'
     class='input'
     placeholder='Passphrase'
     type='password'
-    autocomplete='new-password'
     bind:value={passphrase}
   />
 
