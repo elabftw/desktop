@@ -127,10 +127,10 @@ func (a *App) DeleteProfile(profileUUID string, passphrase string) (*ProfileInde
 		return nil, fmt.Errorf("profile uuid is empty")
 	}
 
-    passphrase = strings.TrimSpace(passphrase)
-    if passphrase == "" {
-        return nil, fmt.Errorf("passphrase is empty")
-    }
+	passphrase = strings.TrimSpace(passphrase)
+	if passphrase == "" {
+		return nil, fmt.Errorf("passphrase is empty")
+	}
 
 	idx, err := loadProfileIndex()
 	if err != nil {
@@ -144,12 +144,12 @@ func (a *App) DeleteProfile(profileUUID string, passphrase string) (*ProfileInde
 		if profile.UUID == profileUUID {
 			found = true
 
-            key, privateKey, err := unlockProfileCryptoParams(&profile, passphrase)
-            if err != nil {
-                return nil, err
-            }
-            zeroBytes(key)
-            zeroBytes(privateKey)
+			key, privateKey, err := unlockProfileCryptoParams(&profile, passphrase)
+			if err != nil {
+				return nil, err
+			}
+			zeroBytes(key)
+			zeroBytes(privateKey)
 			continue
 		}
 
