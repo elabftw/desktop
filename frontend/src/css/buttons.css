@@ -69,14 +69,25 @@ button {
 
 /* Danger button */
 .btn-danger {
-  background: var(--danger-bg);
-  color: var(--danger-text);
-  border-color: var(--danger-border);
+  background: rgba(159, 58, 56, 0.14);
+  color: #ffb8b6;
+  border-color: rgba(255, 120, 116, 0.28);
 }
 
 .btn-danger:hover {
-  background: var(--danger-hover-bg);
-  border-color: var(--danger-hover-border);
+  background: rgba(159, 58, 56, 0.24);
+  color: #ffd4d2;
+  border-color: rgba(255, 120, 116, 0.46);
+}
+
+.btn-danger:active {
+  background: rgba(159, 58, 56, 0.32);
+  border-color: rgba(255, 120, 116, 0.58);
+}
+
+.btn-danger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 120, 116, 0.18);
 }
 
 /* Small button */
