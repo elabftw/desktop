@@ -2,6 +2,7 @@
 @import 'alerts.css';
 @import 'inputs.css';
 @import 'profiles.css';
+@import 'main-app.css';
 
 :root {
   /* base */
@@ -56,7 +57,10 @@
 }
 
 html {
-  background-color: var(--page-bg);
+  min-height: 100%;
+  background: radial-gradient(circle at top right, rgba(137, 172, 208, 0.14), transparent 34rem),
+  radial-gradient(circle at top left, rgba(250, 185, 91, 0.08), transparent 28rem),
+  var(--page-bg);
   color: var(--text);
 }
 

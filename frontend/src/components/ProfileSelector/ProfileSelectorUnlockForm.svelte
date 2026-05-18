@@ -23,32 +23,59 @@
   const handleSubmit = preventDefaultSubmit(() => unlock(passphrase));
 </script>
 
-<form class='container-sm' onsubmit={handleSubmit}>
-  <label for='unlockPassphrase' class='label'>Enter your passphrase</label>
+<section class='auth-panel'>
+  <form class='auth-card' onsubmit={handleSubmit}>
+    <div class='form-header'>
+      <h2>Unlock profile</h2>
+      <p>Enter your passphrase to continue.</p>
+    </div>
 
-  <input
-    use:autofocus
-    autocomplete='off'
-    placeholder='Passphrase'
-    bind:value={passphrase}
-    class='input'
-    id='unlockPassphrase'
-    type='password'
-  />
+    <div class='input-box'>
+      <label for='unlockPassphrase' class='label'>Passphrase</label>
 
-  <div class='button-row'>
-    <button class='btn btn-secondary' type='button' onclick={clearProfileSelection}>Cancel</button>
-    <button class='btn btn-primary' type='submit'>Unlock</button>
-  </div>
-  <br/>
-  <button
-    class='btn btn-danger'
-    type='button'
-    onclick={() => deleteSelectedProfile(passphrase)}
-  >
-    Delete profile (dev)
-  </button>
-  <button class='btn btn-danger' type='button' onclick={forceDeleteProfile}>Force delete</button>
+      <input
+        use:autofocus
+        autocomplete='off'
+        placeholder='Enter passphrase'
+        bind:value={passphrase}
+        class='input'
+        id='unlockPassphrase'
+        type='password'
+      />
+    </div>
 
-  <Alert type='error' message={addError}/>
-</form>
+    <Alert type='error' message={addError}/>
+
+    <div class='button-row form-actions'>
+      <button class='btn btn-secondary' type='button' onclick={clearProfileSelection}>
+        Cancel
+      </button>
+
+      <button class='btn btn-primary' type='submit'>
+        Unlock
+      </button>
+    </div>
+
+    <details class='danger-zone'>
+      <summary>Danger zone</summary>
+
+      <div class='danger-actions'>
+        <button
+          class='btn btn-danger btn-sm'
+          type='button'
+          onclick={() => deleteSelectedProfile(passphrase)}
+        >
+          Delete profile
+        </button>
+
+        <button
+          class='btn btn-danger btn-sm'
+          type='button'
+          onclick={forceDeleteProfile}
+        >
+          Force delete
+        </button>
+      </div>
+    </details>
+  </form>
+</section>

@@ -16,29 +16,45 @@
   const handleSubmit = preventDefaultSubmit(() => confirmAddProfile(name, passphrase));
 </script>
 
-<form class='container-sm' onsubmit={handleSubmit}>
-  <label for='profileName'>Profile name</label>
-  <input
-    use:autofocus
-    placeholder='Username'
-    class='input'
-    id='profileName'
-    bind:value={name}
-  />
+<section class='auth-panel'>
+  <form class='auth-card' onsubmit={handleSubmit}>
+    <div class='form-header'>
+      <h2>Create profile</h2>
+      <p>Add a new local profile for your entries.</p>
+    </div>
 
-  <label for='profilePassphrase'>Passphrase</label>
-  <input
-    id='profilePassphrase'
-    class='input'
-    placeholder='Passphrase'
-    type='password'
-    bind:value={passphrase}
-  />
+    <div class='input-box'>
+      <label for='profileName'>Profile name</label>
+      <input
+        use:autofocus
+        placeholder='Username'
+        class='input'
+        id='profileName'
+        bind:value={name}
+      />
+    </div>
 
-  <Alert type='error' message={addError}/>
+    <div class='input-box'>
+      <label for='profilePassphrase'>Passphrase</label>
+      <input
+        id='profilePassphrase'
+        class='input'
+        placeholder='Passphrase'
+        type='password'
+        bind:value={passphrase}
+      />
+    </div>
 
-  <div class='button-row'>
-    <button type='button' class='btn btn-secondary' onclick={closeAddProfile}>Cancel</button>
-    <button type='submit' class='btn btn-primary'>Add</button>
-  </div>
-</form>
+    <Alert type='error' message={addError}/>
+
+    <div class='button-row form-actions'>
+      <button type='button' class='btn btn-secondary' onclick={closeAddProfile}>
+        Cancel
+      </button>
+
+      <button type='submit' class='btn btn-primary'>
+        Add profile
+      </button>
+    </div>
+  </form>
+</section>

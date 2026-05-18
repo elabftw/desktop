@@ -4,10 +4,11 @@
     GetProfileIndex,
     AddProfile,
     UnlockProfile,
-    DeleteProfile, ForceDeleteProfile
+    DeleteProfile,
+    ForceDeleteProfile
   } from '../../../wailsjs/go/main/App';
   import type { main } from '../../../wailsjs/go/models';
-  import { errorMessage } from "../../utils/helpers";
+  import { errorMessage } from '../../utils/helpers';
 
   import ProfileSelectorList from './ProfileSelectorList.svelte';
   import ProfileSelectorCreateForm from './ProfileSelectorCreateForm.svelte';
@@ -25,9 +26,9 @@
 
   let {onUnlocked}: Props = $props();
 
-  // refresh profiles list
   async function refreshIndex(): Promise<void> {
     addError = '';
+
     try {
       index = await GetProfileIndex();
       profiles = index?.profiles ?? [];
@@ -48,9 +49,9 @@
     addError = '';
   }
 
-  // create a new profile
   async function confirmAddProfile(name: string, passphrase: string): Promise<void> {
     name = name.trim();
+
     if (!name) {
       addError = 'Please enter a profile name.';
       return;
@@ -76,17 +77,22 @@
     activeProfile = uuid;
   }
 
-  async function forceDeleteProfile() {
+  async function forceDeleteProfile(): Promise<void> {
+    if (!activeProfile) {
+      addError = 'Please select a profile to delete.';
+      return;
+    }
+
     const ok = confirm('Force delete this profile and all local entries? This cannot be undone.');
     if (!ok) return;
 
     try {
-      index = await ForceDeleteProfile(activeProfile)
+      index = await ForceDeleteProfile(activeProfile);
       profiles = index?.profiles ?? [];
       clearProfileSelection();
-    } catch (err) {
-      console.error('Force delete failed:', err)
-      throw err
+    } catch (e: unknown) {
+      console.error('Force delete failed:', e);
+      addError = errorMessage(e);
     }
   }
 
@@ -114,13 +120,11 @@
     }
   }
 
-  // when a profile is selected and we click Cancel. Also used to reset state after a 'delete profile'.
   function clearProfileSelection(): void {
     activeProfile = null;
     addError = '';
   }
 
-  // log into a profile using passphrase
   async function unlock(passphrase: string): Promise<void> {
     if (!activeProfile) {
       addError = 'Please select a profile.';
@@ -145,16 +149,31 @@
   });
 </script>
 
-<div class='container'>
+<div class='profile-shell'>
   {#if !showAddProfile}
-    <ProfileSelectorList {profiles} {activeProfile} {openAddProfile} {selectProfile}/>
+    <ProfileSelectorList
+      {profiles}
+      {activeProfile}
+      {openAddProfile}
+      {selectProfile}
+    />
   {/if}
 
   {#if showAddProfile}
-    <ProfileSelectorCreateForm {addError} {closeAddProfile} {confirmAddProfile}/>
+    <ProfileSelectorCreateForm
+      {addError}
+      {closeAddProfile}
+      {confirmAddProfile}
+    />
   {/if}
 
   {#if activeProfile}
-    <ProfileSelectorUnlockForm {addError} {clearProfileSelection} {unlock} {deleteSelectedProfile} {forceDeleteProfile}/>
+    <ProfileSelectorUnlockForm
+      {addError}
+      {clearProfileSelection}
+      {unlock}
+      {deleteSelectedProfile}
+      {forceDeleteProfile}
+    />
   {/if}
 </div>
