@@ -4,8 +4,7 @@
     GetProfileIndex,
     AddProfile,
     UnlockProfile,
-    DeleteProfile,
-    ForceDeleteProfile
+    DeleteProfile
   } from '../../../wailsjs/go/main/App';
   import type { main } from '../../../wailsjs/go/models';
   import { errorMessage } from '../../utils/helpers';
@@ -75,25 +74,6 @@
     showAddProfile = false;
     addError = '';
     activeProfile = uuid;
-  }
-
-  async function forceDeleteProfile(): Promise<void> {
-    if (!activeProfile) {
-      addError = 'Please select a profile to delete.';
-      return;
-    }
-
-    const ok = confirm('Force delete this profile and all local entries? This cannot be undone.');
-    if (!ok) return;
-
-    try {
-      index = await ForceDeleteProfile(activeProfile);
-      profiles = index?.profiles ?? [];
-      clearProfileSelection();
-    } catch (e: unknown) {
-      console.error('Force delete failed:', e);
-      addError = errorMessage(e);
-    }
   }
 
   async function deleteSelectedProfile(passphrase: string): Promise<void> {
@@ -173,7 +153,6 @@
       {clearProfileSelection}
       {unlock}
       {deleteSelectedProfile}
-      {forceDeleteProfile}
     />
   {/if}
 </div>

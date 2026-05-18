@@ -217,7 +217,7 @@ func unlockProfileCryptoParams(profile *ProfileEntry, passphrase string) ([]byte
 	)
 	if err != nil {
 		zeroBytes(key)
-		return nil, nil, fmt.Errorf("invalid passphrase")
+		return nil, nil, fmt.Errorf("Invalid passphrase")
 	}
 
 	privateKey := ed25519.PrivateKey(privateKeyBytes)

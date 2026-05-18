@@ -7,15 +7,13 @@
     clearProfileSelection: () => void;
     unlock: (passphrase: string) => void | Promise<void>;
     deleteSelectedProfile: (passphrase: string) => void | Promise<void>;
-    forceDeleteProfile: () => void | Promise<void>;
   };
 
   let {
     addError,
     clearProfileSelection,
     unlock,
-    deleteSelectedProfile,
-    forceDeleteProfile
+    deleteSelectedProfile
   }: Props = $props();
 
   let passphrase = $state('');
@@ -60,20 +58,8 @@
       <summary>Danger zone</summary>
 
       <div class='danger-actions'>
-        <button
-          class='btn btn-danger btn-sm'
-          type='button'
-          onclick={() => deleteSelectedProfile(passphrase)}
-        >
+        <button class='btn btn-danger btn-sm' type='button' onclick={() => deleteSelectedProfile(passphrase)}>
           Delete profile
-        </button>
-
-        <button
-          class='btn btn-danger btn-sm'
-          type='button'
-          onclick={forceDeleteProfile}
-        >
-          Force delete
         </button>
       </div>
     </details>
