@@ -4,6 +4,7 @@
 @import 'profiles.css';
 @import 'main-app.css';
 
+/* TODO: add stylelint*/
 :root {
   /* base */
   --page-bg: #1b2636;
