@@ -3,8 +3,8 @@ textarea {
   width: 100%;
   padding: 0.8rem 0.95rem;
   border-radius: 12px;
-  border: 1px solid rgba(201, 214, 227, 0.22);
-  background: rgba(15, 28, 49, 0.56);
+  border: 1px solid var(--border-soft);
+  background: var(--surface-dark-soft);
   color: var(--soft-white);
   font: inherit;
   box-sizing: border-box;
@@ -13,19 +13,19 @@ textarea {
 
 .input::placeholder,
 textarea::placeholder {
-  color: rgba(244, 247, 251, 0.42);
+  color: var(--soft-white-muted);
 }
 
 .input:focus,
 textarea:focus {
   outline: none;
-  border-color: rgba(250, 185, 91, 0.72);
-  box-shadow: 0 0 0 3px rgba(250, 185, 91, 0.14);
+  border-color: var(--orange-focus-border);
+  box-shadow: 0 0 0 3px var(--orange-focus-shadow);
 }
 
 label {
   display: inline-block;
-  color: rgba(244, 247, 251, 0.82);
+  color: var(--soft-white-strong);
   font-size: 0.95rem;
   font-weight: 800;
 }

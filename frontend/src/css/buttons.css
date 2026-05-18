@@ -35,19 +35,17 @@ button {
   box-shadow: var(--shadow-focus-blue);
 }
 
-/* Primary button */
 .btn-primary {
-  background: linear-gradient(180deg, #ffd978, #fab95b);
-  color: #241800;
-  border-color: rgba(250, 185, 91, 0.4);
-  box-shadow: 0 10px 24px rgba(250, 185, 91, 0.18);
+  background: linear-gradient(180deg, var(--orange-light), var(--orange));
+  color: var(--orange-dark);
+  border-color: var(--orange-border);
+  box-shadow: 0 10px 24px var(--orange-shadow);
 }
 
 .btn-primary:hover {
-  background: linear-gradient(180deg, #ffe19a, #ffc76f);
+  background: linear-gradient(180deg, var(--orange-lighter), var(--orange-hover));
 }
 
-/* Secondary / neutral button */
 .btn-secondary {
   background: rgba(30, 47, 69, 0.9);
   color: var(--soft-white);
@@ -55,30 +53,29 @@ button {
 }
 
 .btn-secondary:hover {
-  background: rgba(36, 54, 75, 1);
+  background: var(--dark-blue);
 }
 
-/* Danger button */
 .btn-danger {
   background: rgba(159, 58, 56, 0.14);
-  color: #ffb8b6;
-  border-color: rgba(255, 120, 116, 0.28);
+  color: var(--red-light);
+  border-color: var(--red-border);
 }
 
 .btn-danger:hover {
   background: rgba(159, 58, 56, 0.24);
-  color: #ffd4d2;
-  border-color: rgba(255, 120, 116, 0.46);
+  color: var(--red-lighter);
+  border-color: var(--red-hover-border);
 }
 
 .btn-danger:active {
   background: rgba(159, 58, 56, 0.32);
-  border-color: rgba(255, 120, 116, 0.58);
+  border-color: var(--red-active-border);
 }
 
 .btn-danger:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(255, 120, 116, 0.18);
+  box-shadow: 0 0 0 3px var(--red-shadow);
 }
 
 /* Small button */
