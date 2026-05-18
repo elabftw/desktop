@@ -10,23 +10,8 @@
 
   let {profiles, activeProfile, openAddProfile, selectProfile}: Props = $props();
 
-  function profileName(profile: main.ProfileEntry): string {
-    return profile.display_name?.trim() || profile.uuid;
-  }
-
   function initials(profile: main.ProfileEntry): string {
-    const name = profile.display_name?.trim();
-
-    if (!name) {
-      return profile.uuid.slice(0, 2).toUpperCase();
-    }
-
-    return name
-      .split(/\s+/)
-      .slice(0, 2)
-      .map((part) => part[0])
-      .join('')
-      .toUpperCase();
+    return profile.display_name?.trim().slice(0, 2).toUpperCase();
   }
 </script>
 
@@ -76,7 +61,7 @@
             <span class='profile-avatar'>{initials(profile)}</span>
 
             <span class='profile-content'>
-              <span class='profile-name'>{profileName(profile)}</span>
+              <span class='profile-name'>{profile.display_name?.trim() || profile.uuid}</span>
               <span class='profile-meta'>
                 {activeProfile === profile.uuid ? 'Selected' : 'Click to unlock'}
               </span>

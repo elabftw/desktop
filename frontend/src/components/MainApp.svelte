@@ -27,14 +27,6 @@
     return DateTime.fromISO(iso).setLocale(locale).toRelative() ?? 'now';
   }
 
-  function profileInitials(uuid: string): string {
-    return uuid.slice(0, 2).toUpperCase();
-  }
-
-  function shortProfileUuid(uuid: string): string {
-    return `${uuid.slice(0, 8)}…`;
-  }
-
   async function openEntry(id: number): Promise<void> {
     addError = '';
     status = '';
@@ -122,10 +114,10 @@
 
     <div class='account-bar'>
       <div class='profile-pill' title={profileUuid}>
-        <span class='profile-avatar-small'>{profileInitials(profileUuid)}</span>
+        <span class='profile-avatar-small'>{profileUuid.slice(0, 2).toUpperCase()}</span>
         <span class='profile-pill-text'>
           <span class='profile-name-small'>Profile</span>
-          <span class='profile-id-small'>{shortProfileUuid(profileUuid)}</span>
+          <span class='profile-id-small'>{profileUuid.slice(0, 8)}...</span>
         </span>
       </div>
 
