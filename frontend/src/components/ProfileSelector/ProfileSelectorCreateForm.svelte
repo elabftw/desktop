@@ -47,7 +47,7 @@
 
     <Alert type='error' message={addError}/>
 
-    <div class='button-row form-actions'>
+    <div class='flex-row-center form-actions'>
       <button type='button' class='btn btn-secondary' onclick={closeAddProfile}>
         Cancel
       </button>

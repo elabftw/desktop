@@ -8,12 +8,13 @@
 
   type Props = {
     profileUuid: string;
+    profileName: string;
     onLogout?: () => void;
   };
 
   type View = 'index' | 'editor';
 
-  let {profileUuid, onLogout}: Props = $props();
+  let {profileUuid, profileName, onLogout}: Props = $props();
 
   let entryTitle = $state('');
   let entryMainText = $state('');
@@ -113,11 +114,10 @@
     </div>
 
     <div class='account-bar'>
-      <div class='profile-pill' title={profileUuid}>
-        <span class='profile-avatar-small'>{profileUuid.slice(0, 2).toUpperCase()}</span>
+      <div class='profile-pill' title={profileName}>
+        <span class='profile-avatar-small'>{profileName.slice(0, 2).toUpperCase()}</span>
         <span class='profile-pill-text'>
-          <span class='profile-name-small'>Profile</span>
-          <span class='profile-id-small'>{profileUuid.slice(0, 8)}...</span>
+          <span class='profile-name-small'>{profileName}</span>
         </span>
       </div>
 

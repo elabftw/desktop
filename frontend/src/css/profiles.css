@@ -239,7 +239,7 @@
   color: rgba(244, 247, 251, 0.58);
 }
 
-.form-actions {
+.form-action {
   justify-content: flex-end;
 }
 
@@ -299,11 +299,11 @@
     grid-column: 2;
   }
 
-  .form-actions {
+  .form-action {
     justify-content: stretch;
   }
 
-  .form-actions .btn {
+  .form-action .btn {
     flex: 1;
   }
 }

@@ -14,12 +14,13 @@
   import ProfileSelectorUnlockForm from './ProfileSelectorUnlockForm.svelte';
 
   type Props = {
-    onUnlocked?: (profileUuid: string) => void;
+    onUnlocked?: (profileUuid: string, profileName: string) => void;
   };
 
   let showAddProfile = $state(false);
   let profiles = $state<main.ProfileEntry[]>([]);
   let activeProfile = $state<string | null>(null);
+  let activeProfileName = $state<string | null>(null);
   let index = $state<main.ProfileIndex | null>(null);
   let addError = $state('');
 
@@ -70,10 +71,11 @@
     }
   }
 
-  function selectProfile(uuid: string): void {
+  function selectProfile(uuid: string, name: string): void {
     showAddProfile = false;
     addError = '';
     activeProfile = uuid;
+    activeProfileName = name;
   }
 
   async function deleteSelectedProfile(passphrase: string): Promise<void> {
@@ -118,7 +120,7 @@
 
     try {
       await UnlockProfile(activeProfile, passphrase);
-      onUnlocked?.(activeProfile);
+      onUnlocked?.(activeProfile, activeProfileName);
     } catch (e: unknown) {
       addError = errorMessage(e);
     }

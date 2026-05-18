@@ -21,15 +21,6 @@ button {
   transform 0.12s ease;
 }
 
-/* align buttons div (no bootstrap in here yet so =)) */
-.button-row {
-  display: flex;
-  justify-content: center;
-  gap: 0.75rem;
-  margin-top: 1rem;
-  flex-wrap: wrap;
-}
-
 .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;

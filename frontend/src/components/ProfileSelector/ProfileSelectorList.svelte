@@ -5,7 +5,7 @@
     profiles: main.ProfileEntry[];
     activeProfile: string | null;
     openAddProfile: () => void;
-    selectProfile: (uuid: string) => void;
+    selectProfile: (uuid: string, name: string) => void;
   };
 
   let {profiles, activeProfile, openAddProfile, selectProfile}: Props = $props();
@@ -55,7 +55,7 @@
             class='profile-box'
             class:active={activeProfile === profile.uuid}
             class:masked={activeProfile !== null && activeProfile !== profile.uuid}
-            onclick={() => selectProfile(profile.uuid)}
+            onclick={() => selectProfile(profile.uuid, profile.display_name)}
             aria-pressed={activeProfile === profile.uuid}
           >
             <span class='profile-avatar'>{initials(profile)}</span>
