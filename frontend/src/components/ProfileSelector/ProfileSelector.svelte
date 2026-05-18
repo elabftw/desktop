@@ -25,6 +25,7 @@
 
   let {onUnlocked}: Props = $props();
 
+  // refresh profiles list
   async function refreshIndex(): Promise<void> {
     addError = '';
     try {
@@ -47,6 +48,7 @@
     addError = '';
   }
 
+  // create a new profile
   async function confirmAddProfile(name: string, passphrase: string): Promise<void> {
     name = name.trim();
     if (!name) {
@@ -112,11 +114,13 @@
     }
   }
 
+  // when a profile is selected and we click Cancel. Also used to reset state after a 'delete profile'.
   function clearProfileSelection(): void {
     activeProfile = null;
     addError = '';
   }
 
+  // log into a profile using passphrase
   async function unlock(passphrase: string): Promise<void> {
     if (!activeProfile) {
       addError = 'Please select a profile.';
@@ -151,12 +155,6 @@
   {/if}
 
   {#if activeProfile}
-    <ProfileSelectorUnlockForm
-      {addError}
-      {clearProfileSelection}
-      {unlock}
-      {deleteSelectedProfile}
-      {forceDeleteProfile}
-    />
+    <ProfileSelectorUnlockForm {addError} {clearProfileSelection} {unlock} {deleteSelectedProfile} {forceDeleteProfile}/>
   {/if}
 </div>
