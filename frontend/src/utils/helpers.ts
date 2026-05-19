@@ -1,13 +1,12 @@
-import type { Action } from 'svelte/action';
+import type { Attachment } from 'svelte/attachments';
 
 /*
  * Focuses the targeted element when it is mounted.
  * Usually used on inputs to replace the native `autofocus` attribute
  * and avoid Svelte a11y_autofocus warnings.
  */
-export const autofocus: Action<HTMLElement> = (node) => {
+export const autofocus: Attachment<HTMLElement> = (node) => {
   queueMicrotask(() => node.focus());
-  return {};
 };
 
 /* Converts an unknown caught error into a readable string. */
