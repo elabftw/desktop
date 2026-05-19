@@ -116,9 +116,7 @@
     <div class='account-bar'>
       <div class='profile-pill' title={profileName}>
         <span class='profile-avatar-small'>{profileName.slice(0, 2).toUpperCase()}</span>
-        <span class='profile-pill-text'>
-          <span class='profile-name-small'>{profileName}</span>
-        </span>
+          <span class='text-strong'>{profileName}</span>
       </div>
 
       <button class='btn btn-danger btn-logout' onclick={logout}>
