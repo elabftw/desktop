@@ -5,21 +5,6 @@
   text-align: left;
 }
 
-.app-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 2rem;
-  margin-bottom: 2rem;
-}
-
-.account-bar {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-  flex: 0 0 auto;
-}
-
 .profile-pill {
   display: inline-flex;
   align-items: center;
@@ -70,22 +55,6 @@
   padding: 1.7rem;
 }
 
-.entries-panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1.5rem;
-  padding-bottom: 1.25rem;
-  margin-bottom: 1.25rem;
-  border-bottom: 1px solid rgba(201, 214, 227, 0.12);
-}
-
-.entries-title-block {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
 .icon {
   width: 52px;
   height: 52px;
@@ -131,7 +100,7 @@
 .entry-card:hover {
   transform: translateY(-1px);
   border-color: rgba(250, 185, 91, 0.42);
-  background: rgba(36, 54, 75, 0.78);
+  background: var(--dark-blue-2);
 }
 
 .entry-card:focus-visible {
@@ -244,15 +213,6 @@
     padding: 1.5rem 0;
   }
 
-  .app-header {
-    flex-direction: column;
-  }
-
-  .account-bar {
-    width: 100%;
-    justify-content: space-between;
-  }
-
   .profile-pill {
     min-width: 0;
     flex: 1;
@@ -263,12 +223,12 @@
     border-radius: 18px;
   }
 
-  .entries-panel-header {
+  .card-header-banner {
     align-items: flex-start;
     flex-direction: column;
   }
 
-  .entries-panel-header .btn {
+  .card-header-banner .btn {
     width: 100%;
   }
 

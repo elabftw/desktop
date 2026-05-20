@@ -17,7 +17,7 @@
 </script>
 
 <section class='auth-panel'>
-  <form class='auth-card' onsubmit={handleSubmit}>
+  <form class='card-container' onsubmit={handleSubmit}>
     <h2>Create profile</h2>
     <p class='description'>Add a new local profile for your entries.</p>
 

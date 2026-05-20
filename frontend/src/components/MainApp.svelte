@@ -114,7 +114,7 @@
 </script>
 
 <div class='app-shell'>
-  <header class='app-header'>
+  <header class='header-banner'>
     <div>
       <p class='header-subtitle'>Unlocked profile</p>
       {#if view === 'index'}
@@ -126,7 +126,7 @@
       {/if}
     </div>
 
-    <div class='account-bar'>
+    <div class='flex-row-center'>
       <div class='profile-pill' title={profileName}>
         <span class='profile-avatar-small'>{profileName.slice(0, 2).toUpperCase()}</span>
           <span class='text-strong'>{profileName}</span>
@@ -146,8 +146,8 @@
 
   {#if view === 'index'}
     <section class='entries-panel' aria-labelledby='entries-title'>
-      <div class='entries-panel-header'>
-        <div class='entries-title-block'>
+      <div class='card-header-banner'>
+        <div class='flex gap-1'>
           <div class='icon' aria-hidden='true'>▣</div>
           <div>
             <h2 id='entries-title'>Saved entries</h2>

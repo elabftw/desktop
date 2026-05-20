@@ -30,29 +30,24 @@
 </script>
 
 <section>
-  <header class='profile-banner'>
+  <p class='header-subtitle'>Welcome back</p>
+  <header class='header-banner'>
     <div>
-      <p class='header-subtitle'>Welcome back</p>
       <h1>Select a profile</h1>
       <h2>Choose a profile to unlock your saved entries.</h2>
     </div>
     <button class='btn btn-primary flex-auto' onclick={openAddProfile}>
-      <span aria-hidden='true'>+</span>
-      Add profile
+      <span aria-hidden='true'>+</span>Add profile
     </button>
   </header>
 
-  <section class='profile-panel' aria-labelledby='profiles-title'>
-    <div class='panel-header'>
-      <div class='panel-title-block'>
+  <section class='card-container' aria-labelledby='profiles-title'>
+    <div class='card-header'>
+      <div class='flex items-center gap-1'>
         <div class='icon' aria-hidden='true'>●</div>
         <div>
-          <h2 id='profiles-title'>Profiles</h2>
-          <p>
-            {profiles.length === 1
-              ? '1 profile available'
-              : `${profiles.length} profiles available`}
-          </p>
+          <h3 id='profiles-title'>Profiles</h3>
+          <p class='description'>{profiles.length === 1 ? '1 profile available' : `${profiles.length} profiles available`}</p>
         </div>
       </div>
     </div>

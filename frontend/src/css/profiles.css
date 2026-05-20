@@ -5,12 +5,17 @@
   text-align: left;
 }
 
-.profile-banner {
+.header-banner, .card-header-banner {
   display: flex;
-  align-items: flex-start;
   justify-content: space-between;
-  gap: 2rem;
-  margin-bottom: 2rem;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.card-header-banner {
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(201, 214, 227, 0.12);
 }
 
 .header-subtitle {
@@ -28,40 +33,10 @@
   font-size: 1.12rem;
 }
 
-.profile-panel {
-  padding: 1.7rem;
-  border: 1px solid rgba(201, 214, 227, 0.16);
-  border-radius: 22px;
-  background: var(--surface-dark-soft);
-  box-shadow: 0 14px 36px var(--dark-blue-3);
-}
-
-.panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1.5rem;
+.card-header {
   padding-bottom: 1.25rem;
   margin-bottom: 1.25rem;
-  border-bottom: 1px solid rgba(201, 214, 227, 0.12);
-}
-
-.panel-title-block {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.panel-header h2 {
-  margin: 0;
-  color: var(--soft-white);
-  font-size: 1.75rem;
-  letter-spacing: -0.035em;
-}
-
-.panel-header p {
-  margin: 0.35rem 0 0;
-  color: rgba(244, 247, 251, 0.55);
+  border-bottom: 1px solid var(--border-soft);
 }
 
 .profiles {
@@ -71,18 +46,15 @@
 }
 
 .profile-box {
-  width: 100%;
-  margin: 0;
   padding: 1rem;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 1rem;
   text-align: left;
-  color: inherit;
-  border: 1px solid rgba(201, 214, 227, 0.14);
+  border: 1px solid var(--border-soft);
   border-radius: 16px;
-  background: rgba(30, 47, 69, 0.55);
+  background: var(--dark-blue-3);
   cursor: pointer;
   transition: background-color 0.12s ease,
   border-color 0.12s ease,
@@ -90,9 +62,9 @@
 }
 
 .profile-box:hover {
-  transform: translateY(-1px);
-  border-color: rgba(250, 185, 91, 0.42);
-  background: rgba(36, 54, 75, 0.78);
+  transform: translateY(-2px);
+  border-color: var(--orange-hover);
+  background: var(--dark-blue-2);
 }
 
 .profile-box:focus-visible {
@@ -103,7 +75,7 @@
 
 .profile-box.active {
   border-color: rgba(250, 185, 91, 0.58);
-  background: rgba(36, 54, 75, 0.88);
+  background: var(--dark-blue-2);
 }
 
 .profile-box.masked {
@@ -185,20 +157,20 @@
   margin: 2rem auto 0;
 }
 
-.auth-card, .auth-unlock-card {
+.card-container, .auth-unlock-card {
   padding: 1.5rem;
   border: 1px solid var(--border-soft);
   box-shadow: 0 14px 36px var(--dark-blue-3);
 }
 
-.auth-card {
+.card-container {
   border-radius: 22px;
   background: var(--surface-dark-soft);
 }
 
 .auth-unlock-card {
-  border-top: 0;
-  transform: translateY(-20px);
+  border: 0;
+  transform: translateY(-30px);
   border-radius: 0 0 20px 20px ;
 }
 
@@ -236,18 +208,13 @@
     padding: 1.5rem 0;
   }
 
-  .profile-banner {
+  .header-banner {
     flex-direction: column;
     gap: 1.25rem;
   }
 
   .flex-auto {
     width: 100%;
-  }
-
-  .profile-panel {
-    padding: 1.15rem;
-    border-radius: 18px;
   }
 
   .panel-header {

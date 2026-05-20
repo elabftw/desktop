@@ -100,21 +100,6 @@ body {
   text-align: center;
 }
 
-.container {
-  width: min(900px, calc(100vw - 4rem));
-  margin: 0 auto;
-}
-
-.container-md {
-  width: min(640px, calc(100vw - 3rem));
-  margin: 0 auto;
-}
-
-.container-sm {
-  width: min(420px, calc(100vw - 2rem));
-  margin: 0 auto;
-}
-
 #logo {
   display: block;
   margin: auto;
@@ -125,21 +110,6 @@ body {
 ul {
   padding: 0;
   list-style: none;
-}
-
-.title {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--orange);
-  font: inherit;
-  font-size: 1.5rem;
-  text-align: left;
-  cursor: pointer;
-}
-
-.title:hover {
-  text-decoration: underline;
 }
 
 h1 {
@@ -169,15 +139,19 @@ h2 {
   display: flex;
 }
 
+.items-center {
+  align-items: center;
+}
+
+.flex-auto {
+  flex: 0 0 auto;
+  margin-top: 0.25rem;
+}
+
 .gap-1 {
   gap: 1rem;
 }
 
 .text-strong {
   font-weight: 800;
-}
-
-.flex-auto {
-  flex: 0 0 auto;
-  margin-top: 0.25rem;
 }
