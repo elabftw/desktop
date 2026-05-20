@@ -29,6 +29,16 @@ func main() {
 			Buttons: []string{"OK"},
 		})
 	}
+
+	// full screen
+	toggleFullscreen := func() {
+		if rt.WindowIsFullscreen(app.ctx) {
+			rt.WindowUnfullscreen(app.ctx)
+			return
+		}
+		rt.WindowFullscreen(app.ctx)
+	}
+
 	if runtime.GOOS == "darwin" {
 		appSubmenu := appMenu.AddSubmenu("eLabFTW Desktop")
 		appSubmenu.AddText("About...", nil, func(_ *menu.CallbackData) {
@@ -40,10 +50,21 @@ func main() {
 		})
 
 		appMenu.Append(menu.EditMenu())
+
+		// toggle full screen
+		viewMenu := appMenu.AddSubmenu("View")
+		viewMenu.AddText("Toggle Full Screen", keys.Combo("f", keys.CmdOrCtrlKey, keys.ControlKey), func(_ *menu.CallbackData) {
+			toggleFullscreen()
+		})
 	} else {
 		fileMenu := appMenu.AddSubmenu("File")
 		fileMenu.AddText("Quit", keys.CmdOrCtrl("q"), func(_ *menu.CallbackData) {
 			rt.Quit(app.ctx)
+		})
+
+		viewMenu := appMenu.AddSubmenu("View")
+		viewMenu.AddText("Toggle Full Screen", keys.Key("F11"), func(_ *menu.CallbackData) {
+			toggleFullscreen()
 		})
 
 		helpMenu := appMenu.AddSubmenu("Help")

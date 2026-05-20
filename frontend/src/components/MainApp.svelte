@@ -156,10 +156,7 @@
             </span>
           </div>
         </div>
-
-        <button class='btn btn-primary' onclick={openEditor}>
-          <span aria-hidden='true'>+</span> Create entry
-        </button>
+        <button class='btn btn-primary' onclick={openEditor}><span aria-hidden='true'>+</span> Create entry</button>
       </div>
 
       {#if listStatus}
@@ -171,8 +168,7 @@
           <div class='empty-icon' aria-hidden='true'>✎</div>
           <h3>No entries yet</h3>
           <p>Create your first entry to start writing.</p>
-
-          <button class='btn btn-primary' onclick={openEditor}>Create entry</button>
+          <button class='btn btn-primary' onclick={openEditor}><span aria-hidden='true'>+</span> Create entry</button>
         </div>
       {:else}
         <div class='entry-list'>
