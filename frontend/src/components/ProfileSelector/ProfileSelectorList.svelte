@@ -31,7 +31,7 @@
   <section class='profile-panel' aria-labelledby='profiles-title'>
     <div class='panel-header'>
       <div class='panel-title-block'>
-        <div class='panel-icon' aria-hidden='true'>●</div>
+        <div class='icon' aria-hidden='true'>●</div>
         <div>
           <h2 id='profiles-title'>Profiles</h2>
           <p>

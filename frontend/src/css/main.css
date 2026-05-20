@@ -39,7 +39,6 @@
   --red-light: #ffb8b6;
   --red-lighter: #f2dede;
   --red-border: rgba(255, 120, 116, 0.28);
-  --red-hover-border: rgba(255, 120, 116, 0.46);
   --red-background: rgba(159, 58, 56, 0.14);
 
   /* Info alert */
@@ -163,6 +162,14 @@ h2 {
   justify-content: center;
   gap: 0.75rem;
   margin-top: 1rem;
+}
+
+.flex {
+  display: flex;
+}
+
+.gap-1 {
+  gap: 1rem;
 }
 
 .text-strong {

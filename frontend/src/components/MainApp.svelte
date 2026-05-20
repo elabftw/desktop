@@ -94,7 +94,7 @@
   async function deleteEntry(id: number, title: string): Promise<void> {
     addError = '';
     status = '';
-    const confirmed = window.confirm(`Delete "${title || 'Untitled entry'}"? This cannot be undone.`);
+    const confirmed = window.confirm(`Delete "${title}"? This cannot be undone.`);
     if (!confirmed) {
       return;
     }
@@ -148,7 +148,7 @@
     <section class='entries-panel' aria-labelledby='entries-title'>
       <div class='entries-panel-header'>
         <div class='entries-title-block'>
-          <div class='entries-icon' aria-hidden='true'>▣</div>
+          <div class='icon' aria-hidden='true'>▣</div>
           <div>
             <h2 id='entries-title'>Saved entries</h2>
             <span class='description'>
@@ -177,6 +177,7 @@
       {:else}
         <div class='entry-list'>
           {#each entries as e (e.id)}
+            <div class='flex gap-1'>
             <button type='button' class='entry-card' onclick={() => openEntry(e.id)}>
               <span class='entry-card-icon' aria-hidden='true'>▤</span>
               <span class='entry-card-content'>
@@ -192,6 +193,10 @@
                 Open &#8594;
               </span>
             </button>
+            <button type='button' class='btn btn-danger ' onclick={() => deleteEntry(e.id, e.title)} aria-label={`Delete ${e.title}`}>
+              <span aria-hidden='true'>&#128465;</span>
+            </button>
+            </div>
           {/each}
         </div>
       {/if}

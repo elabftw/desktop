@@ -63,8 +63,8 @@ button {
 }
 
 .btn-danger:hover {
+  background: var(--red-border);
   color: var(--soft-white);
-  border-color: var(--red-hover-border);
 }
 
 .btn-danger:active {
