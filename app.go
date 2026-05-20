@@ -51,10 +51,10 @@ func (a *App) startup(ctx context.Context) {
 func (a *App) requireUnlockedProfile(profileUUID string) error {
 	profileUUID = strings.TrimSpace(profileUUID)
 	if profileUUID == "" {
-		return fmt.Errorf("profile uuid is empty")
+		return fmt.Errorf("Profile uuid is empty")
 	}
 	if a.activeProfileUUID != profileUUID || len(a.activeKey) == 0 {
-		return fmt.Errorf("profile is locked")
+		return fmt.Errorf("Profile is locked")
 	}
 	return nil
 }
@@ -65,15 +65,15 @@ func (a *App) requireUnlockedProfile(profileUUID string) error {
 func (a *App) UnlockProfile(profileUUID string, passphrase string) error {
 	profileUUID = strings.TrimSpace(profileUUID)
 	if profileUUID == "" {
-		return fmt.Errorf("profile uuid is empty")
+		return fmt.Errorf("Profile uuid is empty")
 	}
 	passphrase = strings.TrimSpace(passphrase)
 	if passphrase == "" {
-		return fmt.Errorf("passphrase is empty")
+		return fmt.Errorf("Passphrase is empty")
 	}
 
 	if a.index == nil {
-		return fmt.Errorf("profile index is not loaded")
+		return fmt.Errorf("Profile index is not loaded")
 	}
 
 	var selected *ProfileEntry
@@ -85,7 +85,7 @@ func (a *App) UnlockProfile(profileUUID string, passphrase string) error {
 	}
 
 	if selected == nil {
-		return fmt.Errorf("unknown profile uuid")
+		return fmt.Errorf("Unknown profile uuid")
 	}
 
 	key, privateKey, err := unlockProfileCryptoParams(selected, passphrase)
@@ -124,12 +124,12 @@ func (a *App) LockProfile() {
 func (a *App) DeleteProfile(profileUUID string, passphrase string) (*ProfileIndex, error) {
 	profileUUID = strings.TrimSpace(profileUUID)
 	if profileUUID == "" {
-		return nil, fmt.Errorf("profile uuid is empty")
+		return nil, fmt.Errorf("Profile uuid is empty")
 	}
 
 	passphrase = strings.TrimSpace(passphrase)
 	if passphrase == "" {
-		return nil, fmt.Errorf("passphrase is empty")
+		return nil, fmt.Errorf("Passphrase is empty")
 	}
 
 	idx, err := loadProfileIndex()
@@ -157,7 +157,7 @@ func (a *App) DeleteProfile(profileUUID string, passphrase string) (*ProfileInde
 	}
 
 	if !found {
-		return nil, fmt.Errorf("unknown profile uuid")
+		return nil, fmt.Errorf("Unknown profile uuid")
 	}
 
 	dir, err := profileDir(profileUUID)
@@ -166,7 +166,7 @@ func (a *App) DeleteProfile(profileUUID string, passphrase string) (*ProfileInde
 	}
 
 	if err := os.RemoveAll(dir); err != nil {
-		return nil, fmt.Errorf("delete profile dir: %w", err)
+		return nil, fmt.Errorf("Delete profile dir: %w", err)
 	}
 
 	idx.Profiles = filtered
@@ -202,12 +202,12 @@ type diskProfile struct {
 func (a *App) AddProfile(displayName string, passphrase string) (*ProfileIndex, error) {
 	displayName = strings.TrimSpace(displayName)
 	if displayName == "" {
-		return nil, fmt.Errorf("display name is empty")
+		return nil, fmt.Errorf("Display name is empty")
 	}
 
 	passphrase = strings.TrimSpace(passphrase)
 	if passphrase == "" {
-		return nil, fmt.Errorf("passphrase is empty")
+		return nil, fmt.Errorf("Passphrase is empty")
 	}
 
 	newUUID := uuid.NewString()
@@ -262,14 +262,14 @@ func (a *App) SaveEntry(profileUUID string, title string, body string) (int64, e
 
 	db, err := OpenProfileDB(pdir)
 	if err != nil {
-		return 0, fmt.Errorf("open profile db: %w", err)
+		return 0, fmt.Errorf("Open profile db: %w", err)
 	}
 	defer func() { _ = db.Close() }()
 
 	title = strings.TrimSpace(title)
 	body = strings.TrimSpace(body)
 	if title == "" {
-		return 0, fmt.Errorf("title is empty")
+		return 0, fmt.Errorf("Title is empty")
 	}
 
 	// Here is encryption done
@@ -277,12 +277,12 @@ func (a *App) SaveEntry(profileUUID string, title string, body string) (int64, e
 	// The DB remains readable as SQLite, but title/body are ciphertext.
 	encryptedTitle, err := encryptString(a.activeKey, title)
 	if err != nil {
-		return 0, fmt.Errorf("encrypt title: %w", err)
+		return 0, fmt.Errorf("Encrypt title: %w", err)
 	}
 
 	encryptedBody, err := encryptString(a.activeKey, body)
 	if err != nil {
-		return 0, fmt.Errorf("encrypt body: %w", err)
+		return 0, fmt.Errorf("Encrypt body: %w", err)
 	}
 
 	// 	res, err := db.Exec(`INSERT INTO entries (title, body) VALUES (?, ?)`, title, body)
@@ -292,7 +292,7 @@ func (a *App) SaveEntry(profileUUID string, title string, body string) (int64, e
 		encryptedBody,
 	)
 	if err != nil {
-		return 0, fmt.Errorf("insert entry: %w", err)
+		return 0, fmt.Errorf("Insert entry: %w", err)
 	}
 
 	id, err := res.LastInsertId()
@@ -347,7 +347,7 @@ func (a *App) ListEntries(profileUUID string) ([]EntrySummary, error) {
 		// the row stores encrypted title/body values. Decrypt them before returning the entry to frontend.
 		title, err := decryptString(a.activeKey, e.Title)
 		if err != nil {
-			return nil, fmt.Errorf("decrypt entry title: %w", err)
+			return nil, fmt.Errorf("Decrypt entry title: %w", err)
 		}
 		e.Title = title
 		out = append(out, e)
@@ -373,7 +373,7 @@ func (a *App) GetEntry(profileUUID string, id int64) (*Entry, error) {
 		return nil, err
 	}
 	if id <= 0 {
-		return nil, fmt.Errorf("invalid id")
+		return nil, fmt.Errorf("Invalid id")
 	}
 
 	pdir, err := profileDir(profileUUID)
@@ -395,7 +395,7 @@ func (a *App) GetEntry(profileUUID string, id int64) (*Entry, error) {
 	`, id).Scan(&e.ID, &e.Title, &e.Body, &e.CreatedAt, &e.UpdatedAt)
 
 	if err == sql.ErrNoRows {
-		return nil, fmt.Errorf("entry not found")
+		return nil, fmt.Errorf("Entry not found")
 	}
 	if err != nil {
 		return nil, fmt.Errorf("query entry: %w", err)
@@ -403,12 +403,12 @@ func (a *App) GetEntry(profileUUID string, id int64) (*Entry, error) {
 
 	title, err := decryptString(a.activeKey, e.Title)
 	if err != nil {
-		return nil, fmt.Errorf("decrypt entry title: %w", err)
+		return nil, fmt.Errorf("Decrypt entry title: %w", err)
 	}
 
 	body, err := decryptString(a.activeKey, e.Body)
 	if err != nil {
-		return nil, fmt.Errorf("decrypt entry body: %w", err)
+		return nil, fmt.Errorf("Decrypt entry body: %w", err)
 	}
 
 	e.Title = title

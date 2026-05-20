@@ -107,7 +107,7 @@ func loadProfileIndex() (*ProfileIndex, error) {
 
 	var idx ProfileIndex
 	if err := json.Unmarshal(b, &idx); err != nil {
-		return nil, fmt.Errorf("parse index.json: %w", err)
+		return nil, fmt.Errorf("Parse index.json: %w", err)
 	}
 	if idx.Version == 0 {
 		idx.Version = 1

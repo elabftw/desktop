@@ -6,6 +6,7 @@ import type { Attachment } from 'svelte/attachments';
  * and avoid Svelte a11y_autofocus warnings.
  */
 export const autofocus: Attachment<HTMLElement> = (node) => {
+  // queueMicrotask waits until element is ready in the page to run focus
   queueMicrotask(() => node.focus());
 };
 

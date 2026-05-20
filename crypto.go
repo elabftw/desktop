@@ -48,7 +48,7 @@ type profileCryptoParams struct {
 func randomBytes(size int) ([]byte, error) {
 	out := make([]byte, size)
 	if _, err := rand.Read(out); err != nil {
-		return nil, fmt.Errorf("random bytes: %w", err)
+		return nil, fmt.Errorf("Random bytes: %w", err)
 	}
 	return out, nil
 }
@@ -79,7 +79,7 @@ func encryptBytesWithAAD(key []byte, plaintext []byte, additionalData []byte) (s
 	//   base64(nonce || ciphertext)
 	aead, err := chacha20poly1305.NewX(key)
 	if err != nil {
-		return "", fmt.Errorf("create cipher: %w", err)
+		return "", fmt.Errorf("Create cipher: %w", err)
 	}
 
 	nonce, err := randomBytes(aead.NonceSize())
@@ -105,17 +105,17 @@ func decryptBytesWithAAD(key []byte, encoded string, additionalData []byte) ([]b
 	// Split the nonce back out before opening the ciphertext.
 	payload, err := base64Encoding.DecodeString(encoded)
 	if err != nil {
-		return nil, fmt.Errorf("decode ciphertext: %w", err)
+		return nil, fmt.Errorf("Decode ciphertext: %w", err)
 	}
 
 	aead, err := chacha20poly1305.NewX(key)
 	if err != nil {
-		return nil, fmt.Errorf("create cipher: %w", err)
+		return nil, fmt.Errorf("Create cipher: %w", err)
 	}
 
 	nonceSize := aead.NonceSize()
 	if len(payload) < nonceSize {
-		return nil, fmt.Errorf("ciphertext is too short")
+		return nil, fmt.Errorf("Ciphertext is too short")
 	}
 
 	nonce := payload[:nonceSize]
@@ -123,7 +123,7 @@ func decryptBytesWithAAD(key []byte, encoded string, additionalData []byte) ([]b
 
 	plaintext, err := aead.Open(nil, nonce, ciphertext, additionalData)
 	if err != nil {
-		return nil, fmt.Errorf("decrypt: %w", err)
+		return nil, fmt.Errorf("Decrypt: %w", err)
 	}
 
 	return plaintext, nil
@@ -149,7 +149,7 @@ func zeroBytes(b []byte) {
 
 func createProfileCryptoParams(profileUUID string, passphrase string) (*profileCryptoParams, error) {
 	if profileUUID == "" {
-		return nil, fmt.Errorf("profile uuid is empty")
+		return nil, fmt.Errorf("Profile uuid is empty")
 	}
 
 	// Each profile gets its own Ed25519 identity keypair.
@@ -157,7 +157,7 @@ func createProfileCryptoParams(profileUUID string, passphrase string) (*profileC
 	// with a key derived from the user's passphrase.
 	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
-		return nil, fmt.Errorf("generate ed25519 keypair: %w", err)
+		return nil, fmt.Errorf("Generate ed25519 keypair: %w", err)
 	}
 	defer zeroBytes(privateKey)
 
@@ -175,7 +175,7 @@ func createProfileCryptoParams(profileUUID string, passphrase string) (*profileC
 		profilePrivateKeyAAD(profileUUID),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("encrypt private key: %w", err)
+		return nil, fmt.Errorf("Encrypt private key: %w", err)
 	}
 
 	return &profileCryptoParams{
@@ -189,23 +189,23 @@ func unlockProfileCryptoParams(profile *ProfileEntry, passphrase string) ([]byte
 	// Re-derive profile key from the passphrase and stored salt.
 	// If the passphrase is wrong, decryptBytesWithAAD will fail authentication.
 	if profile == nil {
-		return nil, nil, fmt.Errorf("profile is nil")
+		return nil, nil, fmt.Errorf("Profile is nil")
 	}
 	if profile.UUID == "" {
-		return nil, nil, fmt.Errorf("profile uuid is empty")
+		return nil, nil, fmt.Errorf("Profile uuid is empty")
 	}
 	if profile.PublicKey == "" || profile.Salt == "" || profile.EncryptedPrivateKey == "" {
-		return nil, nil, fmt.Errorf("profile has no encrypted key metadata")
+		return nil, nil, fmt.Errorf("Profile has no encrypted key metadata")
 	}
 
 	publicKey, err := base64Encoding.DecodeString(profile.PublicKey)
 	if err != nil {
-		return nil, nil, fmt.Errorf("decode public key: %w", err)
+		return nil, nil, fmt.Errorf("Decode public key: %w", err)
 	}
 
 	salt, err := base64Encoding.DecodeString(profile.Salt)
 	if err != nil {
-		return nil, nil, fmt.Errorf("decode salt: %w", err)
+		return nil, nil, fmt.Errorf("Decode salt: %w", err)
 	}
 
 	key := deriveProfileKey(passphrase, salt)
@@ -224,7 +224,7 @@ func unlockProfileCryptoParams(profile *ProfileEntry, passphrase string) ([]byte
 	if len(privateKey) != ed25519.PrivateKeySize {
 		zeroBytes(key)
 		zeroBytes(privateKey)
-		return nil, nil, fmt.Errorf("invalid private key size")
+		return nil, nil, fmt.Errorf("Invalid private key size")
 	}
 
 	// Sanity-check that the decrypted private key matches the stored public key.
@@ -233,7 +233,7 @@ func unlockProfileCryptoParams(profile *ProfileEntry, passphrase string) ([]byte
 	if !ok || !bytes.Equal(derivedPublicKey, publicKey) {
 		zeroBytes(key)
 		zeroBytes(privateKey)
-		return nil, nil, fmt.Errorf("invalid profile key metadata")
+		return nil, nil, fmt.Errorf("Invalid profile key metadata")
 	}
 
 	return key, privateKey, nil
