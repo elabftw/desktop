@@ -32,7 +32,7 @@
       <label for='unlockPassphrase' class='label'>Passphrase</label>
 
       <input
-        use:autofocus
+        {@attach autofocus}
         autocomplete='off'
         placeholder='Enter passphrase'
         bind:value={passphrase}

@@ -26,7 +26,7 @@
     <div class='input-box'>
       <label for='profileName'>Profile name</label>
       <input
-        use:autofocus
+        {@attach autofocus}
         placeholder='Username'
         class='input'
         id='profileName'

@@ -144,8 +144,7 @@
         </div>
 
         <button class='btn btn-primary' onclick={openEditor}>
-          <span aria-hidden='true'>+</span>
-          Create entry
+          <span aria-hidden='true'>+</span> Create entry
         </button>
       </div>
 
@@ -159,9 +158,7 @@
           <h3>No entries yet</h3>
           <p>Create your first entry to start writing.</p>
 
-          <button class='btn btn-primary' onclick={openEditor}>
-            Create entry
-          </button>
+          <button class='btn btn-primary' onclick={openEditor}>Create entry</button>
         </div>
       {:else}
         <div class='entry-list'>
@@ -195,19 +192,14 @@
     <section class='editor-panel'>
       <form class='editor-form' onsubmit={handleSubmit}>
         <div class='editor-toolbar'>
-          <button class='btn btn-secondary' type='button' onclick={openIndex}>
-            ← Back
-          </button>
-
-          <button class='btn btn-primary' type='submit'>
-            Save
-          </button>
+          <button class='btn btn-secondary' type='button' onclick={openIndex}>← Back</button>
+          <button class='btn btn-primary' type='submit'>Save</button>
         </div>
 
         <div class='input-box'>
           <label for='entryTitle'>Entry title</label>
           <input
-            use:autofocus
+            {@attach autofocus}
             id='entryTitle'
             type='text'
             class='input entry-title-input'
