@@ -193,9 +193,9 @@ type diskProfileIndex struct {
 }
 
 type diskProfile struct {
-	UUID        string    `json:"uuid"`
-	DisplayName string    `json:"display_name"`
-	CreatedAt   time.Time `json:"created_at"`
+	UUID        string `json:"uuid"`
+	DisplayName string `json:"display_name"`
+	CreatedAt   string `json:"createdAt"`
 }
 
 // create a profile
@@ -222,7 +222,7 @@ func (a *App) AddProfile(displayName string, passphrase string) (*ProfileIndex, 
 		return nil, err
 	}
 
-	now := time.Now()
+	now := time.Now().Format(time.RFC3339Nano)
 
 	idx.Profiles = append(idx.Profiles, ProfileEntry{
 		UUID:                newUUID,

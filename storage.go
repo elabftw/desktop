@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 )
 
 const AppName = "elabftw-desktop"
@@ -17,9 +16,9 @@ type ProfileIndex struct {
 }
 
 type ProfileEntry struct {
-	UUID        string    `json:"uuid"`
-	DisplayName string    `json:"display_name,omitempty"`
-	CreatedAt   time.Time `json:"created_at"`
+	UUID        string `json:"uuid"`
+	DisplayName string `json:"display_name,omitempty"`
+	CreatedAt   string `json:"created_at"`
 
 	// PublicKey is the profile's Ed25519 public key.
 	// not secret, can be stored in the profile index.
