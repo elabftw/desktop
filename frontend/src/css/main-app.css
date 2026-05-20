@@ -13,20 +13,6 @@
   margin-bottom: 2rem;
 }
 
-.app-header h1 {
-  margin: 0;
-  color: var(--soft-white);
-  font-size: clamp(2.1rem, 5vw, 3.25rem);
-  line-height: 1;
-  letter-spacing: -0.045em;
-}
-
-.app-subtitle {
-  margin: 0.75rem 0 0;
-  color: rgba(244, 247, 251, 0.66);
-  font-size: 1.12rem;
-}
-
 .account-bar {
   display: flex;
   align-items: center;

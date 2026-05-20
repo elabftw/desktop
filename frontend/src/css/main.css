@@ -142,6 +142,20 @@ ul {
   text-decoration: underline;
 }
 
+h1 {
+  margin: 0;
+  color: var(--soft-white);
+  font-size: clamp(2.1rem, 5vw, 3.25rem);
+  line-height: 1;
+  letter-spacing: -0.045em;
+}
+
+h2 {
+  margin: 0.75rem 0 0;
+  color: rgba(244, 247, 251, 0.66);
+  font-size: 1.12rem;
+}
+
 /* Layout helpers */
 .flex-row-center {
   display: flex;
@@ -153,4 +167,9 @@ ul {
 
 .text-strong {
   font-weight: 800;
+}
+
+.flex-auto {
+  flex: 0 0 auto;
+  margin-top: 0.25rem;
 }

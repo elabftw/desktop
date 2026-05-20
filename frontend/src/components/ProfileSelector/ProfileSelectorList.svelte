@@ -15,22 +15,14 @@
   }
 </script>
 
-<section class='profile-page'>
-  <header class='profile-hero'>
+<section>
+  <header class='profile-banner'>
     <div>
-      <p class='eyebrow'>Welcome back</p>
+      <p class='header-subtitle'>Welcome back</p>
       <h1>Select a profile</h1>
-      <p class='hero-subtitle'>
-        Choose a profile to unlock your saved entries.
-      </p>
+      <h2>Choose a profile to unlock your saved entries.</h2>
     </div>
-
-    <button class='btn btn-primary'>primary</button>
-    <button class='btn btn-secondary'>primary</button>
-    <button class='btn btn-danger'>danger</button>
-    <button class='btn btn-sm'>button sm</button>
-    <button class='btn' disabled>disabled</button>
-    <button class='btn btn-primary btn-create-profile' onclick={openAddProfile}>
+    <button class='btn btn-primary flex-auto' onclick={openAddProfile}>
       <span aria-hidden='true'>+</span>
       Add profile
     </button>
@@ -40,7 +32,6 @@
     <div class='panel-header'>
       <div class='panel-title-block'>
         <div class='panel-icon' aria-hidden='true'>●</div>
-
         <div>
           <h2 id='profiles-title'>Profiles</h2>
           <p>

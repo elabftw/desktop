@@ -102,14 +102,13 @@
 <div class='app-shell'>
   <header class='app-header'>
     <div>
-      <p class='eyebrow'>Unlocked profile</p>
-
+      <p class='header-subtitle'>Unlocked profile</p>
       {#if view === 'index'}
         <h1>My Entries</h1>
-        <p class='app-subtitle'>Manage your saved entries.</p>
+        <h2>Manage your saved entries.</h2>
       {:else}
         <h1>{entryTitle.trim() || 'Untitled entry'}</h1>
-        <p class='app-subtitle'>Write, edit, and save your entry.</p>
+        <h2>Write, edit, and save your entry.</h2>
       {/if}
     </div>
 
