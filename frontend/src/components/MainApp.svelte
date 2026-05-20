@@ -113,7 +113,7 @@
   });
 </script>
 
-<div class='app-shell'>
+<div class='container'>
   <header class='header-banner'>
     <div>
       <p class='header-subtitle'>Unlocked profile</p>
@@ -126,13 +126,13 @@
       {/if}
     </div>
 
-    <div class='flex-row-center'>
-      <div class='profile-pill' title={profileName}>
-        <span class='profile-avatar-small'>{profileName.slice(0, 2).toUpperCase()}</span>
+    <div class='flex-row-center items-center'>
+      <div class='profile-pill flex items-center gap-1' title={profileName}>
+        <span class='profile-avatar'>{profileName.slice(0, 2).toUpperCase()}</span>
           <span class='text-strong'>{profileName}</span>
       </div>
 
-      <button class='btn btn-danger btn-logout' onclick={logout}>
+      <button class='btn btn-danger' onclick={logout}>
         Logout
       </button>
     </div>
@@ -145,12 +145,12 @@
   {/if}
 
   {#if view === 'index'}
-    <section class='entries-panel' aria-labelledby='entries-title'>
+    <section class='panel' aria-labelledby='entries-title'>
       <div class='card-header-banner'>
-        <div class='flex gap-1'>
+        <div class='flex items-center gap-1'>
           <div class='icon' aria-hidden='true'>▣</div>
           <div>
-            <h2 id='entries-title'>Saved entries</h2>
+            <h3 id='entries-title'>Saved entries</h3>
             <span class='description'>
               {entries.length === 1 ? '1 entry' : `${entries.length} entries`}
             </span>
@@ -198,7 +198,7 @@
       {/if}
     </section>
   {:else if view === 'editor'}
-    <section class='editor-panel'>
+    <section class='panel'>
       <form class='editor-form' onsubmit={handleSubmit}>
         <div class='editor-toolbar'>
           <button class='btn btn-secondary' type='button' onclick={openIndex}>← Back</button>

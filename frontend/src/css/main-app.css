@@ -1,4 +1,4 @@
-.app-shell {
+.container {
   width: min(1120px, calc(100vw - 3rem));
   margin: 0 auto;
   padding: 2.5rem 0;
@@ -6,52 +6,22 @@
 }
 
 .profile-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.75rem;
-  min-width: 0;
+  max-height: 48px;
   padding: 0.55rem 0.85rem 0.55rem 0.55rem;
-  border: 1px solid rgba(201, 214, 227, 0.18);
+  border: 1px solid var(--border-soft);
   border-radius: 999px;
-  background: rgba(15, 28, 49, 0.45);
-}
-
-.profile-avatar-small {
-  width: 38px;
-  height: 38px;
-  display: grid;
-  place-items: center;
-  flex: 0 0 auto;
-  border-radius: 999px;
-  color: #241800;
-  background: #fab95b;
-  font-weight: 900;
-  font-size: 0.9rem;
-}
-
-.profile-id-small {
-  color: rgba(244, 247, 251, 0.5);
-  font-size: 0.82rem;
-  line-height: 1.1;
-}
-
-.btn-logout {
-  min-height: 48px;
+  background: var(--surface-dark-soft);
 }
 
 .app-alert {
   margin-bottom: 1rem;
 }
 
-.entries-panel,
-.editor-panel {
+.panel {
   border: 1px solid rgba(201, 214, 227, 0.16);
   border-radius: 22px;
   background: var(--surface-dark-soft);
   box-shadow: 0 14px 36px var(--dark-blue-3);
-}
-
-.entries-panel {
   padding: 1.7rem;
 }
 
@@ -65,13 +35,6 @@
   color: #fab95b;
   background: rgba(244, 247, 251, 0.08);
   font-size: 1.35rem;
-}
-
-.entries-panel h2 {
-  margin: 0;
-  color: var(--soft-white);
-  font-size: 1.75rem;
-  letter-spacing: -0.035em;
 }
 
 .entry-list {
@@ -180,10 +143,6 @@
   margin: 0.45rem 0 1.25rem;
 }
 
-.editor-panel {
-  padding: 1.5rem;
-}
-
 .editor-form {
   width: 100%;
 }
@@ -208,17 +167,7 @@
 }
 
 @media (max-width: 720px) {
-  .app-shell {
-    width: min(100% - 2rem, 1120px);
-    padding: 1.5rem 0;
-  }
-
-  .profile-pill {
-    min-width: 0;
-    flex: 1;
-  }
-
-  .entries-panel {
+  .panel {
     padding: 1.15rem;
     border-radius: 18px;
   }
