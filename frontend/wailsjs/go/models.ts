@@ -42,9 +42,8 @@ export namespace main {
 	    uuid: string;
 	    display_name?: string;
 	    created_at: string;
-	    public_key?: string;
 	    salt?: string;
-	    encrypted_private_key?: string;
+	    encrypted_verifier?: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new ProfileEntry(source);
@@ -55,9 +54,8 @@ export namespace main {
 	        this.uuid = source["uuid"];
 	        this.display_name = source["display_name"];
 	        this.created_at = source["created_at"];
-	        this.public_key = source["public_key"];
 	        this.salt = source["salt"];
-	        this.encrypted_private_key = source["encrypted_private_key"];
+	        this.encrypted_verifier = source["encrypted_verifier"];
 	    }
 	}
 	export class ProfileIndex {

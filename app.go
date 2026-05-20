@@ -88,7 +88,7 @@ func (a *App) UnlockProfile(profileUUID string, passphrase string) error {
 		return fmt.Errorf("Unknown profile uuid")
 	}
 
-	key, privateKey, err := unlockProfileCryptoParams(selected, passphrase)
+	key, err := unlockProfileCryptoParams(selected, passphrase)
 	if err != nil {
 		return err
 	}
@@ -97,7 +97,6 @@ func (a *App) UnlockProfile(profileUUID string, passphrase string) error {
 
 	a.activeProfileUUID = profileUUID
 	a.activeKey = key
-	a.activePrivateKey = privateKey
 
 	return nil
 }
@@ -144,12 +143,11 @@ func (a *App) DeleteProfile(profileUUID string, passphrase string) (*ProfileInde
 		if profile.UUID == profileUUID {
 			found = true
 
-			key, privateKey, err := unlockProfileCryptoParams(&profile, passphrase)
+            key, err := unlockProfileCryptoParams(&profile, passphrase)
 			if err != nil {
 				return nil, err
 			}
 			zeroBytes(key)
-			zeroBytes(privateKey)
 			continue
 		}
 
@@ -212,10 +210,10 @@ func (a *App) AddProfile(displayName string, passphrase string) (*ProfileIndex, 
 
 	newUUID := uuid.NewString()
 
-	cryptoParams, err := createProfileCryptoParams(newUUID, passphrase)
-	if err != nil {
-		return nil, err
-	}
+	cryptoParams, err := createProfileCryptoParams(passphrase)
+    if err != nil {
+    	return nil, err
+    }
 
 	idx, err := loadProfileIndex()
 	if err != nil {
@@ -225,13 +223,12 @@ func (a *App) AddProfile(displayName string, passphrase string) (*ProfileIndex, 
 	now := time.Now().Format(time.RFC3339Nano)
 
 	idx.Profiles = append(idx.Profiles, ProfileEntry{
-		UUID:                newUUID,
-		DisplayName:         displayName,
-		CreatedAt:           now,
-		PublicKey:           cryptoParams.PublicKey,
-		Salt:                cryptoParams.Salt,
-		EncryptedPrivateKey: cryptoParams.EncryptedPrivateKey,
-	})
+    	UUID:              newUUID,
+    	DisplayName:       displayName,
+    	CreatedAt:         now,
+    	Salt:              cryptoParams.Salt,
+    	EncryptedVerifier: cryptoParams.EncryptedVerifier,
+    })
 
 	if _, err := ensureProfileDir(newUUID); err != nil {
 		return nil, err
