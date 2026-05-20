@@ -18,9 +18,9 @@
 
 /* Red error alert */
 .alert-error {
-  background: var(--error-bg);
-  border-color: var(--error-border);
-  color: var(--error-text);
+  background: var(--red-lighter);
+  border-color: var(--red-light);
+  color: var(--red-dark);
 }
 
 /* Green success alert */

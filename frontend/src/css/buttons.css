@@ -32,24 +32,24 @@ button {
 
 .btn:focus-visible {
   outline: none;
-  box-shadow: var(--shadow-focus-blue);
+  box-shadow: var(--dark-blue-shadow);
 }
 
 .btn-primary {
   background: linear-gradient(180deg, var(--orange-light), var(--orange));
   color: var(--orange-dark);
-  border-color: var(--orange-border);
-  box-shadow: 0 10px 24px var(--orange-shadow);
+  border-color: var(--orange);
+  box-shadow: 0 5px 24px var(--orange-shadow);
 }
 
 .btn-primary:hover {
-  background: linear-gradient(180deg, var(--orange-lighter), var(--orange-hover));
+  background: linear-gradient(180deg, var(--orange-light), var(--orange-lighter));
 }
 
 .btn-secondary {
-  background: rgba(30, 47, 69, 0.9);
+  background: var(--dark-blue-2);
   color: var(--soft-white);
-  border-color: rgba(201, 214, 227, 0.2);
+  border-color: var(--border-soft);
 }
 
 .btn-secondary:hover {
@@ -57,25 +57,23 @@ button {
 }
 
 .btn-danger {
-  background: rgba(159, 58, 56, 0.14);
+  background: var(--red-background);
   color: var(--red-light);
   border-color: var(--red-border);
 }
 
 .btn-danger:hover {
-  background: rgba(159, 58, 56, 0.24);
-  color: var(--red-lighter);
+  color: var(--soft-white);
   border-color: var(--red-hover-border);
 }
 
 .btn-danger:active {
-  background: rgba(159, 58, 56, 0.32);
-  border-color: var(--red-active-border);
+  background: var(--red-border);
 }
 
 .btn-danger:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px var(--red-shadow);
+  box-shadow: 0 0 0 3px var(--red-background);
 }
 
 /* Small button */

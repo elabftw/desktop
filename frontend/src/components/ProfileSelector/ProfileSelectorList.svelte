@@ -25,6 +25,11 @@
       </p>
     </div>
 
+    <button class='btn btn-primary'>primary</button>
+    <button class='btn btn-secondary'>primary</button>
+    <button class='btn btn-danger'>danger</button>
+    <button class='btn btn-sm'>button sm</button>
+    <button class='btn' disabled>disabled</button>
     <button class='btn btn-primary btn-create-profile' onclick={openAddProfile}>
       <span aria-hidden='true'>+</span>
       Add profile

@@ -19,7 +19,7 @@ textarea::placeholder {
 .input:focus,
 textarea:focus {
   outline: none;
-  border-color: var(--orange-focus-border);
+  border-color: var(--orange-hover);
   box-shadow: 0 0 0 3px var(--orange-focus-shadow);
 }
 
