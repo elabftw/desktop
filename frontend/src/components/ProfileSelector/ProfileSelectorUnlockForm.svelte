@@ -4,6 +4,7 @@
 
   type Props = {
     addError: string;
+    clearError: () => void;
     clearProfileSelection: () => void;
     unlock: (passphrase: string) => void | Promise<void>;
     deleteSelectedProfile: (passphrase: string) => void | Promise<void>;
@@ -37,7 +38,7 @@
       />
     </div>
 
-    <Alert type='error' message={addError}/>
+    {#key addError}<Alert type='error' message={addError}/>{/key}
 
     <div class='flex-row-center form-actions'>
       <button class='btn btn-secondary' type='button' onclick={clearProfileSelection}>

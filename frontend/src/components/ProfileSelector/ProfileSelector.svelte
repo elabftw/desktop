@@ -130,7 +130,7 @@
   });
 </script>
 
-<div class='profile-shell'>
+<div class='container'>
   {#if !showAddProfile}
     <ProfileSelectorList
       {profiles}

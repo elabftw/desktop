@@ -36,26 +36,26 @@
   --orange-focus-shadow: rgba(250, 185, 91, 0.14);
 
   /* Red */
-  --red-dark: #a94442;
+  --red-dark: #ffb8b6;
   --red-light: #ffb8b6;
-  --red-lighter: #f2dede;
+  --red-lighter: rgba(159, 58, 56, 0.14);
   --red-border: rgba(255, 120, 116, 0.28);
   --red-background: rgba(159, 58, 56, 0.14);
 
   /* Info alert */
-  --info-bg: #d9edf7;
-  --info-border: #bcdff1;
-  --info-text: #31708f;
+  --info-bg: rgba(49, 112, 143, 0.14);
+  --info-border: rgba(158, 217, 244, 0.24);
+  --info-text: #9ed9f4;
 
   /* Success alert */
-  --success-bg: #dff0d8;
-  --success-border: #c8e5bc;
-  --success-text: #3c763d;
+  --success-bg: rgba(42, 62, 42, 0.48);
+  --success-border: rgba(121, 156, 121, 0.48);
+  --success-text: #8ff08f;
 
   /* Warning alert */
-  --warning-bg: #fcf8e3;
-  --warning-border: #f2e3a3;
-  --warning-text: #8a6d3b;
+  --warning-bg: rgba(250, 185, 91, 0.10);
+  --warning-border: rgba(250, 185, 91, 0.28);
+  --warning-text: var(--orange-light);
 }
 
 * {
@@ -133,6 +133,10 @@ h2 {
   justify-content: center;
   gap: 0.75rem;
   margin-top: 1rem;
+}
+
+.justify-between {
+  justify-content: space-between;
 }
 
 .flex {

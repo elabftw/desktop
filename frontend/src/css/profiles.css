@@ -1,11 +1,4 @@
-.profile-shell {
-  width: min(1120px, calc(100vw - 3rem));
-  margin: 0 auto;
-  padding: 2.5rem 0;
-  text-align: left;
-}
-
-.header-banner, .card-header-banner {
+.header-banner {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -13,14 +6,14 @@
   margin-bottom: 1.5rem;
 }
 
-.card-header-banner {
+.border-bottom {
   padding-bottom: 1.25rem;
-  border-bottom: 1px solid rgba(201, 214, 227, 0.12);
+  border-bottom: 1px solid var(--border-soft);
 }
 
 .header-subtitle {
   margin: 0 0 0.35rem;
-  color: #fab95b;
+  color: var(--orange);
   font-size: 0.85rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -90,7 +83,7 @@
   flex: 0 0 auto;
   border-radius: 999px;
   color: #241800;
-  background: #fab95b;
+  background: var(--orange);
   font-weight: 900;
   font-size: 0.9rem;
 }
@@ -116,7 +109,7 @@
 }
 
 .profile-action {
-  color: #fab95b;
+  color: var(--orange);
   font-weight: 850;
   white-space: nowrap;
 }
@@ -127,18 +120,6 @@
   place-items: center;
   text-align: center;
   color: rgba(244, 247, 251, 0.62);
-}
-
-.empty-icon {
-  width: 64px;
-  height: 64px;
-  display: grid;
-  place-items: center;
-  margin-bottom: 1rem;
-  border-radius: 999px;
-  color: #fab95b;
-  background: rgba(244, 247, 251, 0.08);
-  font-size: 1.65rem;
 }
 
 .empty-state h3 {
@@ -186,7 +167,7 @@
 .danger-zone {
   margin-top: 1.25rem;
   padding-top: 1rem;
-  border-top: 1px solid rgba(201, 214, 227, 0.12);
+  border-top: 1px solid var(--border-soft);
 }
 
 .danger-zone summary {

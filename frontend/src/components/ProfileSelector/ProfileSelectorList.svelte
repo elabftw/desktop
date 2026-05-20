@@ -87,7 +87,7 @@
       </div>
     {:else}
       <div class='empty-state'>
-        <div class='empty-icon' aria-hidden='true'>+</div>
+        <div class='icon-sm' aria-hidden='true'>+</div>
         <h3>No profiles yet</h3>
         <p>Create a profile to start saving entries.</p>
 

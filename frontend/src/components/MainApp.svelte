@@ -83,7 +83,7 @@
     addError = '';
     try {
       const id = await SaveEntry(profileUuid, entryTitle, entryMainText);
-      status = `Saved with id ${id}`;
+      status = `Saved with id ${id} ✔`;
       await refreshEntries();
     } catch (e: unknown) {
       status = '';
@@ -138,15 +138,9 @@
     </div>
   </header>
 
-  {#if addError}
-    <div class='app-alert'>
-      <Alert type='error' message={addError}/>
-    </div>
-  {/if}
-
   {#if view === 'index'}
     <section class='panel' aria-labelledby='entries-title'>
-      <div class='card-header-banner'>
+      <div class='header-banner border-bottom'>
         <div class='flex items-center gap-1'>
           <div class='icon' aria-hidden='true'>▣</div>
           <div>
@@ -165,17 +159,16 @@
         </div>
       {:else if entries.length === 0}
         <div class='empty-state'>
-          <div class='empty-icon' aria-hidden='true'>✎</div>
+          <div class='icon' aria-hidden='true'>✎</div>
           <h3>No entries yet</h3>
           <p>Create your first entry to start writing.</p>
-          <button class='btn btn-primary' onclick={openEditor}><span aria-hidden='true'>+</span> Create entry</button>
         </div>
       {:else}
         <div class='entry-list'>
           {#each entries as e (e.id)}
             <div class='flex gap-1'>
             <button type='button' class='entry-card' onclick={() => openEntry(e.id)}>
-              <span class='entry-card-icon' aria-hidden='true'>▤</span>
+              <span class='icon-sm' aria-hidden='true'>▤</span>
               <span class='entry-card-content'>
                 <span class='entry-card-title'>
                   {e.title || 'Untitled entry'}
@@ -217,7 +210,7 @@
           />
         </div>
 
-        <div>
+        <div class='input-box'>
           <label for='entryMainText'>Entry main text</label>
           <textarea
             id='entryMainText'
@@ -228,10 +221,10 @@
         </div>
 
         {#if status}
-          <Alert type='success' message={status}/>
+          {#key status}<Alert type='success' message={status}/>{/key}
         {/if}
 
-        <Alert type='error' message={addError}/>
+        {#key addError}<Alert type='error' message={addError}/>{/key}
       </form>
     </section>
   {/if}
