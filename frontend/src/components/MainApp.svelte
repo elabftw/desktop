@@ -221,10 +221,10 @@
         </div>
 
         {#if status}
-          {#key status}<Alert type='success' message={status}/>{/key}
+          <Alert type='success' message={status}/>
         {/if}
 
-        {#key addError}<Alert type='error' message={addError}/>{/key}
+        <Alert type='error' message={addError}/>
       </form>
     </section>
   {/if}

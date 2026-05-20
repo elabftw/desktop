@@ -43,7 +43,7 @@
       />
     </div>
 
-    {#key addError}<Alert type='error' message={addError}/>{/key}
+    <Alert type='error' message={addError}/>
 
     <div class='flex-row-center form-actions'>
       <button type='button' class='btn btn-secondary' onclick={closeAddProfile}>
