@@ -21,7 +21,7 @@
     <h2>Create profile</h2>
     <p class='description'>Add a new local profile for your entries.</p>
 
-    <div class='input-box'>
+    <div>
       <label for='profileName'>Profile name</label>
       <input
         {@attach autofocus}
@@ -32,7 +32,7 @@
       />
     </div>
 
-    <div class='input-box'>
+    <div>
       <label for='profilePassphrase'>Passphrase</label>
       <input
         id='profilePassphrase'

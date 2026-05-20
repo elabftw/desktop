@@ -24,7 +24,7 @@
 <section>
   <form class='auth-unlock-card' onsubmit={handleSubmit}>
     <p class='description'>Enter your passphrase to continue.</p>
-    <div class='input-box'>
+    <div>
       <label for='unlockPassphrase' class='label'>Passphrase</label>
       <input
         {@attach autofocus}

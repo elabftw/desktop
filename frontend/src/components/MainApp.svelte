@@ -205,7 +205,7 @@
           <button class='btn btn-primary' type='submit'>Save</button>
         </div>
 
-        <div class='input-box'>
+        <div>
           <label for='entryTitle'>Entry title</label>
           <input
             {@attach autofocus}
@@ -217,7 +217,7 @@
           />
         </div>
 
-        <div class='input-box'>
+        <div>
           <label for='entryMainText'>Entry main text</label>
           <textarea
             id='entryMainText'
