@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/ed25519"
 	"database/sql"
 	"fmt"
 	"os"
@@ -21,10 +20,6 @@ type App struct {
 	// activeKey is the passphrase-derived symmetric key kept only in memory
 	// while a profile is unlocked. It is cleared on LockProfile.
 	activeKey []byte
-
-	// activePrivateKey is the decrypted Ed25519 private key for the active
-	// profile. It is cleared on LockProfile.
-	activePrivateKey ed25519.PrivateKey
 }
 
 // NewApp creates a new App application struct
@@ -44,7 +39,7 @@ func (a *App) startup(ctx context.Context) {
 	a.index = idx
 }
 
-// requireUnlockedProfile gates authentified actions
+// requireUnlockedProfile gates authentified actions.
 // Frontend can call exported Wails methods directly, so UI checks are not
 // enough. Every method that reads or writes profile data must verify that
 // the requested profile is currently unlocked.
@@ -59,9 +54,9 @@ func (a *App) requireUnlockedProfile(profileUUID string) error {
 	return nil
 }
 
-// Unlock a Profile - verifies the passphrase by attempting to decrypt the profile's
-// encrypted private key. On success, the derived key is kept in memory and used
-// to encrypt/decrypt entry contents for this profile only
+// UnlockProfile verifies the passphrase by decrypting the profile's encrypted
+// verifier. On success, the derived key is kept in memory and used to
+// encrypt/decrypt entry contents for this profile only.
 func (a *App) UnlockProfile(profileUUID string, passphrase string) error {
 	profileUUID = strings.TrimSpace(profileUUID)
 	if profileUUID == "" {
@@ -101,7 +96,7 @@ func (a *App) UnlockProfile(profileUUID string, passphrase string) error {
 	return nil
 }
 
-// Lock a profile (logout) - clears the in-memory session state.
+// LockProfile clears the in-memory session state.
 // After this, profile-scoped actions reject reads/writes until UnlockProfile
 // succeeds again.
 func (a *App) LockProfile() {
@@ -111,11 +106,6 @@ func (a *App) LockProfile() {
 		zeroBytes(a.activeKey)
 	}
 	a.activeKey = nil
-
-	if a.activePrivateKey != nil {
-		zeroBytes(a.activePrivateKey)
-	}
-	a.activePrivateKey = nil
 }
 
 // DeleteProfile deletes a profile after verifying its passphrase.
@@ -143,11 +133,12 @@ func (a *App) DeleteProfile(profileUUID string, passphrase string) (*ProfileInde
 		if profile.UUID == profileUUID {
 			found = true
 
-            key, err := unlockProfileCryptoParams(&profile, passphrase)
+			key, err := unlockProfileCryptoParams(&profile, passphrase)
 			if err != nil {
 				return nil, err
 			}
 			zeroBytes(key)
+
 			continue
 		}
 
@@ -196,7 +187,7 @@ type diskProfile struct {
 	CreatedAt   string `json:"createdAt"`
 }
 
-// create a profile
+// AddProfile creates a new profile with a passphrase-derived encryption key.
 func (a *App) AddProfile(displayName string, passphrase string) (*ProfileIndex, error) {
 	displayName = strings.TrimSpace(displayName)
 	if displayName == "" {
@@ -211,9 +202,9 @@ func (a *App) AddProfile(displayName string, passphrase string) (*ProfileIndex, 
 	newUUID := uuid.NewString()
 
 	cryptoParams, err := createProfileCryptoParams(passphrase)
-    if err != nil {
-    	return nil, err
-    }
+	if err != nil {
+		return nil, err
+	}
 
 	idx, err := loadProfileIndex()
 	if err != nil {
@@ -223,12 +214,12 @@ func (a *App) AddProfile(displayName string, passphrase string) (*ProfileIndex, 
 	now := time.Now().Format(time.RFC3339Nano)
 
 	idx.Profiles = append(idx.Profiles, ProfileEntry{
-    	UUID:              newUUID,
-    	DisplayName:       displayName,
-    	CreatedAt:         now,
-    	Salt:              cryptoParams.Salt,
-    	EncryptedVerifier: cryptoParams.EncryptedVerifier,
-    })
+		UUID:              newUUID,
+		DisplayName:       displayName,
+		CreatedAt:         now,
+		Salt:              cryptoParams.Salt,
+		EncryptedVerifier: cryptoParams.EncryptedVerifier,
+	})
 
 	if _, err := ensureProfileDir(newUUID); err != nil {
 		return nil, err
@@ -269,7 +260,6 @@ func (a *App) SaveEntry(profileUUID string, title string, body string) (int64, e
 		return 0, fmt.Errorf("Title is empty")
 	}
 
-	// Here is encryption done
 	// Encrypt sensitive entry content before writing to SQLite.
 	// The DB remains readable as SQLite, but title/body are ciphertext.
 	encryptedTitle, err := encryptString(a.activeKey, title)
@@ -282,7 +272,6 @@ func (a *App) SaveEntry(profileUUID string, title string, body string) (int64, e
 		return 0, fmt.Errorf("Encrypt body: %w", err)
 	}
 
-	// 	res, err := db.Exec(`INSERT INTO entries (title, body) VALUES (?, ?)`, title, body)
 	res, err := db.Exec(
 		`INSERT INTO entries (title, body) VALUES (?, ?)`,
 		encryptedTitle,
@@ -380,7 +369,8 @@ func (a *App) ListEntries(profileUUID string) ([]EntrySummary, error) {
 		if err := rows.Scan(&e.ID, &e.Title, &e.CreatedAt, &e.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("scan entry: %w", err)
 		}
-		// the row stores encrypted title/body values. Decrypt them before returning the entry to frontend.
+		// The row stores encrypted title/body values.
+		// Decrypt the title before returning the entry to frontend.
 		title, err := decryptString(a.activeKey, e.Title)
 		if err != nil {
 			return nil, fmt.Errorf("Decrypt entry title: %w", err)
