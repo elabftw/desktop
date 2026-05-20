@@ -43,15 +43,15 @@ func (a *App) startup(ctx context.Context) {
 // Frontend can call exported Wails methods directly, so UI checks are not
 // enough. Every method that reads or writes profile data must verify that
 // the requested profile is currently unlocked.
-func (a *App) requireUnlockedProfile(profileUUID string) error {
+func (a *App) requireUnlockedProfile(profileUUID string) (string, error) {
 	profileUUID = strings.TrimSpace(profileUUID)
 	if profileUUID == "" {
-		return fmt.Errorf("Profile uuid is empty")
+		return "", fmt.Errorf("Profile uuid is empty")
 	}
 	if a.activeProfileUUID != profileUUID || len(a.activeKey) == 0 {
-		return fmt.Errorf("Profile is locked")
+		return "", fmt.Errorf("Profile is locked")
 	}
-	return nil
+	return profileUUID, nil
 }
 
 // UnlockProfile verifies the passphrase by decrypting the profile's encrypted
@@ -238,8 +238,8 @@ func (a *App) AddProfile(displayName string, passphrase string) (*ProfileIndex, 
 }
 
 func (a *App) SaveEntry(profileUUID string, title string, body string) (int64, error) {
-	profileUUID = strings.TrimSpace(profileUUID)
-	if err := a.requireUnlockedProfile(profileUUID); err != nil {
+	profileUUID, err := a.requireUnlockedProfile(profileUUID)
+	if err != nil {
 		return 0, err
 	}
 
@@ -290,8 +290,8 @@ func (a *App) SaveEntry(profileUUID string, title string, body string) (int64, e
 }
 
 func (a *App) DeleteEntry(profileUUID string, id int64) error {
-	profileUUID = strings.TrimSpace(profileUUID)
-	if err := a.requireUnlockedProfile(profileUUID); err != nil {
+	profileUUID, err := a.requireUnlockedProfile(profileUUID)
+	if err != nil {
 		return err
 	}
 	if id <= 0 {
@@ -337,8 +337,8 @@ type EntrySummary struct {
 
 // Titles are stored encrypted, so decrypt them before returning the summaries to frontend.
 func (a *App) ListEntries(profileUUID string) ([]EntrySummary, error) {
-	profileUUID = strings.TrimSpace(profileUUID)
-	if err := a.requireUnlockedProfile(profileUUID); err != nil {
+	profileUUID, err := a.requireUnlockedProfile(profileUUID)
+	if err != nil {
 		return nil, err
 	}
 
@@ -394,8 +394,8 @@ type Entry struct {
 }
 
 func (a *App) GetEntry(profileUUID string, id int64) (*Entry, error) {
-	profileUUID = strings.TrimSpace(profileUUID)
-	if err := a.requireUnlockedProfile(profileUUID); err != nil {
+	profileUUID, err := a.requireUnlockedProfile(profileUUID)
+	if err != nil {
 		return nil, err
 	}
 	if id <= 0 {
