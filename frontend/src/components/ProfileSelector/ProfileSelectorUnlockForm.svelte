@@ -21,16 +21,11 @@
   const handleSubmit = preventDefaultSubmit(() => unlock(passphrase));
 </script>
 
-<section class='auth-panel'>
-  <form class='auth-card' onsubmit={handleSubmit}>
-    <div class='form-header'>
-      <h2>Unlock profile</h2>
-      <p>Enter your passphrase to continue.</p>
-    </div>
-
+<section>
+  <form class='auth-unlock-card' onsubmit={handleSubmit}>
+    <p class='description'>Enter your passphrase to continue.</p>
     <div class='input-box'>
       <label for='unlockPassphrase' class='label'>Passphrase</label>
-
       <input
         {@attach autofocus}
         autocomplete='off'

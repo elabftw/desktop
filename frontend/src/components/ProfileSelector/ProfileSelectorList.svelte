@@ -1,14 +1,28 @@
 <script lang='ts'>
   import type { main } from '../../../wailsjs/go/models';
+  import ProfileSelectorUnlockForm from './ProfileSelectorUnlockForm.svelte';
 
   type Props = {
     profiles: main.ProfileEntry[];
     activeProfile: string | null;
+    addError: string;
     openAddProfile: () => void;
     selectProfile: (uuid: string, name: string) => void;
+    clearProfileSelection: () => void;
+    unlock: (passphrase: string) => void | Promise<void>;
+    deleteSelectedProfile: (passphrase: string) => void | Promise<void>;
   };
 
-  let {profiles, activeProfile, openAddProfile, selectProfile}: Props = $props();
+  let {
+    profiles,
+    activeProfile,
+    addError,
+    openAddProfile,
+    selectProfile,
+    clearProfileSelection,
+    unlock,
+    deleteSelectedProfile
+  }: Props = $props();
 
   function initials(profile: main.ProfileEntry): string {
     return profile.display_name?.trim().slice(0, 2).toUpperCase();
@@ -55,18 +69,25 @@
             aria-pressed={activeProfile === profile.uuid}
           >
             <span class='profile-avatar'>{initials(profile)}</span>
-
             <span class='profile-content'>
               <span class='profile-name'>{profile.display_name?.trim() || profile.uuid}</span>
-              <span class='profile-meta'>
-                {activeProfile === profile.uuid ? 'Selected' : 'Click to unlock'}
-              </span>
+              <span class='profile-meta'>{activeProfile === profile.uuid ? 'Selected' : 'Click to unlock'}</span>
             </span>
 
             <span class='profile-action' aria-hidden='true'>
               {activeProfile === profile.uuid ? 'Unlock ↓' : 'Select →'}
             </span>
           </button>
+          {#if activeProfile === profile.uuid}
+            <div class='profile-inline-unlock'>
+              <ProfileSelectorUnlockForm
+                {addError}
+                {clearProfileSelection}
+                {unlock}
+                {deleteSelectedProfile}
+              />
+            </div>
+          {/if}
         {/each}
       </div>
     {:else}

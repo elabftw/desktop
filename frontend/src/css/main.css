@@ -13,10 +13,11 @@
   /* dark surfaces */
   --dark-blue: #24364b;
   --dark-blue-2: #1e2f45;
-  --surface-dark-soft: rgba(15, 28, 49, 0.56);
+  --dark-blue-3: rgba(0, 0, 0, 0.16);
+  --surface-dark-soft: rgba(15, 28, 49, 0.5);
   /* dark soft */
   --dark-blue-shadow: 0 0 0 3px rgba(120, 180, 255, 0.25);
-  --border-soft: rgba(201, 214, 227, 0.22);
+  --border-soft: rgba(201, 214, 227, 0.16);
   --blue-glow-soft: rgba(137, 172, 208, 0.14);
 
   /* Light */

@@ -32,8 +32,8 @@
   padding: 1.7rem;
   border: 1px solid rgba(201, 214, 227, 0.16);
   border-radius: 22px;
-  background: rgba(15, 28, 49, 0.5);
-  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.16);
+  background: var(--surface-dark-soft);
+  box-shadow: 0 14px 36px var(--dark-blue-3);
 }
 
 .panel-header {
@@ -185,24 +185,21 @@
   margin: 2rem auto 0;
 }
 
-.auth-card {
+.auth-card, .auth-unlock-card {
   padding: 1.5rem;
-  border: 1px solid rgba(201, 214, 227, 0.16);
+  border: 1px solid var(--border-soft);
+  box-shadow: 0 14px 36px var(--dark-blue-3);
+}
+
+.auth-card {
   border-radius: 22px;
-  background: rgba(15, 28, 49, 0.5);
-  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.16);
+  background: var(--surface-dark-soft);
 }
 
-.form-header {
-  margin-bottom: 1.25rem;
-  text-align: left;
-}
-
-.form-header h2 {
-  margin: 0;
-  color: var(--soft-white);
-  font-size: 1.65rem;
-  letter-spacing: -0.03em;
+.auth-unlock-card {
+  border-top: 0;
+  transform: translateY(-20px);
+  border-radius: 0 0 20px 20px ;
 }
 
 .form-header p {

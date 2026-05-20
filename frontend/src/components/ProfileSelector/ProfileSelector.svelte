@@ -11,7 +11,6 @@
 
   import ProfileSelectorList from './ProfileSelectorList.svelte';
   import ProfileSelectorCreateForm from './ProfileSelectorCreateForm.svelte';
-  import ProfileSelectorUnlockForm from './ProfileSelectorUnlockForm.svelte';
 
   type Props = {
     onUnlocked?: (profileUuid: string, profileName: string) => void;
@@ -136,8 +135,12 @@
     <ProfileSelectorList
       {profiles}
       {activeProfile}
+      {addError}
       {openAddProfile}
       {selectProfile}
+      {clearProfileSelection}
+      {unlock}
+      {deleteSelectedProfile}
     />
   {/if}
 
@@ -146,15 +149,6 @@
       {addError}
       {closeAddProfile}
       {confirmAddProfile}
-    />
-  {/if}
-
-  {#if activeProfile}
-    <ProfileSelectorUnlockForm
-      {addError}
-      {clearProfileSelection}
-      {unlock}
-      {deleteSelectedProfile}
     />
   {/if}
 </div>

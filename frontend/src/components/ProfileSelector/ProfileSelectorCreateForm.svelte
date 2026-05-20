@@ -18,10 +18,8 @@
 
 <section class='auth-panel'>
   <form class='auth-card' onsubmit={handleSubmit}>
-    <div class='form-header'>
-      <h2>Create profile</h2>
-      <p>Add a new local profile for your entries.</p>
-    </div>
+    <h2>Create profile</h2>
+    <p class='description'>Add a new local profile for your entries.</p>
 
     <div class='input-box'>
       <label for='profileName'>Profile name</label>

@@ -62,8 +62,8 @@
 .editor-panel {
   border: 1px solid rgba(201, 214, 227, 0.16);
   border-radius: 22px;
-  background: rgba(15, 28, 49, 0.5);
-  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.16);
+  background: var(--surface-dark-soft);
+  box-shadow: 0 14px 36px var(--dark-blue-3);
 }
 
 .entries-panel {
