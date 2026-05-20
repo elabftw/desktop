@@ -1,0 +1,182 @@
+@import 'buttons.css';
+@import 'alerts.css';
+@import 'inputs.css';
+@import 'profiles.css';
+@import 'main-app.css';
+
+/* TODO: add stylelint*/
+:root {
+  /* base */
+  --page-bg: #1b2636;
+  --text: #ffffff;
+
+  /* dark surfaces */
+  --dark-blue: #24364b;
+  --dark-blue-2: #1e2f45;
+  --surface-dark-soft: rgba(15, 28, 49, 0.56);
+  /* dark soft */
+  --dark-blue-shadow: 0 0 0 3px rgba(120, 180, 255, 0.25);
+  --border-soft: rgba(201, 214, 227, 0.22);
+  --blue-glow-soft: rgba(137, 172, 208, 0.14);
+
+  /* Light */
+  --soft-white: #f4f7fb;
+  --soft-white-muted: rgba(244, 247, 251, 0.42);
+  --soft-white-strong: rgba(244, 247, 251, 0.82);
+
+  /* Orange / gold */
+  --orange: #fab95b;
+  --orange-light: #ffd978;
+  --orange-lighter: #ffe19a;
+  --orange-dark: #241800;
+  --orange-shadow: rgba(250, 185, 91, 0.18);
+  --orange-glow-soft: rgba(250, 185, 91, 0.08);
+  --orange-hover: rgba(250, 185, 91, 0.72);
+  --orange-focus-shadow: rgba(250, 185, 91, 0.14);
+
+  /* Red */
+  --red-dark: #a94442;
+  --red-light: #ffb8b6;
+  --red-lighter: #f2dede;
+  --red-border: rgba(255, 120, 116, 0.28);
+  --red-background: rgba(159, 58, 56, 0.14);
+
+  /* Info alert */
+  --info-bg: #d9edf7;
+  --info-border: #bcdff1;
+  --info-text: #31708f;
+
+  /* Success alert */
+  --success-bg: #dff0d8;
+  --success-border: #c8e5bc;
+  --success-text: #3c763d;
+
+  /* Warning alert */
+  --warning-bg: #fcf8e3;
+  --warning-border: #f2e3a3;
+  --warning-text: #8a6d3b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  color: var(--text);
+  background: radial-gradient(circle at top right, var(--blue-glow-soft), transparent 34rem),
+  radial-gradient(circle at top left, var(--orange-glow-soft), transparent 28rem),
+  var(--page-bg);
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  font-family: Nunito,
+  -apple-system,
+  BlinkMacSystemFont,
+  'Segoe UI',
+  Roboto,
+  Oxygen,
+  Ubuntu,
+  Cantarell,
+  'Fira Sans',
+  'Droid Sans',
+  'Helvetica Neue',
+  sans-serif;
+}
+
+@font-face {
+  font-family: Nunito;
+  font-style: normal;
+  font-weight: 400;
+  src: local(''),
+  url('../assets/fonts/nunito-v16-latin-regular.woff2') format('woff2');
+}
+
+#app {
+  min-height: 100dvh;
+  text-align: center;
+}
+
+.container {
+  width: min(900px, calc(100vw - 4rem));
+  margin: 0 auto;
+}
+
+.container-md {
+  width: min(640px, calc(100vw - 3rem));
+  margin: 0 auto;
+}
+
+.container-sm {
+  width: min(420px, calc(100vw - 2rem));
+  margin: 0 auto;
+}
+
+#logo {
+  display: block;
+  margin: auto;
+  padding: 10% 0 0;
+}
+
+/* Main page - entry titles */
+ul {
+  padding: 0;
+  list-style: none;
+}
+
+.title {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--orange);
+  font: inherit;
+  font-size: 1.5rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.title:hover {
+  text-decoration: underline;
+}
+
+h1 {
+  margin: 0;
+  color: var(--soft-white);
+  font-size: clamp(2.1rem, 5vw, 3.25rem);
+  line-height: 1;
+  letter-spacing: -0.045em;
+}
+
+h2 {
+  margin: 0.75rem 0 0;
+  color: rgba(244, 247, 251, 0.66);
+  font-size: 1.12rem;
+}
+
+/* Layout helpers */
+.flex-row-center {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.flex {
+  display: flex;
+}
+
+.gap-1 {
+  gap: 1rem;
+}
+
+.text-strong {
+  font-weight: 800;
+}
+
+.flex-auto {
+  flex: 0 0 auto;
+  margin-top: 0.25rem;
+}

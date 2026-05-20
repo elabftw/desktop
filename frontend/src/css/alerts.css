@@ -1,0 +1,38 @@
+/* ALERTS */
+.alert {
+  margin-top: 0.75rem;
+  padding: 0.9rem 1rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  text-align: left;
+}
+
+/* Blue info alert */
+.alert-info {
+  background: var(--info-bg);
+  border-color: var(--info-border);
+  color: var(--info-text);
+}
+
+/* Red error alert */
+.alert-error {
+  background: var(--red-lighter);
+  border-color: var(--red-light);
+  color: var(--red-dark);
+}
+
+/* Green success alert */
+.alert-success {
+  background: var(--success-bg);
+  border-color: var(--success-border);
+  color: var(--success-text);
+}
+
+/* Yellow warning alert */
+.alert-warning {
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
+  color: var(--warning-text);
+}

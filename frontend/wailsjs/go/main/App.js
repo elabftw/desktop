@@ -6,16 +6,16 @@ export function AddProfile(arg1, arg2) {
   return window['go']['main']['App']['AddProfile'](arg1, arg2);
 }
 
+export function DeleteEntry(arg1, arg2) {
+  return window['go']['main']['App']['DeleteEntry'](arg1, arg2);
+}
+
 export function DeleteProfile(arg1, arg2) {
   return window['go']['main']['App']['DeleteProfile'](arg1, arg2);
 }
 
 export function GetEntry(arg1, arg2) {
   return window['go']['main']['App']['GetEntry'](arg1, arg2);
-}
-
-export function GetHash() {
-  return window['go']['main']['App']['GetHash']();
 }
 
 export function GetProfileIndex() {
@@ -28,10 +28,6 @@ export function ListEntries(arg1) {
 
 export function LockProfile() {
   return window['go']['main']['App']['LockProfile']();
-}
-
-export function Login(arg1) {
-  return window['go']['main']['App']['Login'](arg1);
 }
 
 export function SaveEntry(arg1, arg2, arg3) {

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 )
 
 const AppName = "elabftw-desktop"
@@ -17,11 +16,16 @@ type ProfileIndex struct {
 }
 
 type ProfileEntry struct {
-	UUID           string    `json:"uuid"`
-	DisplayName    string    `json:"display_name,omitempty"`
-	CreatedAt      time.Time `json:"created_at"`
-	LastUsedAt     time.Time `json:"last_used_at,omitempty"`
-	PassphraseHash string    `json:"passphrase_hash,omitempty"`
+	UUID        string `json:"uuid"`
+	DisplayName string `json:"display_name,omitempty"`
+	CreatedAt   string `json:"created_at"`
+
+	// Salt is a random per-profile salt used with the user's passphrase
+	// to derive the symmetric encryption key. It is not secret.
+	Salt string `json:"salt,omitempty"`
+
+	// small encrypted value used to check that the passphrase-derived key is correct when unlocking a profile.
+	EncryptedVerifier string `json:"encrypted_verifier,omitempty"`
 }
 
 func appRootDir() (string, error) {
@@ -97,7 +101,7 @@ func loadProfileIndex() (*ProfileIndex, error) {
 
 	var idx ProfileIndex
 	if err := json.Unmarshal(b, &idx); err != nil {
-		return nil, fmt.Errorf("parse index.json: %w", err)
+		return nil, fmt.Errorf("Parse index.json: %w", err)
 	}
 	if idx.Version == 0 {
 		idx.Version = 1

@@ -11,7 +11,7 @@ import (
 
 func OpenProfileDB(profileDir string) (*sql.DB, error) {
 	if err := os.MkdirAll(profileDir, 0o755); err != nil {
-		return nil, fmt.Errorf("create profile dir: %w", err)
+		return nil, fmt.Errorf("Create profile dir: %w", err)
 	}
 
 	dbPath := filepath.Join(profileDir, "data.sqlite3")
@@ -23,11 +23,11 @@ func OpenProfileDB(profileDir string) (*sql.DB, error) {
 	// Good defaults for desktop apps
 	if _, err := db.Exec(`PRAGMA foreign_keys = ON;`); err != nil {
 		_ = db.Close()
-		return nil, fmt.Errorf("pragma foreign_keys: %w", err)
+		return nil, fmt.Errorf("Pragma foreign_keys: %w", err)
 	}
 	if _, err := db.Exec(`PRAGMA journal_mode = WAL;`); err != nil {
 		_ = db.Close()
-		return nil, fmt.Errorf("pragma journal_mode: %w", err)
+		return nil, fmt.Errorf("Pragma journal_mode: %w", err)
 	}
 
 	if err := initSchema(db); err != nil {
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS entries (
 PRAGMA user_version = 1;
 `)
 		if err != nil {
-			return fmt.Errorf("create schema v1: %w", err)
+			return fmt.Errorf("Create schema v1: %w", err)
 		}
 		v = 1
 	}

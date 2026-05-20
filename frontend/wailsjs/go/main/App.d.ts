@@ -4,19 +4,17 @@ import {main} from '../models';
 
 export function AddProfile(arg1:string,arg2:string):Promise<main.ProfileIndex>;
 
+export function DeleteEntry(arg1:string,arg2:number):Promise<void>;
+
 export function DeleteProfile(arg1:string,arg2:string):Promise<main.ProfileIndex>;
 
 export function GetEntry(arg1:string,arg2:number):Promise<main.Entry>;
-
-export function GetHash():Promise<string>;
 
 export function GetProfileIndex():Promise<main.ProfileIndex>;
 
 export function ListEntries(arg1:string):Promise<Array<main.EntrySummary>>;
 
 export function LockProfile():Promise<void>;
-
-export function Login(arg1:string):Promise<void>;
 
 export function SaveEntry(arg1:string,arg2:string,arg3:string):Promise<number>;
 
