@@ -4,6 +4,8 @@ import {main} from '../models';
 
 export function AddProfile(arg1:string,arg2:string):Promise<main.ProfileIndex>;
 
+export function DeleteEntry(arg1:string,arg2:number):Promise<void>;
+
 export function DeleteProfile(arg1:string,arg2:string):Promise<main.ProfileIndex>;
 
 export function GetEntry(arg1:string,arg2:number):Promise<main.Entry>;

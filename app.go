@@ -303,6 +303,45 @@ func (a *App) SaveEntry(profileUUID string, title string, body string) (int64, e
 	return id, nil
 }
 
+func (a *App) DeleteEntry(profileUUID string, id int64) error {
+	profileUUID = strings.TrimSpace(profileUUID)
+	if err := a.requireUnlockedProfile(profileUUID); err != nil {
+		return err
+	}
+	if id <= 0 {
+		return fmt.Errorf("Invalid id")
+	}
+
+	pdir, err := profileDir(profileUUID)
+	if err != nil {
+		return err
+	}
+
+	db, err := OpenProfileDB(pdir)
+	if err != nil {
+		return fmt.Errorf("Open profile db: %w", err)
+	}
+	defer func() { _ = db.Close() }()
+
+	res, err := db.Exec(`
+		DELETE FROM entries
+		WHERE id = ?
+	`, id)
+	if err != nil {
+		return fmt.Errorf("delete entry: %w", err)
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("get deleted rows count: %w", err)
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("Entry not found")
+	}
+
+	return nil
+}
+
 type EntrySummary struct {
 	ID        int64  `json:"id"`
 	Title     string `json:"title"`

@@ -105,11 +105,6 @@
   letter-spacing: -0.035em;
 }
 
-.entries-panel-header p {
-  margin: 0.35rem 0 0;
-  color: rgba(244, 247, 251, 0.55);
-}
-
 .entry-list {
   display: grid;
   gap: 0.85rem;
@@ -171,7 +166,7 @@
   white-space: nowrap;
 }
 
-.entry-card-meta {
+.description {
   color: rgba(244, 247, 251, 0.54);
   font-size: 0.95rem;
 }

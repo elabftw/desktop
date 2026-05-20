@@ -1,7 +1,7 @@
 <script lang='ts'>
   import { onMount } from 'svelte';
   import { DateTime } from 'luxon';
-  import { ListEntries, SaveEntry, GetEntry, LockProfile } from '../../wailsjs/go/main/App';
+  import { ListEntries, GetEntry, SaveEntry, DeleteEntry, LockProfile } from '../../wailsjs/go/main/App';
   import type { main } from '../../wailsjs/go/models';
   import { autofocus, errorMessage, preventDefaultSubmit } from '../utils/helpers';
   import Alert from './Alert.svelte';
@@ -81,13 +81,27 @@
   async function saveEntry(): Promise<void> {
     status = 'Saving...';
     addError = '';
-
     try {
       const id = await SaveEntry(profileUuid, entryTitle, entryMainText);
       status = `Saved with id ${id}`;
       await refreshEntries();
     } catch (e: unknown) {
       status = '';
+      addError = errorMessage(e);
+    }
+  }
+
+  async function deleteEntry(id: number, title: string): Promise<void> {
+    addError = '';
+    status = '';
+    const confirmed = window.confirm(`Delete "${title || 'Untitled entry'}"? This cannot be undone.`);
+    if (!confirmed) {
+      return;
+    }
+    try {
+      await DeleteEntry(profileUuid, id);
+      await refreshEntries();
+    } catch (e: unknown) {
       addError = errorMessage(e);
     }
   }
@@ -137,9 +151,9 @@
           <div class='entries-icon' aria-hidden='true'>▣</div>
           <div>
             <h2 id='entries-title'>Saved entries</h2>
-            <p>
+            <span class='description'>
               {entries.length === 1 ? '1 entry' : `${entries.length} entries`}
-            </p>
+            </span>
           </div>
         </div>
 
@@ -163,19 +177,13 @@
       {:else}
         <div class='entry-list'>
           {#each entries as e (e.id)}
-            <button
-              type='button'
-              class='entry-card'
-              onclick={() => openEntry(e.id)}
-            >
+            <button type='button' class='entry-card' onclick={() => openEntry(e.id)}>
               <span class='entry-card-icon' aria-hidden='true'>▤</span>
-
               <span class='entry-card-content'>
                 <span class='entry-card-title'>
                   {e.title || 'Untitled entry'}
                 </span>
-
-                <span class='entry-card-meta'>
+                <span class='description'>
                   Last edited {toRelativeTime(e.updatedAt)}
                 </span>
               </span>

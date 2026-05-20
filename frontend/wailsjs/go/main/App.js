@@ -6,6 +6,10 @@ export function AddProfile(arg1, arg2) {
   return window['go']['main']['App']['AddProfile'](arg1, arg2);
 }
 
+export function DeleteEntry(arg1, arg2) {
+  return window['go']['main']['App']['DeleteEntry'](arg1, arg2);
+}
+
 export function DeleteProfile(arg1, arg2) {
   return window['go']['main']['App']['DeleteProfile'](arg1, arg2);
 }
