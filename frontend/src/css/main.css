@@ -135,7 +135,7 @@ h2 {
   text-align: left;
 }
 
-/* below containers, the sub-container*/
+/* below containers, the sub-container */
 .panel {
   border: 1px solid var(--border-soft);
   border-radius: 22px;

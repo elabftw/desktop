@@ -210,10 +210,10 @@
 
         <label for='entryMainText' class='mt-2'>Entry main text</label>
         <textarea id='entryMainText' bind:value={entryMainText} placeholder='The main text...'></textarea>
-        {#if alert}
-          <Alert type={alert.type} message={alert.message} />
-        {/if}
       </form>
     </section>
+  {/if}
+  {#if alert}
+    <Alert type={alert.type} message={alert.message} />
   {/if}
 </div>
