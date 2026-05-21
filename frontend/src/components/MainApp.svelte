@@ -108,7 +108,7 @@
 
 <div class='container'>
   <header class='flex justify-between items-center mb-2 border-bottom'>
-    <div class='w-100'>
+    <div class='w-100 text-ellipsis'>
       <p class='header-subtitle'>Unlocked profile</p>
       {#if view === 'index'}
         <h1>My Entries</h1>
