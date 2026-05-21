@@ -14,6 +14,7 @@
   --dark-blue: #24364b;
   --dark-blue-2: #1e2f45;
   --dark-blue-3: rgba(0, 0, 0, 0.16);
+  --dark-blue-4: rgba(30, 47, 69, 0.55);
   --surface-dark-soft: rgba(15, 28, 49, 0.5);
   /* dark soft */
   --dark-blue-shadow: 0 0 0 3px rgba(120, 180, 255, 0.25);
@@ -22,8 +23,8 @@
 
   /* Light */
   --soft-white: #f4f7fb;
-  --soft-white-muted: rgba(244, 247, 251, 0.42);
-  --soft-white-strong: rgba(244, 247, 251, 0.82);
+  --gray: rgba(244, 247, 251, 0.42);
+  --light-gray: rgba(191, 191, 191, 0.82);
 
   /* Orange / gold */
   --orange: #fab95b;
@@ -122,7 +123,7 @@ h1 {
 
 h2 {
   margin: 0.75rem 0 0;
-  color: rgba(244, 247, 251, 0.66);
+  color: var(--light-gray);
   font-size: 1.12rem;
 }
 
@@ -158,4 +159,43 @@ h2 {
 
 .text-strong {
   font-weight: 800;
+}
+
+.text-gray {
+  color: var(--gray);
+}
+
+.text-orange {
+  color: var(--orange);
+}
+
+.text-white {
+  color: var(--soft-white);
+}
+
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.description {
+  color: rgba(244, 247, 251, 0.54);
+  font-size: 0.95rem;
+}
+
+.text-big {
+  font-size: 1.2rem;
+}
+
+.w-100 {
+  width: 100%;
+}
+
+.mt-2 {
+  margin-top: 2rem;
+}
+
+.mb-2 {
+  margin-bottom: 2rem;
 }

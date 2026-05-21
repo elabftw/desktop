@@ -1,10 +1,10 @@
 <script lang='ts'>
-  type AlertType = 'success' | 'error' | 'warning' | 'info';
-
-  type AlertProps = {
-    type?: AlertType;
-    message?: string;
+  export type AlertState = {
+    type: 'success' | 'error' | 'warning' | 'info';
+    message: string;
   };
+
+  type AlertProps = Partial<AlertState>;
 
   let { type = 'success', message = '' }: AlertProps = $props();
   let visible = $state(true);

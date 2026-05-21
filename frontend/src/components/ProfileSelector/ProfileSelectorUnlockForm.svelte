@@ -4,7 +4,6 @@
 
   type Props = {
     addError: string;
-    clearError: () => void;
     clearProfileSelection: () => void;
     unlock: (passphrase: string) => void | Promise<void>;
     deleteSelectedProfile: (passphrase: string) => void | Promise<void>;
@@ -54,7 +53,7 @@
       <summary>Danger zone</summary>
 
       <div class='danger-actions'>
-        <button class='btn btn-danger btn-sm' type='button' onclick={() => deleteSelectedProfile(passphrase)}>
+        <button class='btn btn-danger' type='button' onclick={() => deleteSelectedProfile(passphrase)}>
           Delete profile
         </button>
       </div>

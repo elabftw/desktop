@@ -13,15 +13,20 @@
   background: var(--surface-dark-soft);
 }
 
+/* below containers, the sub-container*/
 .panel {
-  border: 1px solid rgba(201, 214, 227, 0.16);
+  border: 1px solid var(--border-soft);
   border-radius: 22px;
   background: var(--surface-dark-soft);
   box-shadow: 0 14px 36px var(--dark-blue-3);
   padding: 1.7rem;
+
+  @media (max-width: 720px) {
+    padding: 1rem;
+  }
 }
 
-.icon, .icon-sm {
+.icon, .icon-sm, .profile-avatar {
   width: 64px;
   height: 64px;
   display: grid;
@@ -32,8 +37,16 @@
   font-size: 1.35rem;
 }
 
+
 .icon-sm {
   transform: scale(.8);
+}
+
+.profile-avatar {
+  transform: scale(.8);
+  color: var(--orange-dark);
+  background: var(--orange);
+  font-weight: 900;
 }
 
 .entry-list {
@@ -50,9 +63,9 @@
   padding: 1rem;
   text-align: left;
   color: inherit;
-  border: 1px solid rgba(201, 214, 227, 0.14);
-  border-radius: 16px;
-  background: rgba(30, 47, 69, 0.55);
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  background: var(--dark-blue-4);
   cursor: pointer;
   transition: background-color 0.12s ease,
   border-color 0.12s ease,
@@ -71,88 +84,8 @@
   box-shadow: 0 0 0 3px rgba(250, 185, 91, 0.14);
 }
 
-.entry-card-content {
-  min-width: 0;
-  display: grid;
-  gap: 0.28rem;
-}
-
-.entry-card-title {
-  overflow: hidden;
-  color: var(--soft-white);
-  font-size: 1.12rem;
-  font-weight: 850;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.description {
-  color: rgba(244, 247, 251, 0.54);
-  font-size: 0.95rem;
-}
-
-.entry-card-action {
-  color: var(--orange);
-  font-weight: 850;
-  white-space: nowrap;
-}
-
-.loading-state,
 .empty-state {
-  padding: 3rem 1rem;
-  text-align: center;
-  color: rgba(244, 247, 251, 0.62);
-}
-
-.empty-state {
+  padding: 2rem 1rem;
   display: grid;
   place-items: center;
-}
-
-.empty-state h3 {
-  margin: 0;
-  color: var(--soft-white);
-  font-size: 1.35rem;
-}
-
-.empty-state p {
-  margin: 0.45rem 0 1.25rem;
-}
-
-.editor-form {
-  width: 100%;
-}
-
-.editor-toolbar {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  padding-bottom: 1.25rem;
-  margin-bottom: 1.25rem;
-  border-bottom: 1px solid var(--border-soft);
-}
-
-.entry-title-input {
-  font-size: 1.2rem;
-  font-weight: 800;
-}
-
-.entry-textarea {
-  min-height: 420px;
-  line-height: 1.6;
-}
-
-@media (max-width: 720px) {
-  .panel {
-    padding: 1.15rem;
-    border-radius: 18px;
-  }
-
-  .entry-card {
-    grid-template-columns: auto minmax(0, 1fr);
-  }
-
-  .entry-card-action {
-    grid-column: 2;
-  }
 }

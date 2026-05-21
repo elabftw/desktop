@@ -75,9 +75,3 @@ button {
   outline: none;
   box-shadow: 0 0 0 3px var(--red-background);
 }
-
-/* Small button */
-.btn-sm {
-  padding: 0.45rem 0.8rem;
-  font-size: 0.88rem;
-}

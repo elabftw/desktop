@@ -31,7 +31,7 @@
 
 <section>
   <p class='header-subtitle'>Welcome back</p>
-  <header class='header-banner'>
+  <header class='flex justify-between items-center mb-2'>
     <div>
       <h1>Select a profile</h1>
       <h2>Choose a profile to unlock your saved entries.</h2>
@@ -41,8 +41,8 @@
     </button>
   </header>
 
-  <section class='card-container' aria-labelledby='profiles-title'>
-    <div class='card-header'>
+  <section class='panel' aria-labelledby='profiles-title'>
+    <div class='flex justify-between items-center border-bottom mb-2'>
       <div class='flex items-center gap-1'>
         <div class='icon' aria-hidden='true'>●</div>
         <div>
@@ -64,12 +64,12 @@
             aria-pressed={activeProfile === profile.uuid}
           >
             <span class='profile-avatar'>{initials(profile)}</span>
-            <span class='profile-content'>
+            <span class='content'>
               <span class='profile-name'>{profile.display_name?.trim() || profile.uuid}</span>
-              <span class='profile-meta'>{activeProfile === profile.uuid ? 'Selected' : 'Click to unlock'}</span>
+              <span class='text-gray'>{activeProfile === profile.uuid ? 'Selected' : 'Click to unlock'}</span>
             </span>
 
-            <span class='profile-action' aria-hidden='true'>
+            <span class='text-orange text-strong' aria-hidden='true'>
               {activeProfile === profile.uuid ? 'Unlock ↓' : 'Select →'}
             </span>
           </button>
@@ -90,7 +90,6 @@
         <div class='icon-sm' aria-hidden='true'>+</div>
         <h3>No profiles yet</h3>
         <p>Create a profile to start saving entries.</p>
-
         <button class='btn btn-primary' onclick={openAddProfile}>
           Create your first profile
         </button>
