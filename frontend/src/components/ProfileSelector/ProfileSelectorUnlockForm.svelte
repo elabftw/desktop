@@ -23,13 +23,12 @@
 
 <section>
   <form class='auth-unlock-card' onsubmit={handleSubmit}>
-    <p class='description'>Enter your passphrase to continue.</p>
     <div>
-      <label for='unlockPassphrase' class='label'>Passphrase</label>
+      <label for='unlockPassphrase' class='text-big mt-2'>Passphrase</label>
       <input
         {@attach autofocus}
         autocomplete='off'
-        placeholder='Enter passphrase'
+        placeholder='Enter your passphrase to continue.'
         bind:value={passphrase}
         class='input'
         id='unlockPassphrase'

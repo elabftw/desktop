@@ -10,14 +10,21 @@ import (
 )
 
 func OpenProfileDB(profileDir string) (*sql.DB, error) {
-	if err := os.MkdirAll(profileDir, 0o755); err != nil {
+	if err := os.MkdirAll(profileDir, 0o700); err != nil {
 		return nil, fmt.Errorf("Create profile dir: %w", err)
 	}
 
 	dbPath := filepath.Join(profileDir, "data.sqlite3")
+    fmt.Println("Opening profile DB:", dbPath)
+
 	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		return nil, fmt.Errorf("open sqlite: %w", err)
+	}
+
+	if err := os.Chmod(dbPath, 0o600); err != nil {
+		_ = db.Close()
+		return nil, fmt.Errorf("chmod sqlite db: %w", err)
 	}
 
 	// Good defaults for desktop apps
@@ -66,6 +73,44 @@ PRAGMA user_version = 1;
 
 	// Future migrations would go here:
 	// if v == 1 { ... set user_version = 2 }
+	if v == 1 {
+		_, err := db.Exec(`
+CREATE TABLE IF NOT EXISTS elabftw_instances (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	site_url TEXT NOT NULL UNIQUE,
+	api_key TEXT NOT NULL,
+	verify_tls INTEGER NOT NULL DEFAULT 1,
+	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+);
+
+CREATE TABLE IF NOT EXISTS local2remote (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	instance INTEGER NOT NULL,
+	remote_id INTEGER NOT NULL,
+	local_id INTEGER NOT NULL,
+	type TEXT NOT NULL CHECK (type IN ('experiment', 'resource', 'template')),
+	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+
+	FOREIGN KEY (instance) REFERENCES elabftw_instances(id) ON DELETE CASCADE,
+	UNIQUE(instance, local_id, type),
+	UNIQUE(instance, remote_id, type)
+);
+
+CREATE INDEX IF NOT EXISTS idx_local2remote_local
+ON local2remote(local_id, type);
+
+CREATE INDEX IF NOT EXISTS idx_local2remote_remote
+ON local2remote(instance, remote_id, type);
+
+PRAGMA user_version = 2;
+`)
+		if err != nil {
+			return fmt.Errorf("Create schema v2: %w", err)
+		}
+		v = 2
+	}
 
 	return nil
 }

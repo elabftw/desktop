@@ -25,7 +25,7 @@ textarea:focus {
 
 label {
   display: inline-block;
-  color: var(--light-gray);
+  color: var(--soft-white);
   font-size: 0.95rem;
   font-weight: 800;
 }
