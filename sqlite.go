@@ -15,7 +15,7 @@ func OpenProfileDB(profileDir string) (*sql.DB, error) {
 	}
 
 	dbPath := filepath.Join(profileDir, "data.sqlite3")
-    fmt.Println("Opening profile DB:", dbPath)
+	fmt.Println("Opening profile DB:", dbPath)
 
 	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
