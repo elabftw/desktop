@@ -16,14 +16,12 @@
   const handleSubmit = preventDefaultSubmit(() => confirmAddProfile(name, passphrase));
 </script>
 
-<section class='auth-panel'>
-  <form class='auth-card' onsubmit={handleSubmit}>
-    <div class='form-header'>
-      <h2>Create profile</h2>
-      <p>Add a new local profile for your entries.</p>
-    </div>
+<section class='panel'>
+  <form onsubmit={handleSubmit}>
+    <h1>Create a profile</h1>
+    <h2 class='mb-2'>Add a new local profile for your entries.</h2>
 
-    <div class='input-box'>
+    <div>
       <label for='profileName'>Profile name</label>
       <input
         {@attach autofocus}
@@ -34,8 +32,8 @@
       />
     </div>
 
-    <div class='input-box'>
-      <label for='profilePassphrase'>Passphrase</label>
+    <div>
+      <label for='profilePassphrase' class='mt-2'>Passphrase</label>
       <input
         id='profilePassphrase'
         class='input'
@@ -47,7 +45,7 @@
 
     <Alert type='error' message={addError}/>
 
-    <div class='flex-row-center form-actions'>
+    <div class='flex gap-1 mt-2 justify-end'>
       <button type='button' class='btn btn-secondary' onclick={closeAddProfile}>
         Cancel
       </button>

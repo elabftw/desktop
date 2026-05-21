@@ -1,14 +1,23 @@
 <script lang='ts'>
-  type AlertType = 'success' | 'error' | 'warning' | 'info';
-  type AlertProps = {
-    type?: AlertType;
-    message?: string;
+  export type AlertState = {
+    type: 'success' | 'error' | 'warning' | 'info';
+    message: string;
   };
+
+  type AlertProps = Partial<AlertState>;
+
   let { type = 'success', message = '' }: AlertProps = $props();
+  let visible = $state(true);
+
+  // Re-show the alert when the parent provides a new message.
+  $effect(() => {
+    if (message) visible = true;
+  });
 </script>
 
-{#if message}
-  <div class={`alert alert-${type}`}>
+{#if message && visible}
+  <div class={`alert alert-${type} flex justify-between items-center`}>
     <strong>{message}</strong>
+    <button class='alert-close' type='button' aria-label='Close alert' onclick={() => visible = false}>×</button>
   </div>
 {/if}

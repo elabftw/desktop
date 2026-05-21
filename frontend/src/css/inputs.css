@@ -13,7 +13,7 @@ textarea {
 
 .input::placeholder,
 textarea::placeholder {
-  color: var(--soft-white-muted);
+  color: var(--gray);
 }
 
 .input:focus,
@@ -25,7 +25,12 @@ textarea:focus {
 
 label {
   display: inline-block;
-  color: var(--soft-white-strong);
+  color: var(--light-gray);
   font-size: 0.95rem;
   font-weight: 800;
+}
+
+textarea {
+  min-height: 420px;
+  line-height: 1.6;
 }

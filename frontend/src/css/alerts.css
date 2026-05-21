@@ -19,7 +19,7 @@
 /* Red error alert */
 .alert-error {
   background: var(--red-lighter);
-  border-color: var(--red-light);
+  border-color: var(--red-border);
   color: var(--red-dark);
 }
 
@@ -35,4 +35,19 @@
   background: var(--warning-bg);
   border-color: var(--warning-border);
   color: var(--warning-text);
+}
+
+.alert-close {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 2rem;
+  font-weight: bold;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.alert-close:hover {
+  opacity: 1;
 }

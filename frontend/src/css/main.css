@@ -13,16 +13,18 @@
   /* dark surfaces */
   --dark-blue: #24364b;
   --dark-blue-2: #1e2f45;
-  --surface-dark-soft: rgba(15, 28, 49, 0.56);
+  --dark-blue-3: rgba(0, 0, 0, 0.16);
+  --dark-blue-4: rgba(30, 47, 69, 0.55);
+  --surface-dark-soft: rgba(15, 28, 49, 0.5);
   /* dark soft */
   --dark-blue-shadow: 0 0 0 3px rgba(120, 180, 255, 0.25);
-  --border-soft: rgba(201, 214, 227, 0.22);
+  --border-soft: rgba(201, 214, 227, 0.16);
   --blue-glow-soft: rgba(137, 172, 208, 0.14);
 
   /* Light */
   --soft-white: #f4f7fb;
-  --soft-white-muted: rgba(244, 247, 251, 0.42);
-  --soft-white-strong: rgba(244, 247, 251, 0.82);
+  --gray: rgba(244, 247, 251, 0.42);
+  --light-gray: rgba(191, 191, 191, 0.82);
 
   /* Orange / gold */
   --orange: #fab95b;
@@ -35,26 +37,26 @@
   --orange-focus-shadow: rgba(250, 185, 91, 0.14);
 
   /* Red */
-  --red-dark: #a94442;
+  --red-dark: #ffb8b6;
   --red-light: #ffb8b6;
-  --red-lighter: #f2dede;
+  --red-lighter: rgba(159, 58, 56, 0.14);
   --red-border: rgba(255, 120, 116, 0.28);
   --red-background: rgba(159, 58, 56, 0.14);
 
   /* Info alert */
-  --info-bg: #d9edf7;
-  --info-border: #bcdff1;
-  --info-text: #31708f;
+  --info-bg: rgba(49, 112, 143, 0.14);
+  --info-border: rgba(158, 217, 244, 0.24);
+  --info-text: #9ed9f4;
 
   /* Success alert */
-  --success-bg: #dff0d8;
-  --success-border: #c8e5bc;
-  --success-text: #3c763d;
+  --success-bg: rgba(42, 62, 42, 0.48);
+  --success-border: rgba(121, 156, 121, 0.48);
+  --success-text: #8ff08f;
 
   /* Warning alert */
-  --warning-bg: #fcf8e3;
-  --warning-border: #f2e3a3;
-  --warning-text: #8a6d3b;
+  --warning-bg: rgba(250, 185, 91, 0.10);
+  --warning-border: rgba(250, 185, 91, 0.28);
+  --warning-text: var(--orange-light);
 }
 
 * {
@@ -99,21 +101,6 @@ body {
   text-align: center;
 }
 
-.container {
-  width: min(900px, calc(100vw - 4rem));
-  margin: 0 auto;
-}
-
-.container-md {
-  width: min(640px, calc(100vw - 3rem));
-  margin: 0 auto;
-}
-
-.container-sm {
-  width: min(420px, calc(100vw - 2rem));
-  margin: 0 auto;
-}
-
 #logo {
   display: block;
   margin: auto;
@@ -126,21 +113,6 @@ ul {
   list-style: none;
 }
 
-.title {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--orange);
-  font: inherit;
-  font-size: 1.5rem;
-  text-align: left;
-  cursor: pointer;
-}
-
-.title:hover {
-  text-decoration: underline;
-}
-
 h1 {
   margin: 0;
   color: var(--soft-white);
@@ -151,11 +123,35 @@ h1 {
 
 h2 {
   margin: 0.75rem 0 0;
-  color: rgba(244, 247, 251, 0.66);
+  color: var(--light-gray);
   font-size: 1.12rem;
 }
 
 /* Layout helpers */
+.container {
+  width: min(1120px, calc(100vw - 3rem));
+  margin: 0 auto;
+  padding: 2.5rem 0;
+  text-align: left;
+}
+
+/* below containers, the sub-container */
+.panel {
+  border: 1px solid var(--border-soft);
+  border-radius: 22px;
+  background: var(--surface-dark-soft);
+  box-shadow: 0 14px 36px var(--dark-blue-3);
+  padding: 1.7rem;
+
+  @media (max-width: 720px) {
+    padding: 1rem;
+  }
+}
+
+.grid {
+  display: grid;
+}
+
 .flex-row-center {
   display: flex;
   flex-wrap: wrap;
@@ -164,19 +160,84 @@ h2 {
   margin-top: 1rem;
 }
 
+.justify-between {
+  justify-content: space-between;
+}
+
+.justify-end {
+  justify-content: flex-end;
+}
+
 .flex {
   display: flex;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.flex-auto {
+  flex: 0 0 auto;
+  margin-top: 0.25rem;
 }
 
 .gap-1 {
   gap: 1rem;
 }
 
+.gap-03 {
+  gap: 0.3rem;
+}
+
 .text-strong {
   font-weight: 800;
 }
 
-.flex-auto {
-  flex: 0 0 auto;
-  margin-top: 0.25rem;
+.text-gray {
+  color: var(--gray);
+}
+
+.text-orange {
+  color: var(--orange);
+}
+
+.text-white {
+  color: var(--soft-white);
+}
+
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.description {
+  color: rgba(244, 247, 251, 0.54);
+  font-size: 0.95rem;
+}
+
+.text-big {
+  font-size: 1.2rem;
+}
+
+.w-100 {
+  width: 100%;
+}
+
+.mt-2 {
+  margin-top: 2rem;
+}
+
+.mb-2 {
+  margin-bottom: 2rem;
+}
+
+.border-bottom {
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.border-top {
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-soft);
 }

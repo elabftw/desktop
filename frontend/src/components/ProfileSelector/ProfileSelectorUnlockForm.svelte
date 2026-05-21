@@ -21,16 +21,11 @@
   const handleSubmit = preventDefaultSubmit(() => unlock(passphrase));
 </script>
 
-<section class='auth-panel'>
-  <form class='auth-card' onsubmit={handleSubmit}>
-    <div class='form-header'>
-      <h2>Unlock profile</h2>
-      <p>Enter your passphrase to continue.</p>
-    </div>
-
-    <div class='input-box'>
+<section>
+  <form class='auth-unlock-card' onsubmit={handleSubmit}>
+    <p class='description'>Enter your passphrase to continue.</p>
+    <div>
       <label for='unlockPassphrase' class='label'>Passphrase</label>
-
       <input
         {@attach autofocus}
         autocomplete='off'
@@ -42,9 +37,9 @@
       />
     </div>
 
-    <Alert type='error' message={addError}/>
+   <Alert type='error' message={addError}/>
 
-    <div class='flex-row-center form-actions'>
+    <div class='flex gap-1 mt-2 justify-end'>
       <button class='btn btn-secondary' type='button' onclick={clearProfileSelection}>
         Cancel
       </button>
@@ -54,11 +49,11 @@
       </button>
     </div>
 
-    <details class='danger-zone'>
-      <summary>Danger zone</summary>
+    <details class='border-top mt-2'>
+      <summary class='text-orange'>Danger zone</summary>
 
-      <div class='danger-actions'>
-        <button class='btn btn-danger btn-sm' type='button' onclick={() => deleteSelectedProfile(passphrase)}>
+      <div class='mt-2'>
+        <button class='btn btn-danger' type='button' onclick={() => deleteSelectedProfile(passphrase)}>
           Delete profile
         </button>
       </div>
