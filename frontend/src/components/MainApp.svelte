@@ -181,6 +181,11 @@
             </div>
           {/each}
         </div>
+<!--        TODO -->
+        <div class='flex justify-end mt-2 gap-1'>
+          <button class='btn btn-secondary'>Push entries to eLabFTW</button>
+          <button class='btn btn-secondary'>Fetch entries from eLabFTW</button>
+        </div>
       {/if}
     </section>
   {:else if view === 'editor'}
