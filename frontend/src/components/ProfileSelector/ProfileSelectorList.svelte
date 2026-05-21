@@ -53,19 +53,19 @@
     </div>
 
     {#if profiles.length > 0}
-      <div class='profiles'>
+      <div class='grid gap-1'>
         {#each profiles as profile (profile.uuid)}
           <button
             type='button'
-            class='profile-box'
+            class='entry-card'
             class:active={activeProfile === profile.uuid}
             class:masked={activeProfile !== null && activeProfile !== profile.uuid}
             onclick={() => selectProfile(profile.uuid, profile.display_name)}
             aria-pressed={activeProfile === profile.uuid}
           >
             <span class='profile-avatar'>{initials(profile)}</span>
-            <span class='content'>
-              <span class='profile-name'>{profile.display_name?.trim() || profile.uuid}</span>
+            <span class='grid gap-03'>
+              <span class='text-strong text-white text-ellipsis text-big'>{profile.display_name?.trim() || profile.uuid}</span>
               <span class='text-gray'>{activeProfile === profile.uuid ? 'Selected' : 'Click to unlock'}</span>
             </span>
 

@@ -157,12 +157,12 @@
           <p>Create your first entry to start writing.</p>
         </div>
       {:else}
-        <div class='entry-list'>
+        <div class='grid gap-1'>
           {#each entries as e (e.id)}
             <div class='flex gap-1'>
             <button type='button' class='entry-card' onclick={() => openEntry(e.id)}>
               <span class='icon-sm' aria-hidden='true'>▤</span>
-              <span class='content'>
+              <span class='grid gap-03'>
                 <span class='text-ellipsis text-white text-strong text-big'>
                   {e.title || 'Untitled entry'}
                 </span>

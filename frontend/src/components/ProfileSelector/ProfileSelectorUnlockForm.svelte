@@ -39,7 +39,7 @@
 
    <Alert type='error' message={addError}/>
 
-    <div class='flex-row-center form-actions'>
+    <div class='flex gap-1 mt-2 justify-end'>
       <button class='btn btn-secondary' type='button' onclick={clearProfileSelection}>
         Cancel
       </button>
@@ -49,10 +49,10 @@
       </button>
     </div>
 
-    <details class='danger-zone'>
-      <summary>Danger zone</summary>
+    <details class='border-top mt-2'>
+      <summary class='text-orange'>Danger zone</summary>
 
-      <div class='danger-actions'>
+      <div class='mt-2'>
         <button class='btn btn-danger' type='button' onclick={() => deleteSelectedProfile(passphrase)}>
           Delete profile
         </button>
