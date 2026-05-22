@@ -1,5 +1,23 @@
 export namespace main {
 	
+	export class ElabftwInstance {
+	    id: number;
+	    siteUrl: string;
+	    apiKey?: string;
+	    verifyTls: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new ElabftwInstance(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.siteUrl = source["siteUrl"];
+	        this.apiKey = source["apiKey"];
+	        this.verifyTls = source["verifyTls"];
+	    }
+	}
 	export class Entry {
 	    id: number;
 	    title: string;
