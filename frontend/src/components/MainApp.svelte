@@ -38,6 +38,8 @@
   let instanceSiteUrl = $state('');
   let instanceApiKey = $state('');
   let instanceVerifyTls = $state(true);
+  // test info endpoint
+  let elabftwInfoOutput = $state('');
 
   function toRelativeTime(iso: string, locale = 'en'): string {
     return DateTime.fromISO(iso).setLocale(locale).toRelative() ?? 'now';
@@ -179,10 +181,11 @@
 
   async function testInstance(id: number): Promise<void> {
     alert = { type: 'info', message: 'Fetching eLabFTW /info...' };
+    elabftwInfoOutput = '';
 
     try {
       const info = await FetchElabftwInfo(profileUuid, id);
-      console.log('eLabFTW /info:', info.raw);
+      elabftwInfoOutput = JSON.stringify(info.raw, null, 2);
       alert = { type: 'success', message: 'Connected to eLabFTW ✔' };
     } catch (e: unknown) {
       alert = { type: 'error', message: errorMessage(e) };
@@ -364,6 +367,12 @@
               </div>
             </div>
           {/each}
+          {#if elabftwInfoOutput}
+            <div class='mt-2'>
+              <h3>eLabFTW /info response</h3>
+              <pre class='panel'>{elabftwInfoOutput}</pre>
+            </div>
+          {/if}
         </div>
       {/if}
 

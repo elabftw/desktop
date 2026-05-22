@@ -1,6 +1,6 @@
 /*
  * To query eLabFTW API easily
-*/
+ */
 package main
 
 import (
@@ -174,7 +174,7 @@ func jsonBody(v any) (*bytes.Reader, error) {
 
 /* ---------- INFO ENDPOINT ---------- */
 func (a *App) FetchElabftwInfo(profileUUID string, instanceID int64) (*ElabftwInfo, error) {
-	resp, err := a.elabftwRequest(profileUUID,instanceID,http.MethodGet,"/info",nil)
+	resp, err := a.elabftwRequest(profileUUID, instanceID, http.MethodGet, "/info", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -188,6 +188,7 @@ func (a *App) FetchElabftwInfo(profileUUID string, instanceID int64) (*ElabftwIn
 
 	return &out, nil
 }
+
 /* ---------- EXP ENDPOINT ---------- */
 func (a *App) FetchElabftwExperiment(profileUUID string, instanceID int64, remoteID int64) (map[string]any, error) {
 	resp, err := a.elabftwRequest(
@@ -208,6 +209,7 @@ func (a *App) FetchElabftwExperiment(profileUUID string, instanceID int64, remot
 
 	return out, nil
 }
+
 /* POC post experiments */
 func (a *App) CreateElabftwExperiment(profileUUID string, instanceID int64, payload any) (map[string]any, error) {
 	body, err := jsonBody(payload)
