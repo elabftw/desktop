@@ -55,13 +55,23 @@ func (a *App) ListElabftwInstances(profileUUID string) ([]ElabftwInstance, error
 	return out, nil
 }
 
+func normalizeElabftwSiteURL(siteURL string) string {
+	siteURL = strings.TrimSpace(siteURL)
+	siteURL = strings.TrimRight(siteURL, "/")
+	return siteURL
+}
+
+func elabftwAPIBaseURL(siteURL string) string {
+	return normalizeElabftwSiteURL(siteURL) + "/api/v2"
+}
+
 func (a *App) AddElabftwInstance(profileUUID string, siteURL string, apiKey string, verifyTLS bool) (int64, error) {
 	profileUUID, err := a.requireUnlockedProfile(profileUUID)
 	if err != nil {
 		return 0, err
 	}
 
-	siteURL = strings.TrimSpace(siteURL)
+	siteURL = normalizeElabftwSiteURL(siteURL)
 	apiKey = strings.TrimSpace(apiKey)
 
 	if siteURL == "" {
