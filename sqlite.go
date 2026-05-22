@@ -10,7 +10,7 @@ import (
 )
 
 func OpenProfileDB(profileDir string) (*sql.DB, error) {
-	if err := os.MkdirAll(profileDir, 0o700); err != nil {
+    if err := os.MkdirAll(profileDir, 0o755); err != nil {
 		return nil, fmt.Errorf("Create profile dir: %w", err)
 	}
 
@@ -19,11 +19,6 @@ func OpenProfileDB(profileDir string) (*sql.DB, error) {
 	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		return nil, fmt.Errorf("open sqlite: %w", err)
-	}
-
-	if err := os.Chmod(dbPath, 0o600); err != nil {
-		_ = db.Close()
-		return nil, fmt.Errorf("chmod sqlite db: %w", err)
 	}
 
 	// Good defaults for desktop apps
