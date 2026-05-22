@@ -127,6 +127,11 @@ h2 {
   font-size: 1.12rem;
 }
 
+a {
+  color: var(--info-text);
+  font-weight: 800;
+}
+
 /* Layout helpers */
 .container {
   width: min(1120px, calc(100vw - 3rem));

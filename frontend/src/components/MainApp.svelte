@@ -1,7 +1,16 @@
 <script lang='ts'>
   import { onMount } from 'svelte';
   import { DateTime } from 'luxon';
-  import { ListEntries, GetEntry, SaveEntry, DeleteEntry, LockProfile } from '../../wailsjs/go/main/App';
+  import {
+    ListEntries,
+    GetEntry,
+    SaveEntry,
+    DeleteEntry,
+    LockProfile,
+    ListElabftwInstances,
+    AddElabftwInstance,
+    DeleteElabftwInstance,
+  } from '../../wailsjs/go/main/App';
   import type { main } from '../../wailsjs/go/models';
   import { autofocus, errorMessage, preventDefaultSubmit } from '../utils/helpers';
   import Alert from './Alert.svelte';
@@ -13,7 +22,7 @@
     onLogout?: () => void;
   };
 
-  type View = 'index' | 'editor';
+  type View = 'index' | 'editor' | 'instances';
 
   let {profileUuid, profileName, onLogout}: Props = $props();
 
@@ -23,6 +32,11 @@
   let view = $state<View>('index');
   let loading = $state(false);
   let alert = $state<AlertState | null>(null);
+  // elabftw instances
+  let instances = $state<main.ElabftwInstance[]>([]);
+  let instanceSiteUrl = $state('');
+  let instanceApiKey = $state('');
+  let instanceVerifyTls = $state(true);
 
   function toRelativeTime(iso: string, locale = 'en'): string {
     return DateTime.fromISO(iso).setLocale(locale).toRelative() ?? 'now';
@@ -104,6 +118,61 @@
   onMount(() => {
     void refreshEntries();
   });
+
+  // elabftw instances
+
+  async function refreshInstances(): Promise<void> {
+    loading = true;
+    try {
+      instances = await ListElabftwInstances(profileUuid);
+    } catch (e: unknown) {
+      alert = { type: 'error', message: errorMessage(e) };
+    } finally {
+      loading = false;
+    }
+  }
+
+  async function openInstances(): Promise<void> {
+    alert = null;
+    await refreshInstances();
+    view = 'instances';
+  }
+
+  async function addInstance(): Promise<void> {
+    alert = { type: 'info', message: 'Adding eLabFTW instance...' };
+
+    try {
+      await AddElabftwInstance(
+        profileUuid,
+        instanceSiteUrl,
+        instanceApiKey,
+        instanceVerifyTls,
+      );
+
+      instanceSiteUrl = '';
+      instanceApiKey = '';
+      instanceVerifyTls = true;
+
+      alert = { type: 'success', message: 'eLabFTW instance added ✔' };
+      await refreshInstances();
+    } catch (e: unknown) {
+      alert = { type: 'error', message: errorMessage(e) };
+    }
+  }
+
+  async function deleteInstance(id: number, siteUrl: string): Promise<void> {
+    const confirmed = window.confirm(`Delete eLabFTW instance "${siteUrl}"?`);
+    if (!confirmed) return;
+
+    try {
+      await DeleteElabftwInstance(profileUuid, id);
+      await refreshInstances();
+    } catch (e: unknown) {
+      alert = { type: 'error', message: errorMessage(e) };
+    }
+  }
+
+  const handleInstanceSubmit = preventDefaultSubmit(addInstance);
 </script>
 
 <div class='container'>
@@ -113,9 +182,12 @@
       {#if view === 'index'}
         <h1>My Entries</h1>
         <h2>Manage your saved entries.</h2>
-      {:else}
+      {:else if view === 'editor'}
         <h1 class='text-ellipsis'>{entryTitle.trim() || 'Untitled entry'}</h1>
         <h2>Write, edit, and save your entry.</h2>
+      {:else}
+        <h1 class='text-ellipsis'>eLabFTW instances</h1>
+        <h2>Add the server you want to sync with</h2>
       {/if}
     </div>
 
@@ -131,6 +203,7 @@
     </div>
   </header>
 
+  <!-- VIEW MODE -->
   {#if view === 'index'}
     <section class='panel' aria-labelledby='entries-title'>
       <div class='flex justify-between items-center mb-2 border-bottom'>
@@ -188,10 +261,92 @@
           <button class='btn btn-secondary'>Push entries to eLabFTW</button>
           {/if}
           <button class='btn btn-secondary'>Fetch entries from eLabFTW</button>
-          <button class='btn btn-secondary'>What eLabFTW Instance</button>
+          <button class='btn btn-secondary' onclick={openInstances}>
+            See eLabFTW Instances
+          </button>
 
         </div>
     </section>
+    <!-- VIEW ELABFTW INSTANCES -->
+  {:else if view === 'instances'}
+    <section class='panel'>
+      <div class='flex justify-between border-bottom mb-2 items-center'>
+        <div>
+          <span class='description'>Add the site URL and your API key to allow communication between the desktop app and your eLabFTW instance.</span>
+          <br>
+          <span class='description'>See the <a href='https://doc.elabftw.net/docs/usage/api'>Documentation</a> to learn how to create a new API key.</span>
+        </div>
+        <button class='btn btn-secondary' type='button' onclick={openIndex}>← Back</button>
+      </div>
+
+      <form onsubmit={handleInstanceSubmit} class='grid gap-1'>
+        <div>
+          <label for='instanceSiteUrl'>Site URL</label>
+          <input
+            id='instanceSiteUrl'
+            type='url'
+            class='input'
+            bind:value={instanceSiteUrl}
+            placeholder='https://elab.example.org'
+          />
+        </div>
+
+        <div>
+          <label for='instanceApiKey'>API key</label>
+          <input
+            id='instanceApiKey'
+            type='password'
+            class='input'
+            bind:value={instanceApiKey}
+            placeholder='Your eLabFTW API key'
+          />
+        </div>
+
+        <label class='flex items-center gap-1'>
+          <input type='checkbox' bind:checked={instanceVerifyTls} />
+          Verify TLS certificates
+        </label>
+
+        <div class='flex justify-end'>
+          <button class='btn btn-primary' type='submit'>
+            Add instance
+          </button>
+        </div>
+      </form>
+
+      <div class='border-bottom mt-2 mb-2'></div>
+
+      {#if loading}
+        <div class='empty-state'>Loading instances...</div>
+      {:else if instances.length === 0}
+        <div class='empty-state'>
+          <h3>No eLabFTW instances yet</h3>
+          <p>Add one above before pushing entries.</p>
+        </div>
+      {:else}
+        <div class='grid gap-1'>
+          {#each instances as instance (instance.id)}
+            <div class='flex justify-between items-center gap-1'>
+              <div class='grid gap-03'>
+                <span class='text-white text-strong'>{instance.siteUrl}</span>
+                <span class='description'>
+                TLS verification: {instance.verifyTls ? 'enabled' : 'disabled'}
+              </span>
+              </div>
+
+              <button
+                type='button'
+                class='btn btn-danger'
+                onclick={() => deleteInstance(instance.id, instance.siteUrl)}
+              >
+                Delete
+              </button>
+            </div>
+          {/each}
+        </div>
+      {/if}
+    </section>
+    <!-- VIEW EDITOR MODE -->
   {:else if view === 'editor'}
     <section class='panel'>
       <form onsubmit={handleSubmit}>
