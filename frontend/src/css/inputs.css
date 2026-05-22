@@ -34,3 +34,38 @@ textarea {
   min-height: 420px;
   line-height: 1.6;
 }
+
+/* checkboxes */
+.checkbox-row {
+  cursor: pointer;
+}
+
+.checkbox-row input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.checkbox-box {
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 1px solid var(--info-text);
+  border-radius: 0.35rem;
+  background: var(--surface-dark-soft);
+  display: inline-grid;
+  place-items: center;
+}
+
+.checkbox-row input:checked + .checkbox-box {
+  background: var(--orange);
+  border-color: var(--orange-hover);
+}
+
+.checkbox-row input:checked + .checkbox-box::after {
+  content: '✓';
+  color: var(--dark-blue);
+}
+
+.checkbox-row:hover .checkbox-box {
+  border-color: var(--orange);
+}

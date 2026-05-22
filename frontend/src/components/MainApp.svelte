@@ -320,9 +320,10 @@
           />
         </div>
 
-        <label class='flex items-center gap-1'>
+        <label class='checkbox-row flex items-center gap-1'>
           <input type='checkbox' bind:checked={instanceVerifyTls} />
-          Verify TLS certificates
+          <span class='checkbox-box'></span>
+          <span>Verify TLS certificates</span>
         </label>
 
         <div class='flex justify-end'>
