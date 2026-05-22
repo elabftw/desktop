@@ -10,7 +10,7 @@ import (
 )
 
 func OpenProfileDB(profileDir string) (*sql.DB, error) {
-    if err := os.MkdirAll(profileDir, 0o755); err != nil {
+	if err := os.MkdirAll(profileDir, 0o755); err != nil {
 		return nil, fmt.Errorf("Create profile dir: %w", err)
 	}
 
