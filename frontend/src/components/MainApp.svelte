@@ -289,11 +289,11 @@
   {:else if view === 'instances'}
     <section class='panel'>
       <div class='flex justify-between border-bottom mb-2 items-center'>
-        <div>
-          <span class='description'>Add the site URL and your API key to allow communication between the desktop app and your eLabFTW instance.</span>
+        <span>
+          Add the site URL and your API key to allow communication between the desktop app and your eLabFTW instance.
           <br>
-          <span class='description'>See the <a href='https://doc.elabftw.net/docs/usage/api'>Documentation</a> to learn how to create a new API key.</span>
-        </div>
+          See the <a href='https://doc.elabftw.net/docs/usage/api'>Documentation</a> to learn how to create a new API key.
+        </span>
         <button class='btn btn-secondary' type='button' onclick={openIndex}>← Back</button>
       </div>
 
