@@ -195,7 +195,7 @@ func (a *App) FetchElabftwExperiment(profileUUID string, instanceID int64, remot
 		profileUUID,
 		instanceID,
 		http.MethodGet,
-		fmt.Sprintf("/experiments", remoteID),
+		fmt.Sprintf("/experiments/%d", remoteID),
 		nil,
 	)
 	if err != nil {
