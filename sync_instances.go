@@ -48,7 +48,11 @@ func (a *App) ListElabftwInstances(profileUUID string) ([]ElabftwInstance, error
 		out = append(out, inst)
 	}
 
-	return out, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows error: %w", err)
+	}
+
+	return out, nil
 }
 
 func (a *App) AddElabftwInstance(profileUUID string, siteURL string, apiKey string, verifyTLS bool) (int64, error) {
@@ -67,6 +71,11 @@ func (a *App) AddElabftwInstance(profileUUID string, siteURL string, apiKey stri
 		return 0, fmt.Errorf("API key is empty")
 	}
 
+	encryptedAPIKey, err := encryptString(a.activeKey, apiKey)
+	if err != nil {
+		return 0, fmt.Errorf("encrypt api key: %w", err)
+	}
+
 	pdir, err := profileDir(profileUUID)
 	if err != nil {
 		return 0, err
@@ -81,12 +90,17 @@ func (a *App) AddElabftwInstance(profileUUID string, siteURL string, apiKey stri
 	res, err := db.Exec(`
 		INSERT INTO elabftw_instances (site_url, api_key, verify_tls)
 		VALUES (?, ?, ?)
-	`, siteURL, apiKey, verifyTLS)
+	`, siteURL, encryptedAPIKey, verifyTLS)
 	if err != nil {
 		return 0, fmt.Errorf("insert elabftw instance: %w", err)
 	}
 
-	return res.LastInsertId()
+	id, err := res.LastInsertId()
+	if err != nil {
+		return 0, fmt.Errorf("get instance id: %w", err)
+	}
+
+	return id, nil
 }
 
 func (a *App) DeleteElabftwInstance(profileUUID string, id int64) error {
@@ -109,16 +123,19 @@ func (a *App) DeleteElabftwInstance(profileUUID string, id int64) error {
 	}
 	defer db.Close()
 
-	res, err := db.Exec(`DELETE FROM elabftw_instances WHERE id = ?`, id)
+	res, err := db.Exec(`
+		DELETE FROM elabftw_instances
+		WHERE id = ?
+	`, id)
 	if err != nil {
 		return fmt.Errorf("delete elabftw instance: %w", err)
 	}
 
-	n, err := res.RowsAffected()
+	rowsAffected, err := res.RowsAffected()
 	if err != nil {
 		return fmt.Errorf("get deleted rows count: %w", err)
 	}
-	if n == 0 {
+	if rowsAffected == 0 {
 		return fmt.Errorf("Instance not found")
 	}
 
