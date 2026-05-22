@@ -10,6 +10,10 @@ export function AddProfile(arg1, arg2) {
   return window['go']['main']['App']['AddProfile'](arg1, arg2);
 }
 
+export function CreateElabftwExperiment(arg1, arg2, arg3) {
+  return window['go']['main']['App']['CreateElabftwExperiment'](arg1, arg2, arg3);
+}
+
 export function DeleteElabftwInstance(arg1, arg2) {
   return window['go']['main']['App']['DeleteElabftwInstance'](arg1, arg2);
 }
@@ -20,6 +24,14 @@ export function DeleteEntry(arg1, arg2) {
 
 export function DeleteProfile(arg1, arg2) {
   return window['go']['main']['App']['DeleteProfile'](arg1, arg2);
+}
+
+export function FetchElabftwExperiment(arg1, arg2, arg3) {
+  return window['go']['main']['App']['FetchElabftwExperiment'](arg1, arg2, arg3);
+}
+
+export function FetchElabftwInfo(arg1, arg2) {
+  return window['go']['main']['App']['FetchElabftwInfo'](arg1, arg2);
 }
 
 export function GetEntry(arg1, arg2) {

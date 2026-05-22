@@ -10,6 +10,7 @@
     ListElabftwInstances,
     AddElabftwInstance,
     DeleteElabftwInstance,
+    FetchElabftwInfo
   } from '../../wailsjs/go/main/App';
   import type { main } from '../../wailsjs/go/models';
   import { autofocus, errorMessage, preventDefaultSubmit } from '../utils/helpers';
@@ -173,6 +174,20 @@
   }
 
   const handleInstanceSubmit = preventDefaultSubmit(addInstance);
+
+  // test elabftw instances
+
+  async function testInstance(id: number): Promise<void> {
+    alert = { type: 'info', message: 'Fetching eLabFTW /info...' };
+
+    try {
+      const info = await FetchElabftwInfo(profileUuid, id);
+      console.log('eLabFTW /info:', info.raw);
+      alert = { type: 'success', message: 'Connected to eLabFTW ✔' };
+    } catch (e: unknown) {
+      alert = { type: 'error', message: errorMessage(e) };
+    }
+  }
 </script>
 
 <div class='container'>
@@ -334,6 +349,8 @@
               </span>
               </div>
 
+              <div>
+
               <button
                 type='button'
                 class='btn btn-danger'
@@ -341,10 +358,15 @@
               >
                 Delete
               </button>
+                <button type='button' class='btn btn-secondary' onclick={() => testInstance(instance.id)}>
+                  Test
+                </button>
+              </div>
             </div>
           {/each}
         </div>
       {/if}
+
     </section>
     <!-- VIEW EDITOR MODE -->
   {:else if view === 'editor'}

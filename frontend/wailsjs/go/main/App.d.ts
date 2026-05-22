@@ -6,11 +6,17 @@ export function AddElabftwInstance(arg1:string,arg2:string,arg3:string,arg4:bool
 
 export function AddProfile(arg1:string,arg2:string):Promise<main.ProfileIndex>;
 
+export function CreateElabftwExperiment(arg1:string,arg2:number,arg3:any):Promise<Record<string, any>>;
+
 export function DeleteElabftwInstance(arg1:string,arg2:number):Promise<void>;
 
 export function DeleteEntry(arg1:string,arg2:number):Promise<void>;
 
 export function DeleteProfile(arg1:string,arg2:string):Promise<main.ProfileIndex>;
+
+export function FetchElabftwExperiment(arg1:string,arg2:number,arg3:number):Promise<Record<string, any>>;
+
+export function FetchElabftwInfo(arg1:string,arg2:number):Promise<main.ElabftwInfo>;
 
 export function GetEntry(arg1:string,arg2:number):Promise<main.Entry>;
 

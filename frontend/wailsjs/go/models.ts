@@ -1,5 +1,17 @@
 export namespace main {
 	
+	export class ElabftwInfo {
+	    raw: Record<string, any>;
+	
+	    static createFrom(source: any = {}) {
+	        return new ElabftwInfo(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.raw = source["raw"];
+	    }
+	}
 	export class ElabftwInstance {
 	    id: number;
 	    siteUrl: string;
