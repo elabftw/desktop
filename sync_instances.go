@@ -151,3 +151,78 @@ func (a *App) DeleteElabftwInstance(profileUUID string, id int64) error {
 
 	return nil
 }
+
+// EDIT/UPDATE ELABFTW Instances
+
+func (a *App) UpdateElabftwInstance(profileUUID string, id int64, siteURL string, apiKey string, verifyTLS bool) error {
+	profileUUID, err := a.requireUnlockedProfile(profileUUID)
+	if err != nil {
+		return err
+	}
+	if id <= 0 {
+		return fmt.Errorf("Invalid instance id")
+	}
+
+	siteURL = normalizeElabftwSiteURL(siteURL)
+	apiKey = strings.TrimSpace(apiKey)
+
+	if siteURL == "" {
+		return fmt.Errorf("Site URL is empty")
+	}
+
+	pdir, err := profileDir(profileUUID)
+	if err != nil {
+		return err
+	}
+
+	db, err := OpenProfileDB(pdir)
+	if err != nil {
+		return fmt.Errorf("open profile db: %w", err)
+	}
+	defer db.Close()
+
+	if apiKey == "" {
+		res, err := db.Exec(`
+			UPDATE elabftw_instances
+			SET site_url = ?, verify_tls = ?, updated_at = (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+			WHERE id = ?
+		`, siteURL, verifyTLS, id)
+		if err != nil {
+			return fmt.Errorf("update elabftw instance: %w", err)
+		}
+
+		rowsAffected, err := res.RowsAffected()
+		if err != nil {
+			return fmt.Errorf("get updated rows count: %w", err)
+		}
+		if rowsAffected == 0 {
+			return fmt.Errorf("Instance not found")
+		}
+
+		return nil
+	}
+
+	encryptedAPIKey, err := encryptString(a.activeKey, apiKey)
+	if err != nil {
+		return fmt.Errorf("encrypt api key: %w", err)
+	}
+
+	res, err := db.Exec(`
+		UPDATE elabftw_instances
+		SET site_url = ?, api_key = ?, verify_tls = ?, updated_at = (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+		WHERE id = ?
+	`, siteURL, encryptedAPIKey, verifyTLS, id)
+	if err != nil {
+		return fmt.Errorf("update elabftw instance: %w", err)
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("get updated rows count: %w", err)
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("Instance not found")
+	}
+
+	return nil
+}

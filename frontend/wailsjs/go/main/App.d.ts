@@ -31,3 +31,5 @@ export function LockProfile():Promise<void>;
 export function SaveEntry(arg1:string,arg2:string,arg3:string):Promise<number>;
 
 export function UnlockProfile(arg1:string,arg2:string):Promise<void>;
+
+export function UpdateElabftwInstance(arg1:string,arg2:number,arg3:string,arg4:string,arg5:boolean):Promise<void>;

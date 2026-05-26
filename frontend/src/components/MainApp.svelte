@@ -9,6 +9,7 @@
     LockProfile,
     ListElabftwInstances,
     AddElabftwInstance,
+    UpdateElabftwInstance,
     DeleteElabftwInstance,
     FetchElabftwInfo
   } from '../../wailsjs/go/main/App';
@@ -40,6 +41,8 @@
   let instanceVerifyTls = $state(true);
   // test info endpoint
   let elabftwInfoOutput = $state('');
+  // update elabftw instance
+  let editingInstanceId = $state<number | null>(null);
 
   function toRelativeTime(iso: string, locale = 'en'): string {
     return DateTime.fromISO(iso).setLocale(locale).toRelative() ?? 'now';
@@ -141,27 +144,43 @@
     view = 'instances';
   }
 
-  async function addInstance(): Promise<void> {
-    alert = { type: 'info', message: 'Adding eLabFTW instance...' };
+  async function saveInstance(): Promise<void> {
+    alert = { type: 'info', message: editingInstanceId ? 'Updating instance...' : 'Adding instance...' };
 
     try {
-      await AddElabftwInstance(
-        profileUuid,
-        instanceSiteUrl,
-        instanceApiKey,
-        instanceVerifyTls,
-      );
+      if (editingInstanceId) {
+        await UpdateElabftwInstance(
+          profileUuid,
+          editingInstanceId,
+          instanceSiteUrl,
+          instanceApiKey,
+          instanceVerifyTls,
+        );
 
+        alert = { type: 'success', message: 'eLabFTW instance updated ✔' };
+      } else {
+        await AddElabftwInstance(
+          profileUuid,
+          instanceSiteUrl,
+          instanceApiKey,
+          instanceVerifyTls,
+        );
+
+        alert = { type: 'success', message: 'eLabFTW instance added ✔' };
+      }
+
+      editingInstanceId = null;
       instanceSiteUrl = '';
       instanceApiKey = '';
       instanceVerifyTls = true;
 
-      alert = { type: 'success', message: 'eLabFTW instance added ✔' };
       await refreshInstances();
     } catch (e: unknown) {
       alert = { type: 'error', message: errorMessage(e) };
     }
   }
+
+  const handleInstanceSubmit = preventDefaultSubmit(saveInstance);
 
   async function deleteInstance(id: number, siteUrl: string): Promise<void> {
     const confirmed = window.confirm(`Delete eLabFTW instance "${siteUrl}"?`);
@@ -175,7 +194,7 @@
     }
   }
 
-  const handleInstanceSubmit = preventDefaultSubmit(addInstance);
+  // const handleInstanceSubmit = preventDefaultSubmit(addInstance);
 
   // test elabftw instances
 
@@ -190,6 +209,26 @@
     } catch (e: unknown) {
       alert = { type: 'error', message: errorMessage(e) };
     }
+  }
+
+  // TODO: move all instance related to another component
+  function editInstance(instance: main.ElabftwInstance): void {
+    editingInstanceId = instance.id;
+    instanceSiteUrl = instance.siteUrl;
+    instanceApiKey = '';
+    instanceVerifyTls = instance.verifyTls;
+    alert = {
+      type: 'info',
+      message: 'Editing instance. Leave API key empty to keep the current key.',
+    };
+  }
+
+  function cancelEditInstance(): void {
+    editingInstanceId = null;
+    instanceSiteUrl = '';
+    instanceApiKey = '';
+    instanceVerifyTls = true;
+    alert = null;
   }
 </script>
 
@@ -316,7 +355,7 @@
             type='password'
             class='input'
             bind:value={instanceApiKey}
-            placeholder='Your eLabFTW API key'
+            placeholder={editingInstanceId ? 'Leave empty to keep current API key' : 'Your eLabFTW API key'}
           />
         </div>
 
@@ -326,9 +365,15 @@
           <span>Verify TLS certificates</span>
         </label>
 
-        <div class='flex justify-end'>
+        <div class='flex justify-end gap-1'>
+          {#if editingInstanceId}
+            <button class='btn btn-secondary' type='button' onclick={cancelEditInstance}>
+              Cancel
+            </button>
+          {/if}
+
           <button class='btn btn-primary' type='submit'>
-            Add instance
+            {editingInstanceId ? 'Update instance' : 'Add instance'}
           </button>
         </div>
       </form>
@@ -361,6 +406,13 @@
                 onclick={() => deleteInstance(instance.id, instance.siteUrl)}
               >
                 Delete
+              </button>
+              <button
+                type='button'
+                class='btn btn-secondary'
+                onclick={() => editInstance(instance)}
+              >
+                Edit
               </button>
                 <button type='button' class='btn btn-secondary' onclick={() => testInstance(instance.id)}>
                   Test

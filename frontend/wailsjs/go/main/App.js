@@ -61,3 +61,7 @@ export function SaveEntry(arg1, arg2, arg3) {
 export function UnlockProfile(arg1, arg2) {
   return window['go']['main']['App']['UnlockProfile'](arg1, arg2);
 }
+
+export function UpdateElabftwInstance(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['main']['App']['UpdateElabftwInstance'](arg1, arg2, arg3, arg4, arg5);
+}
