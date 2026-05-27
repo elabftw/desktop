@@ -110,9 +110,9 @@ wails dev
 
 ---
 
-### ⚠️ Fedora users (important)
+## Troubleshooting
 
-On Fedora ≥ 40, WebKitGTK **4.1** is used instead of **4.0**.
+On Fedora ≥ 40, or Ubuntu 26, WebKitGTK **4.1** is used instead of **4.0**.
 Wails defaults to 4.0, so you must run:
 
 ```bash
