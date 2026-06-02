@@ -260,3 +260,7 @@ a {
 .modal {
   width: min(520px, calc(100vw - 2rem));
 }
+
+.modal h1 {
+  font-size: 2rem;
+}

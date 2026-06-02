@@ -19,6 +19,7 @@
   import { autofocus, errorMessage, preventDefaultSubmit } from '../utils/helpers';
   import Alert from './Alert.svelte';
   import type { AlertState } from './Alert.svelte';
+  import Modal from './Modal.svelte';
 
   type Props = {
     profileUuid: string;
@@ -518,43 +519,32 @@
     </section>
   {/if}
   {#if pushModalOpen}
-    <div class='modal-backdrop'>
-      <div class='modal panel'>
-        <div class='flex justify-between border-bottom'>
-          <h3>Push to eLabFTW</h3>
-          <button class='btn btn-secondary' type='button' onclick={closePushModal}>×</button>
-        </div>
-
-        {#if instances.length > 1}
-          <label for='pushInstance'>Instance</label>
-          <select id='pushInstance' class='input' bind:value={pushInstanceId}>
-            <option value={null}>Select instance...</option>
-            {#each instances as instance (instance.id)}
-              <option value={instance.id}>{instance.siteUrl}</option>
-            {/each}
-          </select>
-        {:else if instances.length === 1}
-          <p class='description'>Instance: {instances[0].siteUrl}</p>
-        {:else}
-          <p class='description'>No eLabFTW instances configured.</p>
-        {/if}
-
-        <label for='pushEntityType' class='mt-2'>Remote type</label>
-        <select id='pushEntityType' class='input' bind:value={pushEntityType}>
-          <option value='experiment'>Experiment</option>
-          <option value='resource'>Resource</option>
+    <Modal title='Push to eLabFTW' onClose={closePushModal}>
+      {#if instances.length > 1}
+        <label for='pushInstance'>Instance</label>
+        <select id='pushInstance' class='input' bind:value={pushInstanceId}>
+          <option value={null}>Select instance...</option>
+          {#each instances as instance (instance.id)}
+            <option value={instance.id}>{instance.siteUrl}</option>
+          {/each}
         </select>
+      {:else if instances.length === 1}
+        <p class='description'>Instance: {instances[0].siteUrl}</p>
+      {:else}
+        <p class='description'>No eLabFTW instances configured.</p>
+      {/if}
 
-        <div class='flex justify-end gap-1 mt-2'>
-          <button class='btn btn-secondary' type='button' onclick={closePushModal}>
-            Cancel
-          </button>
-          <button class='btn btn-primary' type='button' onclick={confirmPush}>
-            Push
-          </button>
-        </div>
-      </div>
-    </div>
+      <label for='pushEntityType' class='mt-2'>Remote type</label>
+      <select id='pushEntityType' class='input' bind:value={pushEntityType}>
+        <option value='experiment'>Experiment</option>
+        <option value='resource'>Resource</option>
+      </select>
+
+      <svelte:fragment slot='actions'>
+        <button class='btn btn-secondary' type='button' onclick={closePushModal}>Cancel</button>
+        <button class='btn btn-primary' type='button' onclick={confirmPush}>Push</button>
+      </svelte:fragment>
+    </Modal>
   {/if}
   {#if alert}
     <Alert type={alert.type} message={alert.message} />
