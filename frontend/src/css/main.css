@@ -246,3 +246,17 @@ a {
   padding-top: 1rem;
   border-top: 1px solid var(--border-soft);
 }
+
+/* modal elements */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 0.55);
+  display: grid;
+  place-items: center;
+  z-index: 50;
+}
+
+.modal {
+  width: min(520px, calc(100vw - 2rem));
+}

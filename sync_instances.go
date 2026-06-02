@@ -1,3 +1,8 @@
+/*
+ * This file handles the synchronization of eLabFTW instances, using their URL,
+ * user's api Key for read/write actions, and stored with id
+ */
+
 package main
 
 import (

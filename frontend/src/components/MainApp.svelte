@@ -11,7 +11,9 @@
     AddElabftwInstance,
     UpdateElabftwInstance,
     DeleteElabftwInstance,
-    FetchElabftwInfo
+    FetchElabftwInfo,
+    PushEntryToElabftw,
+    PushAllEntriesToElabftw
   } from '../../wailsjs/go/main/App';
   import type { main } from '../../wailsjs/go/models';
   import { autofocus, errorMessage, preventDefaultSubmit } from '../utils/helpers';
@@ -43,6 +45,14 @@
   let elabftwInfoOutput = $state('');
   // update elabftw instance
   let editingInstanceId = $state<number | null>(null);
+  // push entries to elabftw
+  // TODO: separate into components because main app is handling everything right now
+  let currentEntryId = $state<number | null>(null);
+  let pushModalOpen = $state(false);
+  let pushMode = $state<'single' | 'all'>('single');
+  let pushEntityType = $state<'experiment' | 'resource'>('experiment');
+  let pushInstanceId = $state<number | null>(null);
+  let pushEntryId = $state<number | null>(null);
 
   function toRelativeTime(iso: string, locale = 'en'): string {
     return DateTime.fromISO(iso).setLocale(locale).toRelative() ?? 'now';
@@ -50,6 +60,7 @@
 
   async function openEntry(id: number): Promise<void> {
     alert = null;
+    currentEntryId = id;
     try {
       const e: main.Entry = await GetEntry(profileUuid, id);
       entryTitle = e.title;
@@ -92,6 +103,7 @@
     entryTitle = '';
     entryMainText = '';
     alert = null;
+    currentEntryId = null;
   }
 
   async function saveEntry(): Promise<void> {
@@ -230,6 +242,49 @@
     instanceVerifyTls = true;
     alert = null;
   }
+
+  // modal helpers
+  async function openPushModal(mode: 'single' | 'all', entryId: number | null = null): Promise<void> {
+    pushMode = mode;
+    pushEntryId = entryId;
+    pushEntityType = 'experiment';
+    alert = null;
+
+    await refreshInstances();
+
+    pushInstanceId = instances.length === 1 ? instances[0].id : null;
+    pushModalOpen = true;
+  }
+
+  function closePushModal(): void {
+    pushModalOpen = false;
+  }
+
+  async function confirmPush(): Promise<void> {
+    if (!pushInstanceId) {
+      alert = { type: 'error', message: 'Select an eLabFTW instance.' };
+      return;
+    }
+
+    try {
+      if (pushMode === 'all') {
+        const results = await PushAllEntriesToElabftw(profileUuid, pushInstanceId, pushEntityType);
+        alert = { type: 'success', message: `Pushed ${results.length} entries ✔` };
+      } else {
+        if (!pushEntryId) {
+          alert = { type: 'error', message: 'No entry selected.' };
+          return;
+        }
+
+        const result = await PushEntryToElabftw(profileUuid, pushEntryId, pushInstanceId, pushEntityType);
+        alert = { type: 'success', message: `Entry ${result.action} as ${result.type} #${result.remoteId} ✔` };
+      }
+
+      pushModalOpen = false;
+    } catch (e: unknown) {
+      alert = { type: 'error', message: errorMessage(e) };
+    }
+  }
 </script>
 
 <div class='container'>
@@ -315,7 +370,7 @@
 <!--        TODO -->
         <div class='flex justify-end mt-2 gap-1'>
           {#if entries.length !== 0}
-          <button class='btn btn-secondary'>Push entries to eLabFTW</button>
+          <button class='btn btn-secondary' onclick={() => openPushModal('all')}>Push all entries to eLabFTW</button>
           {/if}
           <button class='btn btn-secondary'>Fetch entries from eLabFTW</button>
           <button class='btn btn-secondary' onclick={openInstances}>
@@ -436,7 +491,13 @@
       <form onsubmit={handleSubmit}>
         <div class='flex justify-between border-bottom mb-2'>
           <button class='btn btn-secondary' type='button' onclick={openIndex}>← Back</button>
-          <button class='btn btn-primary' type='submit'>Save</button>
+          <div class='flex gap-1'>
+            <button class='btn btn-secondary' type='button' disabled={!currentEntryId}
+              onclick={() => openPushModal('single', currentEntryId)}>
+              Push to eLabFTW Instance
+            </button>
+            <button class='btn btn-primary' type='submit'>Save</button>
+          </div>
         </div>
 
         <div>
@@ -455,6 +516,45 @@
         <textarea id='entryMainText' bind:value={entryMainText} placeholder='The main text...'></textarea>
       </form>
     </section>
+  {/if}
+  {#if pushModalOpen}
+    <div class='modal-backdrop'>
+      <div class='modal panel'>
+        <div class='flex justify-between border-bottom'>
+          <h3>Push to eLabFTW</h3>
+          <button class='btn btn-secondary' type='button' onclick={closePushModal}>×</button>
+        </div>
+
+        {#if instances.length > 1}
+          <label for='pushInstance'>Instance</label>
+          <select id='pushInstance' class='input' bind:value={pushInstanceId}>
+            <option value={null}>Select instance...</option>
+            {#each instances as instance (instance.id)}
+              <option value={instance.id}>{instance.siteUrl}</option>
+            {/each}
+          </select>
+        {:else if instances.length === 1}
+          <p class='description'>Instance: {instances[0].siteUrl}</p>
+        {:else}
+          <p class='description'>No eLabFTW instances configured.</p>
+        {/if}
+
+        <label for='pushEntityType' class='mt-2'>Remote type</label>
+        <select id='pushEntityType' class='input' bind:value={pushEntityType}>
+          <option value='experiment'>Experiment</option>
+          <option value='resource'>Resource</option>
+        </select>
+
+        <div class='flex justify-end gap-1 mt-2'>
+          <button class='btn btn-secondary' type='button' onclick={closePushModal}>
+            Cancel
+          </button>
+          <button class='btn btn-primary' type='button' onclick={confirmPush}>
+            Push
+          </button>
+        </div>
+      </div>
+    </div>
   {/if}
   {#if alert}
     <Alert type={alert.type} message={alert.message} />

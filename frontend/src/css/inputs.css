@@ -1,5 +1,6 @@
 .input,
-textarea {
+textarea,
+select.input {
   width: 100%;
   padding: 0.8rem 0.95rem;
   border-radius: 12px;
@@ -68,4 +69,24 @@ textarea {
 
 .checkbox-row:hover .checkbox-box {
   border-color: var(--orange);
+}
+
+select.input {
+  cursor: pointer;
+  appearance: none;
+  padding-right: 2.8rem;
+  /* this draws the arrow because appearance:none makes it disappear */
+  background: linear-gradient(45deg, transparent 50%, var(--soft-white) 50%), linear-gradient(135deg, var(--soft-white) 50%, transparent 50%), var(--surface-dark-soft);
+  background-position: calc(100% - 1.25rem) 50%, calc(100% - 0.9rem) 50%, 0 0;
+  background-size: 0.35rem 0.35rem, 0.35rem 0.35rem, 100% 100%;
+  background-repeat: no-repeat;
+}
+
+select.input:hover {
+  border-color: var(--orange-hover);
+}
+
+select.input option {
+  background: var(--dark-blue-2);
+  color: var(--soft-white);
 }

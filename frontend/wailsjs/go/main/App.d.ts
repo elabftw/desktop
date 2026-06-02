@@ -28,6 +28,10 @@ export function ListEntries(arg1:string):Promise<Array<main.EntrySummary>>;
 
 export function LockProfile():Promise<void>;
 
+export function PushAllEntriesToElabftw(arg1:string,arg2:number,arg3:string):Promise<Array<main.PushEntryResult>>;
+
+export function PushEntryToElabftw(arg1:string,arg2:number,arg3:number,arg4:string):Promise<main.PushEntryResult>;
+
 export function SaveEntry(arg1:string,arg2:string,arg3:string):Promise<number>;
 
 export function UnlockProfile(arg1:string,arg2:string):Promise<void>;

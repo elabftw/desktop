@@ -1,12 +1,12 @@
 export namespace main {
-	
+
 	export class ElabftwInfo {
 	    raw: Record<string, any>;
-	
+
 	    static createFrom(source: any = {}) {
 	        return new ElabftwInfo(source);
 	    }
-	
+
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.raw = source["raw"];
@@ -17,11 +17,11 @@ export namespace main {
 	    siteUrl: string;
 	    apiKey?: string;
 	    verifyTls: boolean;
-	
+
 	    static createFrom(source: any = {}) {
 	        return new ElabftwInstance(source);
 	    }
-	
+
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.id = source["id"];
@@ -36,11 +36,11 @@ export namespace main {
 	    body: string;
 	    createdAt: string;
 	    updatedAt: string;
-	
+
 	    static createFrom(source: any = {}) {
 	        return new Entry(source);
 	    }
-	
+
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.id = source["id"];
@@ -55,11 +55,11 @@ export namespace main {
 	    title: string;
 	    createdAt: string;
 	    updatedAt: string;
-	
+
 	    static createFrom(source: any = {}) {
 	        return new EntrySummary(source);
 	    }
-	
+
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.id = source["id"];
@@ -74,11 +74,11 @@ export namespace main {
 	    created_at: string;
 	    salt?: string;
 	    encrypted_verifier?: string;
-	
+
 	    static createFrom(source: any = {}) {
 	        return new ProfileEntry(source);
 	    }
-	
+
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.uuid = source["uuid"];
@@ -91,17 +91,17 @@ export namespace main {
 	export class ProfileIndex {
 	    version: number;
 	    profiles: ProfileEntry[];
-	
+
 	    static createFrom(source: any = {}) {
 	        return new ProfileIndex(source);
 	    }
-	
+
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.version = source["version"];
 	        this.profiles = this.convertValues(source["profiles"], ProfileEntry);
 	    }
-	
+
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
 		    if (!a) {
 		        return a;
@@ -119,6 +119,24 @@ export namespace main {
 		    }
 		    return a;
 		}
+	}
+	export class PushEntryResult {
+	    localId: number;
+	    remoteId: number;
+	    action: string;
+	    type: string;
+
+	    static createFrom(source: any = {}) {
+	        return new PushEntryResult(source);
+	    }
+
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.localId = source["localId"];
+	        this.remoteId = source["remoteId"];
+	        this.action = source["action"];
+	        this.type = source["type"];
+	    }
 	}
 
 }
