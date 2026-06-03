@@ -18,6 +18,6 @@
 {#if message && visible}
   <div class={`alert alert-${type} flex justify-between items-center`}>
     <strong>{message}</strong>
-    <button class='alert-close' type='button' aria-label='Close alert' onclick={() => visible = false}>×</button>
+    <button class='alert-close' type='button' aria-label='Close alert' onclick={() => visible = false}>&#x2717;</button>
   </div>
 {/if}

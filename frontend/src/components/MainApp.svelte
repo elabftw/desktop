@@ -34,10 +34,10 @@
   let view = $state<View>('index');
   let loading = $state(false);
   let alert = $state<AlertState | null>(null);
-  let currentEntryId = $state<number | null>(null);
+  let currentEntryId = $state<number | null>(null); // if not null, Update entry. else Save
   let pushModalOpen = $state(false);
-  let pushMode = $state<'single' | 'all'>('single');
-  let pushEntryId = $state<number | null>(null);
+  let pushMode = $state<'single' | 'all'>('single'); // from View of an entry, push a single entry. From list of entries, push all.
+  let pushEntryId = $state<number | null>(null); // # currentEntryId. This is for the modal to push to eLab.
 
   function toRelativeTime(iso: string, locale = 'en'): string {
     return DateTime.fromISO(iso).setLocale(locale).toRelative() ?? 'now';
@@ -92,7 +92,7 @@
   }
 
   // Save an entry // Update an existing entry
-  async function saveEntry(): Promise<void> {
+  async function saveOrUpdateEntry(): Promise<void> {
     alert = {type: 'info', message: currentEntryId ? 'Updating...' : 'Saving...'};
     try {
       if (currentEntryId) {
@@ -124,7 +124,7 @@
     }
   }
 
-  const handleSubmit = preventDefaultSubmit(saveEntry);
+  const handleSubmit = preventDefaultSubmit(saveOrUpdateEntry);
 
   onMount(() => {
     void refreshEntries();
@@ -188,7 +188,7 @@
       {:else if view === 'editor'}
         <h1 class='text-ellipsis'>{entryTitle.trim() || 'Untitled entry'}</h1>
         <h2>Write, edit, and save your entry.</h2>
-      {:else}
+      {:else} <!-- view === 'instances' -->
         <h1 class='text-ellipsis'>eLabFTW instances</h1>
         <h2>Add the server you want to sync with</h2>
       {/if}
@@ -200,9 +200,7 @@
         <span class='text-strong'>{profileName}</span>
       </div>
 
-      <button class='btn btn-danger' onclick={logout}>
-        Logout
-      </button>
+      <button class='btn btn-danger' onclick={logout}>Logout</button>
     </div>
   </header>
 
@@ -211,7 +209,7 @@
     <section class='panel' aria-labelledby='entries-title'>
       <div class='flex justify-between items-center mb-2 border-bottom'>
         <div class='flex items-center gap-1'>
-          <div class='icon' aria-hidden='true'>▣</div>
+          <div class='icon' aria-hidden='true'>&#x2756;</div>
           <div>
             <h3 id='entries-title'>Saved entries</h3>
             <span class='description'>
