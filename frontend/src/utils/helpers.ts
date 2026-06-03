@@ -30,6 +30,7 @@ export function preventDefaultSubmit(
   };
 }
 
+/* opens a url in the preferred browser */
 export function openExternalURL(url: string): void {
   if (!url) return;
   BrowserOpenURL(url);

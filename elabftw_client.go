@@ -88,12 +88,13 @@ func (a *App) loadElabftwClientConfig(profileUUID string, instanceID int64) (*el
 func elabftwHTTPClient(verifyTLS bool) *http.Client {
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{
-			// Needed for local/self-signed HTTPS dev instances.
-			// Only false when the user explicitly disabled TLS verification.
+			// Only false when the user explicitly disables TLS verification.
 			InsecureSkipVerify: !verifyTLS,
 		},
 	}
 
+    // timeout prevents the desktop app from hanging forever if the server is unreachable
+    // Transport carries our TLS configuration, including whether to verify certificates
 	return &http.Client{
 		Timeout:   30 * time.Second,
 		Transport: transport,
@@ -135,12 +136,15 @@ func (a *App) elabftwRequest(
 	return resp, nil
 }
 
+// http.Response is an open stream, so we need to close it when done reading
 func closeResponseBody(resp *http.Response) {
 	if resp != nil && resp.Body != nil {
 		_ = resp.Body.Close()
 	}
 }
 
+// this function is responsible for reading the response body,
+// so it also owns closing it before returning
 func decodeElabftwJSONResponse(resp *http.Response, target any) error {
 	defer closeResponseBody(resp)
 
@@ -210,7 +214,7 @@ func (a *App) FetchElabftwExperiment(profileUUID string, instanceID int64, remot
 	return out, nil
 }
 
-/* POC post experiments */
+/* POST experiments */
 func (a *App) CreateElabftwExperiment(profileUUID string, instanceID int64, payload any) (map[string]any, error) {
 	body, err := jsonBody(payload)
 	if err != nil {
