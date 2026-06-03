@@ -127,9 +127,16 @@ h2 {
   font-size: 1.12rem;
 }
 
-a {
+/* i'm keeping a in case we have links sometime or people use it in browser,
+ but it should be a <button class='link-button' that uses a function for
+ a desktop app links */
+a, .link-button {
+  border: 0;
+  background: 0;
+  cursor: pointer;
   color: var(--info-text);
   font-weight: 800;
+  text-decoration: underline;
 }
 
 /* Layout helpers */
@@ -208,6 +215,10 @@ a {
 
 .text-white {
   color: var(--soft-white);
+}
+
+.text-success {
+  color: var(--success-text);
 }
 
 .text-ellipsis {

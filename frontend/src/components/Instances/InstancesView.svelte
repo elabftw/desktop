@@ -1,3 +1,8 @@
+<!--
+This file contains the list of instances. It allows you to see instances,
+log new instances, edit existing and delete. You can test the API as well
+(info endpoint).
+-->
 <script lang='ts'>
   import {
     ListElabftwInstances,
@@ -8,7 +13,7 @@
   } from '../../../wailsjs/go/main/App';
 
   import type { main } from '../../../wailsjs/go/models';
-  import { errorMessage, preventDefaultSubmit } from '../../utils/helpers';
+  import { errorMessage, preventDefaultSubmit, openExternalURL } from '../../utils/helpers';
   import type { AlertState } from '../Alert.svelte';
 
   type Props = {
@@ -38,7 +43,7 @@
     }
   }
 
-  // save or edit an instance
+  // save or update an instance
   async function saveInstance(): Promise<void> {
     onAlert({
       type: 'info',
@@ -64,7 +69,6 @@
   async function deleteInstance(id: number, siteUrl: string): Promise<void> {
     const confirmed = window.confirm(`Delete eLabFTW instance "${siteUrl}"?`);
     if (!confirmed) return;
-
     try {
       await DeleteElabftwInstance(profileUuid, id);
       await refreshInstances();
@@ -73,10 +77,10 @@
     }
   }
 
+  /* send a GET request to info endpoint and ensure the connection is ok */
   async function testInstance(id: number): Promise<void> {
     onAlert({type: 'info', message: 'Fetching eLabFTW /info...'});
     elabftwInfoOutput = '';
-
     try {
       const info = await FetchElabftwInfo(profileUuid, id);
       elabftwInfoOutput = JSON.stringify(info.raw, null, 2);
@@ -86,12 +90,12 @@
     }
   }
 
+  /* switch the view to edit mode for an instance */
   function editInstance(instance: main.ElabftwInstance): void {
     editingInstanceId = instance.id;
     instanceSiteUrl = instance.siteUrl;
     instanceApiKey = '';
     instanceVerifyTls = instance.verifyTls;
-
     onAlert({type: 'info', message: 'Editing instance. Leave API key empty to keep the current key.'});
   }
 
@@ -117,9 +121,11 @@
     <span>
       Add the site URL and your API key to allow communication between the desktop app and your eLabFTW instance.
       <br/>
-      See the <a href='https://doc.elabftw.net/docs/usage/api'>Documentation</a> to learn how to create a new API key.
+      See the
+      <button type='button' class='link-button'
+              onclick={() => openExternalURL('https://doc.elabftw.net/docs/usage/api')}>Documentation</button>
+      to learn how to create a new API key.
     </span>
-
     <button class='btn btn-secondary' type='button' onclick={onBack}>← Back</button>
   </div>
 
@@ -165,7 +171,7 @@
     </div>
   </form>
 
-  <div class='border-bottom mt-2 mb-2'></div>
+  <div class='border-bottom mb-2'></div>
 
   {#if loading}
     <div class='empty-state'>Loading instances...</div>
@@ -180,7 +186,7 @@
         <div class='flex justify-between items-center gap-1'>
           <div class='grid gap-03'>
             <span class='text-white text-strong'>{instance.siteUrl}</span>
-            <span class='description'>
+            <span class={instance.verifyTls ? 'text-success' : 'text-orange'}>
               TLS verification: {instance.verifyTls ? 'enabled' : 'disabled'}
             </span>
           </div>
@@ -194,7 +200,7 @@
           </div>
         </div>
       {/each}
-
+      <!-- output of the Info GET response -->
       {#if elabftwInfoOutput}
         <div class='mt-2'>
           <h3>eLabFTW /info response</h3>

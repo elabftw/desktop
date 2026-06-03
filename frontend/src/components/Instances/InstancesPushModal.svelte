@@ -1,3 +1,8 @@
+<!--
+This file contains the modal to push informations to eLabFTW. It
+is adapted to be scalable, so later on we'll just replace eLabFTW
+with "Instance Name" for cross platform data share.
+-->
 <script lang='ts'>
   import { ListElabftwInstances } from '../../../wailsjs/go/main/App';
   import type { main } from '../../../wailsjs/go/models';
@@ -48,6 +53,7 @@
   {#if loading}
     <p class='description'>Loading eLabFTW instances...</p>
   {:else if instances.length > 1}
+    <!-- Many instances: Select between the options -->
     <label for='pushInstance'>Instance</label>
     <select id='pushInstance' class='input' bind:value={selectedInstanceId}>
       <option value={null}>Select instance...</option>
@@ -56,11 +62,13 @@
       {/each}
     </select>
   {:else if instances.length === 1}
+    <!-- One instance: select it by default and show url -->
     <p class='description'>Instance: {instances[0].siteUrl}</p>
   {:else}
     <p class='description'>No eLabFTW instances configured.</p>
   {/if}
 
+  <!-- Choose entity type: currently, Experiment/Resource. See later if we want templates as well? TODO -->
   <label for='pushEntityType' class='mt-2'>Remote type</label>
   <select id='pushEntityType' class='input' bind:value={entityType}>
     <option value='experiment'>Experiment</option>
