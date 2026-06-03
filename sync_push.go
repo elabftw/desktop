@@ -163,7 +163,7 @@ func (a *App) patchExistingRemoteEntry(
 	}
 
 	if remoteModifiedAt.After(lastSyncAt) {
-	    return nil, errors.New(remoteModifiedConflictMessage(entityType, remoteID))
+		return nil, errors.New(remoteModifiedConflictMessage(entityType, remoteID))
 	}
 
 	reqBody, err := jsonBody(payload)
