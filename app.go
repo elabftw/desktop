@@ -329,7 +329,7 @@ func (a *App) UpdateEntry(profileUUID string, id int64, title string, body strin
 		UPDATE entries
 		SET title = ?,
 			body = ?,
-			updated_at = (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+			modified_at = (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
 		WHERE id = ?
 	`, encryptedTitle, encryptedBody, id)
 	if err != nil {
@@ -387,10 +387,10 @@ func (a *App) DeleteEntry(profileUUID string, id int64) error {
 }
 
 type EntrySummary struct {
-	ID        int64  `json:"id"`
-	Title     string `json:"title"`
-	CreatedAt string `json:"createdAt"`
-	UpdatedAt string `json:"updatedAt"`
+	ID         int64  `json:"id"`
+	Title      string `json:"title"`
+	CreatedAt  string `json:"createdAt"`
+	ModifiedAt string `json:"modifiedAt"`
 }
 
 // Titles are stored encrypted, so decrypt them before returning the summaries to frontend.
@@ -412,9 +412,9 @@ func (a *App) ListEntries(profileUUID string) ([]EntrySummary, error) {
 	defer func() { _ = db.Close() }()
 
 	rows, err := db.Query(`
-		SELECT id, title, created_at, updated_at
+		SELECT id, title, created_at, modified_at
 		FROM entries
-		ORDER BY updated_at DESC, id DESC
+		ORDER BY modified_at DESC, id DESC
 	`)
 	if err != nil {
 		return nil, fmt.Errorf("query entries: %w", err)
@@ -424,7 +424,7 @@ func (a *App) ListEntries(profileUUID string) ([]EntrySummary, error) {
 	out := make([]EntrySummary, 0)
 	for rows.Next() {
 		var e EntrySummary
-		if err := rows.Scan(&e.ID, &e.Title, &e.CreatedAt, &e.UpdatedAt); err != nil {
+		if err := rows.Scan(&e.ID, &e.Title, &e.CreatedAt, &e.ModifiedAt); err != nil {
 			return nil, fmt.Errorf("scan entry: %w", err)
 		}
 		// The row stores encrypted title/body values.
@@ -444,11 +444,11 @@ func (a *App) ListEntries(profileUUID string) ([]EntrySummary, error) {
 }
 
 type Entry struct {
-	ID        int64  `json:"id"`
-	Title     string `json:"title"`
-	Body      string `json:"body"`
-	CreatedAt string `json:"createdAt"`
-	UpdatedAt string `json:"updatedAt"`
+	ID         int64  `json:"id"`
+	Title      string `json:"title"`
+	Body       string `json:"body"`
+	CreatedAt  string `json:"createdAt"`
+	ModifiedAt string `json:"modifiedAt"`
 }
 
 func (a *App) GetEntry(profileUUID string, id int64) (*Entry, error) {
@@ -473,10 +473,10 @@ func (a *App) GetEntry(profileUUID string, id int64) (*Entry, error) {
 
 	var e Entry
 	err = db.QueryRow(`
-		SELECT id, title, body, created_at, updated_at
+		SELECT id, title, body, created_at, modified_at
 		FROM entries
 		WHERE id = ?
-	`, id).Scan(&e.ID, &e.Title, &e.Body, &e.CreatedAt, &e.UpdatedAt)
+	`, id).Scan(&e.ID, &e.Title, &e.Body, &e.CreatedAt, &e.ModifiedAt)
 
 	if err == sql.ErrNoRows {
 		return nil, fmt.Errorf("Entry not found")

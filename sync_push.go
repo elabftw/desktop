@@ -6,10 +6,12 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type PushEntryResult struct {
@@ -84,38 +86,82 @@ func (a *App) PushEntryToElabftw(profileUUID string, entryID int64, instanceID i
 	}
 
 	var remoteID int64
+	var lastSyncModifiedAt string
+
 	err = db.QueryRow(`
-		SELECT remote_id
-		FROM local2remote
-		WHERE instance = ? AND local_id = ? AND type = ?
-	`, instanceID, entryID, entityType).Scan(&remoteID)
+    	SELECT remote_id, modified_at
+    	FROM local2remote
+    	WHERE instance = ? AND local_id = ? AND type = ?
+    `, instanceID, entryID, entityType).Scan(&remoteID, &lastSyncModifiedAt)
+
+	if err != nil && err != sql.ErrNoRows {
+		return nil, fmt.Errorf("query local2remote: %w", err)
+	}
 
 	if err == nil {
-		reqBody, err := jsonBody(payload)
-		if err != nil {
-			return nil, err
-		}
-
+		// Existing local2remote row means this should PATCH.
+		// First GET the remote entity and check whether it changed since last sync.
 		resp, err := a.elabftwRequest(
 			profileUUID,
 			instanceID,
-			http.MethodPatch,
+			http.MethodGet,
 			fmt.Sprintf("%s/%d", basePath, remoteID),
-			reqBody,
+			nil,
 		)
 		if err != nil {
 			return nil, err
 		}
 
-		if err := decodeElabftwJSONResponse(resp, nil); err != nil {
+		var remote map[string]any
+		if err := decodeElabftwJSONResponse(resp, &remote); err != nil {
+			return nil, err
+		}
+
+		remoteModifiedAt, err := parseElabftwModifiedAt(remote["modified_at"])
+		if err != nil {
+			return nil, err
+		}
+
+		lastSyncAt, err := parseLocalModifiedAt(lastSyncModifiedAt)
+		if err != nil {
+			return nil, err
+		}
+
+		if remoteModifiedAt.After(lastSyncAt) {
+			return nil, fmt.Errorf(remoteModifiedConflictMessage(entityType, remoteID))
+		}
+
+		reqBody, err := jsonBody(payload)
+		if err != nil {
+			return nil, err
+		}
+
+		resp, err = a.elabftwRequest(
+			profileUUID,
+			instanceID,
+			http.MethodGet,
+			fmt.Sprintf("%s/%d", basePath, remoteID),
+			nil,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		var patchedRemote map[string]any
+		if err := decodeElabftwJSONResponse(resp, &patchedRemote); err != nil {
+			return nil, err
+		}
+
+		patchedRemoteModifiedAt, err := parseElabftwModifiedAt(patchedRemote["modified_at"])
+		if err != nil {
 			return nil, err
 		}
 
 		_, err = db.Exec(`
-			UPDATE local2remote
-			SET updated_at = (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
-			WHERE instance = ? AND local_id = ? AND type = ?
-		`, instanceID, entryID, entityType)
+        	UPDATE local2remote
+        	SET modified_at = ?
+        	WHERE instance = ? AND local_id = ? AND type = ?
+        `, patchedRemoteModifiedAt.Format(time.RFC3339Nano), instanceID, entryID, entityType)
 		if err != nil {
 			return nil, fmt.Errorf("update local2remote: %w", err)
 		}
@@ -132,31 +178,31 @@ func (a *App) PushEntryToElabftw(profileUUID string, entryID int64, instanceID i
 	if err != nil {
 		return nil, err
 	}
-
-	resp, err := a.elabftwRequest(
+	resp, err = a.elabftwRequest(
 		profileUUID,
 		instanceID,
-		http.MethodPost,
-		basePath,
-		reqBody,
+		http.MethodGet,
+		fmt.Sprintf("%s/%d", basePath, remoteID),
+		nil,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := decodeElabftwJSONResponse(resp, nil); err != nil {
+	var createdRemote map[string]any
+	if err := decodeElabftwJSONResponse(resp, &createdRemote); err != nil {
 		return nil, err
 	}
 
-	remoteID, err = remoteIDFromLocation(resp.Header.Get("Location"))
+	createdRemoteModifiedAt, err := parseElabftwModifiedAt(createdRemote["modified_at"])
 	if err != nil {
 		return nil, err
 	}
 
 	_, err = db.Exec(`
-		INSERT INTO local2remote (instance, remote_id, local_id, type)
-		VALUES (?, ?, ?, ?)
-	`, instanceID, remoteID, entryID, entityType)
+    	INSERT INTO local2remote (instance, remote_id, local_id, type, modified_at)
+    	VALUES (?, ?, ?, ?, ?)
+    `, instanceID, remoteID, entryID, entityType, createdRemoteModifiedAt.Format(time.RFC3339Nano))
 	if err != nil {
 		return nil, fmt.Errorf("insert local2remote: %w", err)
 	}
@@ -228,4 +274,69 @@ func remoteIDFromLocation(location string) (int64, error) {
 	}
 
 	return id, nil
+}
+
+/*
+ * The behaviour we want, ON PATCH, is:
+ * GET remote first. Read remote's modified_at.
+ * If remote's modified_at is more recent then local modified_at, stop and return a warning
+ * else patch. We want to keep remote as source of truth and warn
+ */
+
+func parseElabftwModifiedAt(value any) (time.Time, error) {
+	s, ok := value.(string)
+	if !ok || strings.TrimSpace(s) == "" {
+		return time.Time{}, fmt.Errorf("remote response does not contain a valid modified_at")
+	}
+
+	s = strings.TrimSpace(s)
+
+	formats := []string{
+		time.RFC3339Nano,
+		time.RFC3339,
+		"2006-01-02 15:04:05",
+		"2006-01-02T15:04:05Z",
+		"2006-01-02T15:04:05.000000Z",
+	}
+
+	for _, layout := range formats {
+		t, err := time.Parse(layout, s)
+		if err == nil {
+			return t.UTC(), nil
+		}
+	}
+
+	return time.Time{}, fmt.Errorf("cannot parse remote modified_at %q", s)
+}
+
+func parseLocalModifiedAt(value string) (time.Time, error) {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return time.Time{}, fmt.Errorf("local modified_at is empty")
+	}
+
+	formats := []string{
+		time.RFC3339Nano,
+		time.RFC3339,
+		"2006-01-02 15:04:05",
+		"2006-01-02T15:04:05Z",
+		"2006-01-02T15:04:05.000000Z",
+	}
+
+	for _, layout := range formats {
+		t, err := time.Parse(layout, value)
+		if err == nil {
+			return t.UTC(), nil
+		}
+	}
+
+	return time.Time{}, fmt.Errorf("cannot parse local modified_at %q", value)
+}
+
+func remoteModifiedConflictMessage(entityType string, remoteID int64) string {
+	return fmt.Sprintf(
+		"Remote %s #%d was modified after your last sync. Pull or review the online version before pushing.",
+		entityType,
+		remoteID,
+	)
 }

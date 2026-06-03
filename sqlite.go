@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS entries (
 	title TEXT NOT NULL,
 	body TEXT NOT NULL,
 	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
-	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+	modified_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
 );
 
 PRAGMA user_version = 1;
@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS elabftw_instances (
 	api_key TEXT NOT NULL,
 	verify_tls INTEGER NOT NULL DEFAULT 1,
 	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
-	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+	modified_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
 );
 
 CREATE TABLE IF NOT EXISTS local2remote (
@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS local2remote (
 	local_id INTEGER NOT NULL,
 	type TEXT NOT NULL CHECK (type IN ('experiment', 'resource', 'template')),
 	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
-	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+	modified_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
 
 	FOREIGN KEY (instance) REFERENCES elabftw_instances(id) ON DELETE CASCADE,
 	UNIQUE(instance, local_id, type),

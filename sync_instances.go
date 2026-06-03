@@ -189,7 +189,7 @@ func (a *App) UpdateElabftwInstance(profileUUID string, id int64, siteURL string
 	if apiKey == "" {
 		res, err := db.Exec(`
 			UPDATE elabftw_instances
-			SET site_url = ?, verify_tls = ?, updated_at = (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+			SET site_url = ?, verify_tls = ?, modified_at = (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
 			WHERE id = ?
 		`, siteURL, verifyTLS, id)
 		if err != nil {
@@ -214,7 +214,7 @@ func (a *App) UpdateElabftwInstance(profileUUID string, id int64, siteURL string
 
 	res, err := db.Exec(`
 		UPDATE elabftw_instances
-		SET site_url = ?, api_key = ?, verify_tls = ?, updated_at = (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+		SET site_url = ?, api_key = ?, verify_tls = ?, modified_at = (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
 		WHERE id = ?
 	`, siteURL, encryptedAPIKey, verifyTLS, id)
 	if err != nil {

@@ -35,7 +35,7 @@ export namespace main {
 	    title: string;
 	    body: string;
 	    createdAt: string;
-	    updatedAt: string;
+	    modifiedAt: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new Entry(source);
@@ -47,14 +47,14 @@ export namespace main {
 	        this.title = source["title"];
 	        this.body = source["body"];
 	        this.createdAt = source["createdAt"];
-	        this.updatedAt = source["updatedAt"];
+	        this.modifiedAt = source["modifiedAt"];
 	    }
 	}
 	export class EntrySummary {
 	    id: number;
 	    title: string;
 	    createdAt: string;
-	    updatedAt: string;
+	    modifiedAt: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new EntrySummary(source);
@@ -65,7 +65,7 @@ export namespace main {
 	        this.id = source["id"];
 	        this.title = source["title"];
 	        this.createdAt = source["createdAt"];
-	        this.updatedAt = source["updatedAt"];
+	        this.modifiedAt = source["modifiedAt"];
 	    }
 	}
 	export class ProfileEntry {

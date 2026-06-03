@@ -167,7 +167,13 @@
 
       pushModalOpen = false;
     } catch (e: unknown) {
-      alert = {type: 'error', message: errorMessage(e)};
+      const message = errorMessage(e);
+      // warning if remote data is more recent than desktop
+      if (message.includes('was modified after your last sync')) {
+        alert = { type: 'warning', message };
+      } else {
+        alert = { type: 'error', message };
+      }
     }
   }
 </script>
@@ -237,7 +243,7 @@
                   {e.title || 'Untitled entry'}
                 </span>
                 <span class='description'>
-                  Last edited {toRelativeTime(e.updatedAt)}
+                  Last edited {toRelativeTime(e.modifiedAt)}
                 </span>
               </span>
 
