@@ -93,8 +93,8 @@ func elabftwHTTPClient(verifyTLS bool) *http.Client {
 		},
 	}
 
-    // timeout prevents the desktop app from hanging forever if the server is unreachable
-    // Transport carries our TLS configuration, including whether to verify certificates
+	// timeout prevents the desktop app from hanging forever if the server is unreachable
+	// Transport carries our TLS configuration, including whether to verify certificates
 	return &http.Client{
 		Timeout:   30 * time.Second,
 		Transport: transport,
@@ -191,51 +191,4 @@ func (a *App) FetchElabftwInfo(profileUUID string, instanceID int64) (*ElabftwIn
 	}
 
 	return &out, nil
-}
-
-/* ---------- EXP ENDPOINT ---------- */
-func (a *App) FetchElabftwExperiment(profileUUID string, instanceID int64, remoteID int64) (map[string]any, error) {
-	resp, err := a.elabftwRequest(
-		profileUUID,
-		instanceID,
-		http.MethodGet,
-		fmt.Sprintf("/experiments/%d", remoteID),
-		nil,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	var out map[string]any
-	if err := decodeElabftwJSONResponse(resp, &out); err != nil {
-		return nil, err
-	}
-
-	return out, nil
-}
-
-/* POST experiments */
-func (a *App) CreateElabftwExperiment(profileUUID string, instanceID int64, payload any) (map[string]any, error) {
-	body, err := jsonBody(payload)
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := a.elabftwRequest(
-		profileUUID,
-		instanceID,
-		http.MethodPost,
-		"/experiments",
-		body,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	var out map[string]any
-	if err := decodeElabftwJSONResponse(resp, &out); err != nil {
-		return nil, err
-	}
-
-	return out, nil
 }
