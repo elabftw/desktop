@@ -297,6 +297,7 @@
           <label for='entryTitle'>Entry title</label>
           <input
             {@attach autofocus}
+            required
             id='entryTitle'
             type='text'
             class='input text-strong text-big'

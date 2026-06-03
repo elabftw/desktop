@@ -127,6 +127,7 @@
     <div>
       <label for='instanceSiteUrl'>Site URL</label>
       <input
+        required
         id='instanceSiteUrl'
         type='url'
         class='input'
@@ -138,6 +139,7 @@
     <div>
       <label for='instanceApiKey'>API key</label>
       <input
+        required
         id='instanceApiKey'
         type='password'
         class='input'

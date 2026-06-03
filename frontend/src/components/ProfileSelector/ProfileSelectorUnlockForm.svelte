@@ -27,6 +27,7 @@
       <label for='unlockPassphrase' class='text-big mt-2'>Passphrase</label>
       <input
         {@attach autofocus}
+        required
         autocomplete='off'
         placeholder='Enter your passphrase to continue.'
         bind:value={passphrase}

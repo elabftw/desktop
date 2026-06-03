@@ -19,7 +19,7 @@
     onclick={stopClick}
   >
     <header class='flex justify-between items-center border-bottom mb-2'>
-      <h1>{title}</h1>
+      <h1 id='modal-title'>{title}</h1>
 
       <button class='btn btn-secondary' type='button' onclick={onClose} aria-label='Close modal'>
         ×
