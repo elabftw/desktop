@@ -73,3 +73,7 @@ export function UnlockProfile(arg1, arg2) {
 export function UpdateElabftwInstance(arg1, arg2, arg3, arg4, arg5) {
   return window['go']['main']['App']['UpdateElabftwInstance'](arg1, arg2, arg3, arg4, arg5);
 }
+
+export function UpdateEntry(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['UpdateEntry'](arg1, arg2, arg3, arg4);
+}

@@ -5,6 +5,7 @@
     ListEntries,
     GetEntry,
     SaveEntry,
+    UpdateEntry,
     DeleteEntry,
     LockProfile,
     ListElabftwInstances,
@@ -107,11 +108,19 @@
     currentEntryId = null;
   }
 
+  // Save an entry // Update an existing entry
   async function saveEntry(): Promise<void> {
-    alert = { type: 'info', message: 'Saving...' };
+    alert = { type: 'info', message: currentEntryId ? 'Updating...' : 'Saving...' };
     try {
-      const id = await SaveEntry(profileUuid, entryTitle, entryMainText);
-      alert = { type: 'success', message: `Saved with id ${id} ✔` };
+      if (currentEntryId) {
+        await UpdateEntry(profileUuid, currentEntryId, entryTitle, entryMainText);
+        alert = { type: 'success', message: 'Entry updated ✔' };
+      } else {
+        const id = await SaveEntry(profileUuid, entryTitle, entryMainText);
+        currentEntryId = id;
+        alert = { type: 'success', message: `Saved with id ${id} ✔` };
+      }
+
       await refreshEntries();
     } catch (e: unknown) {
       alert = { type: 'error', message: errorMessage(e) };

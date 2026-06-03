@@ -289,6 +289,64 @@ func (a *App) SaveEntry(profileUUID string, title string, body string) (int64, e
 	return id, nil
 }
 
+func (a *App) UpdateEntry(profileUUID string, id int64, title string, body string) error {
+	profileUUID, err := a.requireUnlockedProfile(profileUUID)
+	if err != nil {
+		return err
+	}
+	if id <= 0 {
+		return fmt.Errorf("Invalid id")
+	}
+
+	pdir, err := profileDir(profileUUID)
+	if err != nil {
+		return err
+	}
+
+	db, err := OpenProfileDB(pdir)
+	if err != nil {
+		return fmt.Errorf("Open profile db: %w", err)
+	}
+	defer func() { _ = db.Close() }()
+
+	title = strings.TrimSpace(title)
+	body = strings.TrimSpace(body)
+	if title == "" {
+		return fmt.Errorf("Title is empty")
+	}
+
+	encryptedTitle, err := encryptString(a.activeKey, title)
+	if err != nil {
+		return fmt.Errorf("Encrypt title: %w", err)
+	}
+
+	encryptedBody, err := encryptString(a.activeKey, body)
+	if err != nil {
+		return fmt.Errorf("Encrypt body: %w", err)
+	}
+
+	res, err := db.Exec(`
+		UPDATE entries
+		SET title = ?,
+			body = ?,
+			updated_at = (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+		WHERE id = ?
+	`, encryptedTitle, encryptedBody, id)
+	if err != nil {
+		return fmt.Errorf("Update entry: %w", err)
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("get updated rows count: %w", err)
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("Entry not found")
+	}
+
+	return nil
+}
+
 func (a *App) DeleteEntry(profileUUID string, id int64) error {
 	profileUUID, err := a.requireUnlockedProfile(profileUUID)
 	if err != nil {
