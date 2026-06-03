@@ -263,7 +263,8 @@
         {#if entries.length !== 0}
           <button class='btn btn-secondary' onclick={() => openPushModal('all')}>Push all entries to eLabFTW</button>
         {/if}
-        <button class='btn btn-secondary'>Fetch entries from eLabFTW</button>
+        <!-- TODO next version fetch entries: discuss how we handle it -->
+        <button class='btn btn-secondary' disabled>Fetch entries from eLabFTW (next version)</button>
         <button class='btn btn-secondary' onclick={openInstances}>
           See eLabFTW Instances
         </button>
