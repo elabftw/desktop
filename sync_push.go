@@ -258,6 +258,8 @@ func (a *App) postNewRemoteEntry(
 	}, nil
 }
 
+// after pushing, we re-GET the item's modified_at or else it would always be slightly
+// different (& superior) to local modified_at.
 func (a *App) fetchRemoteModifiedAt(profileUUID string, instanceID int64, basePath string, remoteID int64) (time.Time, error) {
 	resp, err := a.elabftwRequest(
 		profileUUID,
@@ -333,7 +335,7 @@ func (a *App) PushAllEntriesToElabftw(profileUUID string, instanceID int64, enti
 	return results, rows.Err()
 }
 
-// the posted experiment's id is in the Location header so we need to parse it
+// the posted entry's id is in the Location header so we need to parse it
 func remoteIDFromLocation(location string) (int64, error) {
 	location = strings.TrimSpace(location)
 	if location == "" {
