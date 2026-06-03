@@ -6,6 +6,7 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -162,7 +163,7 @@ func (a *App) patchExistingRemoteEntry(
 	}
 
 	if remoteModifiedAt.After(lastSyncAt) {
-		return nil, fmt.Errorf(remoteModifiedConflictMessage(entityType, remoteID))
+	    return nil, errors.New(remoteModifiedConflictMessage(entityType, remoteID))
 	}
 
 	reqBody, err := jsonBody(payload)
