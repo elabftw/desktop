@@ -1,11 +1,22 @@
 <script lang='ts'>
   import { onMount } from 'svelte';
   import { DateTime } from 'luxon';
-  import { ListEntries, GetEntry, SaveEntry, DeleteEntry, LockProfile } from '../../wailsjs/go/main/App';
+  import {
+    ListEntries,
+    GetEntry,
+    SaveEntry,
+    UpdateEntry,
+    DeleteEntry,
+    LockProfile,
+    PushEntryToElabftw,
+    PushAllEntriesToElabftw,
+  } from '../../wailsjs/go/main/App';
   import type { main } from '../../wailsjs/go/models';
   import { autofocus, errorMessage, preventDefaultSubmit } from '../utils/helpers';
   import Alert from './Alert.svelte';
   import type { AlertState } from './Alert.svelte';
+  import InstancesView from './Instances/InstancesView.svelte';
+  import InstancesPushModal from './Instances/InstancesPushModal.svelte';
 
   type Props = {
     profileUuid: string;
@@ -13,7 +24,7 @@
     onLogout?: () => void;
   };
 
-  type View = 'index' | 'editor';
+  type View = 'index' | 'editor' | 'instances';
 
   let {profileUuid, profileName, onLogout}: Props = $props();
 
@@ -23,6 +34,10 @@
   let view = $state<View>('index');
   let loading = $state(false);
   let alert = $state<AlertState | null>(null);
+  let currentEntryId = $state<number | null>(null); // if not null, Update entry. else Save
+  let pushModalOpen = $state(false);
+  let pushMode = $state<'single' | 'all'>('single'); // from View of an entry, push a single entry. From list of entries, push all.
+  let pushEntryId = $state<number | null>(null); // # currentEntryId. This is for the modal to push to eLab.
 
   function toRelativeTime(iso: string, locale = 'en'): string {
     return DateTime.fromISO(iso).setLocale(locale).toRelative() ?? 'now';
@@ -30,13 +45,14 @@
 
   async function openEntry(id: number): Promise<void> {
     alert = null;
+    currentEntryId = id;
     try {
       const e: main.Entry = await GetEntry(profileUuid, id);
       entryTitle = e.title;
       entryMainText = e.body;
       view = 'editor';
     } catch (e: unknown) {
-      alert = { type: 'error', message: errorMessage(e) };
+      alert = {type: 'error', message: errorMessage(e)};
     }
   }
 
@@ -46,7 +62,7 @@
       entries = await ListEntries(profileUuid);
     } catch (e: unknown) {
       console.error(e);
-      alert = { type: 'error', message: errorMessage(e) };
+      alert = {type: 'error', message: errorMessage(e)};
     } finally {
       loading = false;
     }
@@ -63,7 +79,7 @@
       await LockProfile();
       onLogout?.();
     } catch (e: unknown) {
-      alert = { type: 'error', message: errorMessage(e) };
+      alert = {type: 'error', message: errorMessage(e)};
     }
   }
 
@@ -72,16 +88,25 @@
     entryTitle = '';
     entryMainText = '';
     alert = null;
+    currentEntryId = null;
   }
 
-  async function saveEntry(): Promise<void> {
-    alert = { type: 'info', message: 'Saving...' };
+  // Save an entry // Update an existing entry
+  async function saveOrUpdateEntry(): Promise<void> {
+    alert = {type: 'info', message: currentEntryId ? 'Updating...' : 'Saving...'};
     try {
-      const id = await SaveEntry(profileUuid, entryTitle, entryMainText);
-      alert = { type: 'success', message: `Saved with id ${id} ✔` };
+      if (currentEntryId) {
+        await UpdateEntry(profileUuid, currentEntryId, entryTitle, entryMainText);
+        alert = {type: 'success', message: 'Entry updated ✔'};
+      } else {
+        const id = await SaveEntry(profileUuid, entryTitle, entryMainText);
+        currentEntryId = id;
+        alert = {type: 'success', message: `Saved with id ${id} ✔`};
+      }
+
       await refreshEntries();
     } catch (e: unknown) {
-      alert = { type: 'error', message: errorMessage(e) };
+      alert = {type: 'error', message: errorMessage(e)};
     }
   }
 
@@ -95,15 +120,62 @@
       await DeleteEntry(profileUuid, id);
       await refreshEntries();
     } catch (e: unknown) {
-      alert = { type: 'error', message: errorMessage(e) };
+      alert = {type: 'error', message: errorMessage(e)};
     }
   }
 
-  const handleSubmit = preventDefaultSubmit(saveEntry);
+  const handleSubmit = preventDefaultSubmit(saveOrUpdateEntry);
 
   onMount(() => {
     void refreshEntries();
   });
+
+  function openInstances(): void {
+    alert = null;
+    view = 'instances';
+  }
+
+  // modal helpers
+  function openPushModal(mode: 'single' | 'all', entryId: number | null = null): void {
+    pushMode = mode;
+    pushEntryId = entryId;
+    alert = null;
+    pushModalOpen = true;
+  }
+
+  function closePushModal(): void {
+    pushModalOpen = false;
+  }
+
+  async function confirmPush(instanceId: number, entityType: 'experiment' | 'resource'): Promise<void> {
+    try {
+      if (pushMode === 'all') {
+        const results = await PushAllEntriesToElabftw(profileUuid, instanceId, entityType);
+        alert = {type: 'success', message: `Pushed ${results.length} entries ✔`};
+      } else {
+        if (!pushEntryId) {
+          alert = {type: 'error', message: 'No entry selected.'};
+          return;
+        }
+
+        const result = await PushEntryToElabftw(profileUuid, pushEntryId, instanceId, entityType);
+        alert = {
+          type: 'success',
+          message: `Entry ${result.action} as ${result.type} #${result.remoteId} ✔`,
+        };
+      }
+
+      pushModalOpen = false;
+    } catch (e: unknown) {
+      const message = errorMessage(e);
+      // warning if remote data is more recent than desktop
+      if (message.includes('was modified after your last sync')) {
+        alert = { type: 'warning', message };
+      } else {
+        alert = { type: 'error', message };
+      }
+    }
+  }
 </script>
 
 <div class='container'>
@@ -113,29 +185,31 @@
       {#if view === 'index'}
         <h1>My Entries</h1>
         <h2>Manage your saved entries.</h2>
-      {:else}
+      {:else if view === 'editor'}
         <h1 class='text-ellipsis'>{entryTitle.trim() || 'Untitled entry'}</h1>
         <h2>Write, edit, and save your entry.</h2>
+      {:else} <!-- view === 'instances' -->
+        <h1 class='text-ellipsis'>eLabFTW instances</h1>
+        <h2>Add the server you want to sync with</h2>
       {/if}
     </div>
 
     <div class='flex gap-1 items-center'>
       <div class='profile-pill flex items-center gap-1' title={profileName}>
         <span class='profile-avatar'>{profileName.slice(0, 2).toUpperCase()}</span>
-          <span class='text-strong'>{profileName}</span>
+        <span class='text-strong'>{profileName}</span>
       </div>
 
-      <button class='btn btn-danger' onclick={logout}>
-        Logout
-      </button>
+      <button class='btn btn-danger' onclick={logout}>Logout</button>
     </div>
   </header>
 
+  <!-- VIEW MODE -->
   {#if view === 'index'}
     <section class='panel' aria-labelledby='entries-title'>
       <div class='flex justify-between items-center mb-2 border-bottom'>
         <div class='flex items-center gap-1'>
-          <div class='icon' aria-hidden='true'>▣</div>
+          <div class='icon' aria-hidden='true'>&#x2756;</div>
           <div>
             <h3 id='entries-title'>Saved entries</h3>
             <span class='description'>
@@ -160,46 +234,68 @@
         <div class='grid gap-1'>
           {#each entries as e (e.id)}
             <div class='flex gap-1'>
-            <button type='button' class='entry-card' onclick={() => openEntry(e.id)}>
-              <span class='icon-sm' aria-hidden='true'>▤</span>
-              <span class='grid gap-03'>
+              <button type='button' class='entry-card' onclick={() => openEntry(e.id)}>
+                <span class='icon-sm' aria-hidden='true'>▤</span>
+                <span class='grid gap-03'>
                 <span class='text-ellipsis text-white text-strong text-big'>
                   {e.title || 'Untitled entry'}
                 </span>
                 <span class='description'>
-                  Last edited {toRelativeTime(e.updatedAt)}
+                  Last edited {toRelativeTime(e.modifiedAt)}
                 </span>
               </span>
 
-              <span class='text-orange text-strong' aria-hidden='true'>
+                <span class='text-orange text-strong' aria-hidden='true'>
                 Open &#8594;
               </span>
-            </button>
-            <button type='button' class='btn btn-danger ' onclick={() => deleteEntry(e.id, e.title)} aria-label={`Delete ${e.title}`}>
-              <span aria-hidden='true'>&#128465;</span>
-            </button>
+              </button>
+              <button type='button' class='btn btn-danger ' onclick={() => deleteEntry(e.id, e.title)}
+                      aria-label={`Delete ${e.title}`}>
+                <span aria-hidden='true'>&#128465;</span>
+              </button>
             </div>
           {/each}
         </div>
-<!--        TODO -->
-        <div class='flex justify-end mt-2 gap-1'>
-          <button class='btn btn-secondary'>Push entries to eLabFTW</button>
-          <button class='btn btn-secondary'>Fetch entries from eLabFTW</button>
-        </div>
       {/if}
+      <div class='flex justify-end mt-2 gap-1'>
+        {#if entries.length !== 0}
+          <button class='btn btn-secondary' onclick={() => openPushModal('all')}>Push all entries to eLabFTW</button>
+        {/if}
+        <!-- TODO next version fetch entries: discuss how we handle it -->
+        <button class='btn btn-secondary' disabled>Fetch entries from eLabFTW (next version)</button>
+        <button class='btn btn-secondary' onclick={openInstances}>
+          See eLabFTW Instances
+        </button>
+
+      </div>
     </section>
+    <!-- VIEW ELABFTW INSTANCES -->
+  {:else if view === 'instances'}
+    <InstancesView
+      {profileUuid}
+      onBack={openIndex}
+      onAlert={(nextAlert) => alert = nextAlert}
+    />
+    <!-- VIEW EDITOR MODE -->
   {:else if view === 'editor'}
     <section class='panel'>
       <form onsubmit={handleSubmit}>
         <div class='flex justify-between border-bottom mb-2'>
           <button class='btn btn-secondary' type='button' onclick={openIndex}>← Back</button>
-          <button class='btn btn-primary' type='submit'>Save</button>
+          <div class='flex gap-1'>
+            <button class='btn btn-secondary' type='button' disabled={!currentEntryId}
+                    onclick={() => openPushModal('single', currentEntryId)}>
+              Push to eLabFTW Instance
+            </button>
+            <button class='btn btn-primary' type='submit'>Save</button>
+          </div>
         </div>
 
         <div>
           <label for='entryTitle'>Entry title</label>
           <input
             {@attach autofocus}
+            required
             id='entryTitle'
             type='text'
             class='input text-strong text-big'
@@ -213,7 +309,15 @@
       </form>
     </section>
   {/if}
+  {#if pushModalOpen}
+    <InstancesPushModal
+      {profileUuid}
+      onClose={closePushModal}
+      onAlert={(nextAlert) => alert = nextAlert}
+      onPush={confirmPush}
+    />
+  {/if}
   {#if alert}
-    <Alert type={alert.type} message={alert.message} />
+    <Alert type={alert.type} message={alert.message}/>
   {/if}
 </div>

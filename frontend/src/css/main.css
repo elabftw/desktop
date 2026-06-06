@@ -104,7 +104,7 @@ body {
 #logo {
   display: block;
   margin: auto;
-  padding: 10% 0 0;
+  padding: 4% 0 0;
 }
 
 /* Main page - entry titles */
@@ -125,6 +125,20 @@ h2 {
   margin: 0.75rem 0 0;
   color: var(--light-gray);
   font-size: 1.12rem;
+}
+
+/*
+ * Keep native <a> styling for browser usage and regular links.
+ * In the desktop app, external links should be rendered as
+ * <button class="link-button"> and opened with BrowserOpenURL().
+ */
+a, .link-button {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: var(--info-text);
+  font-weight: 800;
+  text-decoration: underline;
 }
 
 /* Layout helpers */
@@ -205,6 +219,10 @@ h2 {
   color: var(--soft-white);
 }
 
+.text-success {
+  color: var(--success-text);
+}
+
 .text-ellipsis {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -240,4 +258,22 @@ h2 {
 .border-top {
   padding-top: 1rem;
   border-top: 1px solid var(--border-soft);
+}
+
+/* modal elements */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 0.55);
+  display: grid;
+  place-items: center;
+  z-index: 50;
+}
+
+.modal {
+  width: min(520px, calc(100vw - 2rem));
+}
+
+.modal h1 {
+  font-size: 2rem;
 }

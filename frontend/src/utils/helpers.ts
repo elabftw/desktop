@@ -1,4 +1,5 @@
 import type { Attachment } from 'svelte/attachments';
+import { BrowserOpenURL } from "../../wailsjs/runtime";
 
 /*
  * Focuses the targeted element when it is mounted.
@@ -27,4 +28,10 @@ export function preventDefaultSubmit(
     e.preventDefault();
     void fn();
   };
+}
+
+/* opens a url in the preferred browser */
+export function openExternalURL(url: string): void {
+  if (!url) return;
+  BrowserOpenURL(url);
 }

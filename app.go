@@ -289,6 +289,64 @@ func (a *App) SaveEntry(profileUUID string, title string, body string) (int64, e
 	return id, nil
 }
 
+func (a *App) UpdateEntry(profileUUID string, id int64, title string, body string) error {
+	profileUUID, err := a.requireUnlockedProfile(profileUUID)
+	if err != nil {
+		return err
+	}
+	if id <= 0 {
+		return fmt.Errorf("Invalid id")
+	}
+
+	pdir, err := profileDir(profileUUID)
+	if err != nil {
+		return err
+	}
+
+	db, err := OpenProfileDB(pdir)
+	if err != nil {
+		return fmt.Errorf("Open profile db: %w", err)
+	}
+	defer func() { _ = db.Close() }()
+
+	title = strings.TrimSpace(title)
+	body = strings.TrimSpace(body)
+	if title == "" {
+		return fmt.Errorf("Title is empty")
+	}
+
+	encryptedTitle, err := encryptString(a.activeKey, title)
+	if err != nil {
+		return fmt.Errorf("Encrypt title: %w", err)
+	}
+
+	encryptedBody, err := encryptString(a.activeKey, body)
+	if err != nil {
+		return fmt.Errorf("Encrypt body: %w", err)
+	}
+
+	res, err := db.Exec(`
+		UPDATE entries
+		SET title = ?,
+			body = ?,
+			modified_at = (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+		WHERE id = ?
+	`, encryptedTitle, encryptedBody, id)
+	if err != nil {
+		return fmt.Errorf("Update entry: %w", err)
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("get updated rows count: %w", err)
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("Entry not found")
+	}
+
+	return nil
+}
+
 func (a *App) DeleteEntry(profileUUID string, id int64) error {
 	profileUUID, err := a.requireUnlockedProfile(profileUUID)
 	if err != nil {
@@ -329,10 +387,10 @@ func (a *App) DeleteEntry(profileUUID string, id int64) error {
 }
 
 type EntrySummary struct {
-	ID        int64  `json:"id"`
-	Title     string `json:"title"`
-	CreatedAt string `json:"createdAt"`
-	UpdatedAt string `json:"updatedAt"`
+	ID         int64  `json:"id"`
+	Title      string `json:"title"`
+	CreatedAt  string `json:"createdAt"`
+	ModifiedAt string `json:"modifiedAt"`
 }
 
 // Titles are stored encrypted, so decrypt them before returning the summaries to frontend.
@@ -354,9 +412,9 @@ func (a *App) ListEntries(profileUUID string) ([]EntrySummary, error) {
 	defer func() { _ = db.Close() }()
 
 	rows, err := db.Query(`
-		SELECT id, title, created_at, updated_at
+		SELECT id, title, created_at, modified_at
 		FROM entries
-		ORDER BY updated_at DESC, id DESC
+		ORDER BY modified_at DESC, id DESC
 	`)
 	if err != nil {
 		return nil, fmt.Errorf("query entries: %w", err)
@@ -366,7 +424,7 @@ func (a *App) ListEntries(profileUUID string) ([]EntrySummary, error) {
 	out := make([]EntrySummary, 0)
 	for rows.Next() {
 		var e EntrySummary
-		if err := rows.Scan(&e.ID, &e.Title, &e.CreatedAt, &e.UpdatedAt); err != nil {
+		if err := rows.Scan(&e.ID, &e.Title, &e.CreatedAt, &e.ModifiedAt); err != nil {
 			return nil, fmt.Errorf("scan entry: %w", err)
 		}
 		// The row stores encrypted title/body values.
@@ -386,11 +444,11 @@ func (a *App) ListEntries(profileUUID string) ([]EntrySummary, error) {
 }
 
 type Entry struct {
-	ID        int64  `json:"id"`
-	Title     string `json:"title"`
-	Body      string `json:"body"`
-	CreatedAt string `json:"createdAt"`
-	UpdatedAt string `json:"updatedAt"`
+	ID         int64  `json:"id"`
+	Title      string `json:"title"`
+	Body       string `json:"body"`
+	CreatedAt  string `json:"createdAt"`
+	ModifiedAt string `json:"modifiedAt"`
 }
 
 func (a *App) GetEntry(profileUUID string, id int64) (*Entry, error) {
@@ -415,10 +473,10 @@ func (a *App) GetEntry(profileUUID string, id int64) (*Entry, error) {
 
 	var e Entry
 	err = db.QueryRow(`
-		SELECT id, title, body, created_at, updated_at
+		SELECT id, title, body, created_at, modified_at
 		FROM entries
 		WHERE id = ?
-	`, id).Scan(&e.ID, &e.Title, &e.Body, &e.CreatedAt, &e.UpdatedAt)
+	`, id).Scan(&e.ID, &e.Title, &e.Body, &e.CreatedAt, &e.ModifiedAt)
 
 	if err == sql.ErrNoRows {
 		return nil, fmt.Errorf("Entry not found")

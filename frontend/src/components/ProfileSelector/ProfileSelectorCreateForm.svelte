@@ -24,6 +24,7 @@
     <div>
       <label for='profileName'>Profile name</label>
       <input
+        required
         {@attach autofocus}
         placeholder='Username'
         class='input'
@@ -35,6 +36,7 @@
     <div>
       <label for='profilePassphrase' class='mt-2'>Passphrase</label>
       <input
+        required
         id='profilePassphrase'
         class='input'
         placeholder='Passphrase'

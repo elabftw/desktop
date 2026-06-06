@@ -1,11 +1,41 @@
 export namespace main {
 	
+	export class ElabftwInfo {
+	    raw: Record<string, any>;
+	
+	    static createFrom(source: any = {}) {
+	        return new ElabftwInfo(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.raw = source["raw"];
+	    }
+	}
+	export class ElabftwInstance {
+	    id: number;
+	    siteUrl: string;
+	    apiKey?: string;
+	    verifyTls: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new ElabftwInstance(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.siteUrl = source["siteUrl"];
+	        this.apiKey = source["apiKey"];
+	        this.verifyTls = source["verifyTls"];
+	    }
+	}
 	export class Entry {
 	    id: number;
 	    title: string;
 	    body: string;
 	    createdAt: string;
-	    updatedAt: string;
+	    modifiedAt: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new Entry(source);
@@ -17,14 +47,14 @@ export namespace main {
 	        this.title = source["title"];
 	        this.body = source["body"];
 	        this.createdAt = source["createdAt"];
-	        this.updatedAt = source["updatedAt"];
+	        this.modifiedAt = source["modifiedAt"];
 	    }
 	}
 	export class EntrySummary {
 	    id: number;
 	    title: string;
 	    createdAt: string;
-	    updatedAt: string;
+	    modifiedAt: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new EntrySummary(source);
@@ -35,7 +65,7 @@ export namespace main {
 	        this.id = source["id"];
 	        this.title = source["title"];
 	        this.createdAt = source["createdAt"];
-	        this.updatedAt = source["updatedAt"];
+	        this.modifiedAt = source["modifiedAt"];
 	    }
 	}
 	export class ProfileEntry {
@@ -89,6 +119,24 @@ export namespace main {
 		    }
 		    return a;
 		}
+	}
+	export class PushEntryResult {
+	    localId: number;
+	    remoteId: number;
+	    action: string;
+	    type: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new PushEntryResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.localId = source["localId"];
+	        this.remoteId = source["remoteId"];
+	        this.action = source["action"];
+	        this.type = source["type"];
+	    }
 	}
 
 }
