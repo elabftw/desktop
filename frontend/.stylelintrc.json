@@ -1,0 +1,23 @@
+{
+  "extends": "stylelint-config-standard",
+  "plugins": [
+    "stylelint-order",
+    "stylelint-declaration-strict-value"
+  ],
+  "rules": {
+    "selector-max-id": 3,
+    "selector-no-qualifying-type": null,
+    "order/order": [
+      "custom-properties",
+      "declarations",
+      "rules"
+    ],
+    "order/properties-alphabetical-order": true,
+    "scale-unlimited/declaration-strict-value": [
+      ["color", "background-color", "border-color", "fill", "stroke"],
+      {
+        "ignoreValues": ["inherit", "transparent", "currentColor", "unset"]
+      }
+    ]
+  }
+}

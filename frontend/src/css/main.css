@@ -1,61 +1,62 @@
-@import 'buttons.css';
-@import 'alerts.css';
-@import 'inputs.css';
-@import 'profiles.css';
-@import 'main-app.css';
+@import url('buttons.css');
+@import url('alerts.css');
+@import url('inputs.css');
+@import url('profiles.css');
+@import url('main-app.css');
 
-/* TODO: add stylelint*/
+/* TODO: add stylelint */
 :root {
   /* base */
   --page-bg: #1b2636;
-  --text: #ffffff;
+  --text: #fff;
 
   /* dark surfaces */
   --dark-blue: #24364b;
   --dark-blue-2: #1e2f45;
-  --dark-blue-3: rgba(0, 0, 0, 0.16);
-  --dark-blue-4: rgba(30, 47, 69, 0.55);
-  --surface-dark-soft: rgba(15, 28, 49, 0.5);
+  --dark-blue-3: rgb(0 0 0 / 16%);
+  --dark-blue-4: rgb(30 47 69 / 55%);
+  --surface-dark-soft: rgb(15 28 49 / 50%);
+
   /* dark soft */
-  --dark-blue-shadow: 0 0 0 3px rgba(120, 180, 255, 0.25);
-  --border-soft: rgba(201, 214, 227, 0.16);
-  --blue-glow-soft: rgba(137, 172, 208, 0.14);
+  --dark-blue-shadow: 0 0 0 3px rgb(120 180 255 / 25%);
+  --border-soft: rgb(201 214 227 / 16%);
+  --blue-glow-soft: rgb(137 172 208 / 14%);
 
   /* Light */
   --soft-white: #f4f7fb;
-  --gray: rgba(244, 247, 251, 0.42);
-  --light-gray: rgba(191, 191, 191, 0.82);
+  --gray: rgb(244 247 251 / 42%);
+  --light-gray: rgb(191 191 191 / 82%);
 
   /* Orange / gold */
   --orange: #fab95b;
   --orange-light: #ffd978;
   --orange-lighter: #ffe19a;
   --orange-dark: #241800;
-  --orange-shadow: rgba(250, 185, 91, 0.18);
-  --orange-glow-soft: rgba(250, 185, 91, 0.08);
-  --orange-hover: rgba(250, 185, 91, 0.72);
-  --orange-focus-shadow: rgba(250, 185, 91, 0.14);
+  --orange-shadow: rgb(250 185 91 / 18%);
+  --orange-glow-soft: rgb(250 185 91 / 8%);
+  --orange-hover: rgb(250 185 91 / 72%);
+  --orange-focus-shadow: rgb(250 185 91 / 14%);
 
   /* Red */
   --red-dark: #ffb8b6;
   --red-light: #ffb8b6;
-  --red-lighter: rgba(159, 58, 56, 0.14);
-  --red-border: rgba(255, 120, 116, 0.28);
-  --red-background: rgba(159, 58, 56, 0.14);
+  --red-lighter: rgb(159 58 56 / 14%);
+  --red-border: rgb(255 120 116 / 28%);
+  --red-background: rgb(159 58 56 / 14%);
 
   /* Info alert */
-  --info-bg: rgba(49, 112, 143, 0.14);
-  --info-border: rgba(158, 217, 244, 0.24);
+  --info-bg: rgb(49 112 143 / 14%);
+  --info-border: rgb(158 217 244 / 24%);
   --info-text: #9ed9f4;
 
   /* Success alert */
-  --success-bg: rgba(42, 62, 42, 0.48);
-  --success-border: rgba(121, 156, 121, 0.48);
+  --success-bg: rgb(42 62 42 / 48%);
+  --success-border: rgb(121 156 121 / 48%);
   --success-text: #8ff08f;
 
   /* Warning alert */
-  --warning-bg: rgba(250, 185, 91, 0.10);
-  --warning-border: rgba(250, 185, 91, 0.28);
+  --warning-bg: rgb(250 185 91 / 10%);
+  --warning-border: rgb(250 185 91 / 28%);
   --warning-text: var(--orange-light);
 }
 
@@ -64,15 +65,14 @@
 }
 
 html {
-  min-height: 100%;
-  color: var(--text);
   background: radial-gradient(circle at top right, var(--blue-glow-soft), transparent 34rem),
   radial-gradient(circle at top left, var(--orange-glow-soft), transparent 28rem),
   var(--page-bg);
+  color: var(--text);
+  min-height: 100%;
 }
 
 body {
-  margin: 0;
   color: var(--text);
   font-family: Nunito,
   -apple-system,
@@ -86,6 +86,7 @@ body {
   'Droid Sans',
   'Helvetica Neue',
   sans-serif;
+  margin: 0;
 }
 
 @font-face {
@@ -109,22 +110,22 @@ body {
 
 /* Main page - entry titles */
 ul {
-  padding: 0;
   list-style: none;
+  padding: 0;
 }
 
 h1 {
-  margin: 0;
   color: var(--soft-white);
   font-size: clamp(2.1rem, 5vw, 3.25rem);
-  line-height: 1;
   letter-spacing: -0.045em;
+  line-height: 1;
+  margin: 0;
 }
 
 h2 {
-  margin: 0.75rem 0 0;
   color: var(--light-gray);
   font-size: 1.12rem;
+  margin: 0.75rem 0 0;
 }
 
 /*
@@ -133,31 +134,31 @@ h2 {
  * <button class="link-button"> and opened with BrowserOpenURL().
  */
 a, .link-button {
-  border: 0;
   background: transparent;
-  cursor: pointer;
+  border: 0;
   color: var(--info-text);
+  cursor: pointer;
   font-weight: 800;
   text-decoration: underline;
 }
 
 /* Layout helpers */
 .container {
-  width: min(1120px, calc(100vw - 3rem));
   margin: 0 auto;
   padding: 2.5rem 0;
   text-align: left;
+  width: min(1120px, calc(100vw - 3rem));
 }
 
 /* below containers, the sub-container */
 .panel {
+  background: var(--surface-dark-soft);
   border: 1px solid var(--border-soft);
   border-radius: 22px;
-  background: var(--surface-dark-soft);
   box-shadow: 0 14px 36px var(--dark-blue-3);
   padding: 1.7rem;
 
-  @media (max-width: 720px) {
+  @media (width <= 720px) {
     padding: 1rem;
   }
 }
@@ -169,8 +170,8 @@ a, .link-button {
 .flex-row-center {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
   gap: 0.75rem;
+  justify-content: center;
   margin-top: 1rem;
 }
 
@@ -230,7 +231,7 @@ a, .link-button {
 }
 
 .description {
-  color: rgba(244, 247, 251, 0.54);
+  color: rgb(244 247 251 / 54%);
   font-size: 0.95rem;
 }
 
@@ -251,22 +252,22 @@ a, .link-button {
 }
 
 .border-bottom {
-  padding-bottom: 1.25rem;
   border-bottom: 1px solid var(--border-soft);
+  padding-bottom: 1.25rem;
 }
 
 .border-top {
-  padding-top: 1rem;
   border-top: 1px solid var(--border-soft);
+  padding-top: 1rem;
 }
 
 /* modal elements */
 .modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgb(0 0 0 / 0.55);
+  background: rgb(0 0 0 / 55%);
   display: grid;
+  inset: 0;
   place-items: center;
+  position: fixed;
   z-index: 50;
 }
 
