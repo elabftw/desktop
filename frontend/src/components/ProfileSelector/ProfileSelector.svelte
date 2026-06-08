@@ -1,3 +1,13 @@
+<!--
+This file is part of eLabFTW Desktop.
+
+@author Nicolas <Deltablot>
+@author Moustapha <Deltablot>
+@copyright 2026 Deltablot
+@see https://www.elabftw.net
+SPDX-License-Identifier: GPL-3.0-or-later
+-->
+
 <script lang='ts'>
   import { onMount } from 'svelte';
   import {

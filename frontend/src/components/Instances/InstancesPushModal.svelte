@@ -1,4 +1,14 @@
 <!--
+This file is part of eLabFTW Desktop.
+
+@author Nicolas <Deltablot>
+@author Moustapha <Deltablot>
+@copyright 2026 Deltablot
+@see https://www.elabftw.net
+SPDX-License-Identifier: GPL-3.0-or-later
+-->
+
+<!--
 This file contains the modal to push informations to eLabFTW. It
 is adapted to be scalable, so later on we'll just replace eLabFTW
 with "Instance Name" for cross platform data share.
