@@ -10,7 +10,7 @@ func renderMarkdownToHTML(input string) string {
 	extensions := parser.CommonExtensions | parser.AutoHeadingIDs
 	p := parser.NewWithExtensions(extensions)
 
-	htmlFlags := html.CommonFlags
+	htmlFlags := html.CommonFlags | html.SkipHTML
 	renderer := html.NewRenderer(html.RendererOptions{
 		Flags: htmlFlags,
 	})

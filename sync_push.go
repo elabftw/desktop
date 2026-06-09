@@ -91,8 +91,9 @@ func (a *App) PushEntryToElabftw(profileUUID string, entryID int64, instanceID i
 	}
 
 	payload := map[string]any{
-		"title": title,
-		"body":  renderMarkdownToHTML(bodyText),
+		"title":        title,
+		"body":         renderMarkdownToHTML(bodyText),
+		"content_type": 1,
 	}
 
 	var remoteID int64
