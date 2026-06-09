@@ -192,7 +192,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
 <div class='container'>
   <header class='flex justify-between items-center mb-2 border-bottom'>
     <div class='w-100 text-ellipsis'>
-      <p class='header-subtitle'>Unlocked profile</p>
       {#if view === 'index'}
         <h1>My Entries</h1>
         <h2>Manage your saved entries.</h2>
@@ -316,7 +315,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
         </div>
 
         <label for='entryMainText' class='mt-2'>Entry main text</label>
-<!--        <textarea id='entryMainText' bind:value={entryMainText} placeholder='The main text...'></textarea>-->
         <MarkdownEditor
           value={entryMainText}
           onChange={(next) => entryMainText = next}
