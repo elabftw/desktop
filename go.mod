@@ -3,6 +3,7 @@ module elabftw-desktop
 go 1.25.0
 
 require (
+	github.com/gomarkdown/markdown v0.0.0-20260417124207-7d523f7318df
 	github.com/google/uuid v1.6.0
 	github.com/wailsapp/wails/v2 v2.12.0
 	golang.org/x/crypto v0.50.0
