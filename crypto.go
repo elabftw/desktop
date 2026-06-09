@@ -1,3 +1,13 @@
+/*
+ * This file is part of eLabFTW Desktop.
+ *
+ * @author Nicolas CARPi <Deltablot>
+ * @author Moustapha Camara <Deltablot>
+ * @copyright 2026 Nicolas CARPi
+ * @see https://www.elabftw.net Official website
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 // This file contains local profile encryption helpers.
 //
 // The user's passphrase is never stored directly. When a profile is created,

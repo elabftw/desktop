@@ -1,4 +1,14 @@
 /*
+ * This file is part of eLabFTW Desktop.
+ *
+ * @author Nicolas CARPi <Deltablot>
+ * @author Moustapha Camara <Deltablot>
+ * @copyright 2026 Nicolas CARPi
+ * @see https://www.elabftw.net Official website
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+/*
  * This file handles the PUSHing of entries to configured eLabFTW instance
  */
 
