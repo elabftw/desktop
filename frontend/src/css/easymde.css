@@ -1,3 +1,8 @@
+/* stylelint-disable selector-class-pattern */
+
+/* prevent the linter from flagging ".EasyMDEContainer" to be kebab-case
+ * as those classes come from easymde */
+
 /* the toolbar appears transparent with black text, we want blue-white */
 .editor-toolbar button {
   color: var(--soft-white) !important;
