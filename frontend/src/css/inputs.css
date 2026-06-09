@@ -1,15 +1,15 @@
 .input,
 textarea,
 select.input {
-  width: 100%;
-  padding: 0.8rem 0.95rem;
-  border-radius: 12px;
-  border: 1px solid var(--border-soft);
   background: var(--surface-dark-soft);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  box-sizing: border-box;
   color: var(--soft-white);
   font: inherit;
-  box-sizing: border-box;
   margin-top: 0.5em;
+  padding: 0.8rem 0.95rem;
+  width: 100%;
 }
 
 .input::placeholder,
@@ -17,23 +17,24 @@ textarea::placeholder {
   color: var(--gray);
 }
 
+textarea {
+  line-height: 1.6;
+  min-height: 420px;
+}
+
+
 .input:focus,
 textarea:focus {
-  outline: none;
   border-color: var(--orange-hover);
   box-shadow: 0 0 0 3px var(--orange-focus-shadow);
+  outline: none;
 }
 
 label {
-  display: inline-block;
   color: var(--soft-white);
+  display: inline-block;
   font-size: 0.95rem;
   font-weight: 800;
-}
-
-textarea {
-  min-height: 420px;
-  line-height: 1.6;
 }
 
 /* checkboxes */
@@ -42,19 +43,23 @@ textarea {
 }
 
 .checkbox-row input {
-  position: absolute;
   opacity: 0;
   pointer-events: none;
+  position: absolute;
 }
 
 .checkbox-box {
-  width: 1.1rem;
-  height: 1.1rem;
+  background: var(--surface-dark-soft);
   border: 1px solid var(--info-text);
   border-radius: 0.35rem;
-  background: var(--surface-dark-soft);
   display: inline-grid;
+  height: 1.1rem;
   place-items: center;
+  width: 1.1rem;
+}
+
+.checkbox-row:hover .checkbox-box {
+  border-color: var(--orange);
 }
 
 .checkbox-row input:checked + .checkbox-box {
@@ -63,23 +68,20 @@ textarea {
 }
 
 .checkbox-row input:checked + .checkbox-box::after {
-  content: '✓';
   color: var(--dark-blue);
-}
-
-.checkbox-row:hover .checkbox-box {
-  border-color: var(--orange);
+  content: '✓';
 }
 
 select.input {
-  cursor: pointer;
   appearance: none;
-  padding-right: 2.8rem;
+
   /* this draws the arrow because appearance:none makes it disappear */
   background: linear-gradient(45deg, transparent 50%, var(--soft-white) 50%), linear-gradient(135deg, var(--soft-white) 50%, transparent 50%), var(--surface-dark-soft);
   background-position: calc(100% - 1.25rem) 50%, calc(100% - 0.9rem) 50%, 0 0;
-  background-size: 0.35rem 0.35rem, 0.35rem 0.35rem, 100% 100%;
   background-repeat: no-repeat;
+  background-size: 0.35rem 0.35rem, 0.35rem 0.35rem, 100% 100%;
+  cursor: pointer;
+  padding-right: 2.8rem;
 }
 
 select.input:hover {

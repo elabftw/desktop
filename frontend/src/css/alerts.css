@@ -1,11 +1,11 @@
 /* ALERTS */
 .alert {
-  margin-top: 0.75rem;
-  padding: 0.9rem 1rem;
-  border-radius: 8px;
   border: 1px solid transparent;
+  border-radius: 8px;
   font-size: 0.95rem;
   line-height: 1.45;
+  margin-top: 0.75rem;
+  padding: 0.9rem 1rem;
   text-align: left;
 }
 
@@ -38,13 +38,13 @@
 }
 
 .alert-close {
-  border: 0;
   background: transparent;
+  border: 0;
   color: inherit;
+  cursor: pointer;
   font-size: 2rem;
   font-weight: bold;
   line-height: 1;
-  cursor: pointer;
   opacity: 0.7;
 }
 

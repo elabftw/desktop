@@ -1,21 +1,21 @@
 .header-subtitle {
-  margin: 0 0 0.35rem;
   color: var(--orange);
   font-size: 0.85rem;
   font-weight: 800;
   letter-spacing: 0.08em;
+  margin: 0 0 0.35rem;
   text-transform: uppercase;
 }
 
 .icon, .icon-sm, .profile-avatar {
-  width: 64px;
-  height: 64px;
-  display: grid;
-  place-items: center;
+  background: var(--blue-glow-soft);
   border-radius: 999px;
   color: var(--orange);
-  background: var(--blue-glow-soft);
+  display: grid;
   font-size: 1.35rem;
+  height: 64px;
+  place-items: center;
+  width: 64px;
 }
 
 .icon-sm, .profile-avatar {
@@ -23,44 +23,44 @@
 }
 
 .profile-avatar {
-  color: var(--orange-dark);
   background: var(--orange);
+  color: var(--orange-dark);
   font-weight: 900;
 }
 
 .entry-card {
-  width: 100%;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  text-align: left;
-  color: inherit;
+  background: var(--dark-blue-4);
   border: 1px solid var(--border-soft);
   border-radius: 8px;
-  background: var(--dark-blue-4);
+  color: inherit;
   cursor: pointer;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  padding: 1rem;
+  text-align: left;
   transition: background-color 0.12s ease,
   border-color 0.12s ease,
   transform 0.12s ease;
+  width: 100%;
 }
 
 .entry-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--orange-hover);
   background: var(--dark-blue-2);
+  border-color: var(--orange-hover);
+  transform: translateY(-2px);
 }
 
 .entry-card:focus-visible {
-  outline: none;
   border-color:  var(--orange-hover);
   box-shadow: 0 0 0 3px var(--orange-shadow);
+  outline: none;
 }
 
 .entry-card.active {
-  border-color: rgba(250, 185, 91, 0.58);
   background: var(--dark-blue-2);
+  border-color: rgb(250 185 91 / 58%);
 }
 
 .entry-card.masked {
@@ -68,7 +68,7 @@
 }
 
 .empty-state {
-  padding: 2rem 1rem;
   display: grid;
+  padding: 2rem 1rem;
   place-items: center;
 }

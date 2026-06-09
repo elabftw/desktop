@@ -1,29 +1,29 @@
 /* logged in - profile */
 .profile-pill {
-  max-height: 48px;
-  padding: 0.55rem 0.85rem 0.55rem 0.55rem;
+  background: var(--surface-dark-soft);
   border: 1px solid var(--border-soft);
   border-radius: 999px;
-  background: var(--surface-dark-soft);
+  max-height: 48px;
+  padding: 0.55rem 0.85rem 0.55rem 0.55rem;
 }
 
 /* when clicking a profile to unlock it */
 .auth-unlock-card {
-  padding: 1.5rem;
-  box-shadow: 0 14px 36px var(--dark-blue-3);
   border: 0;
-  transform: translateY(-30px);
   border-radius: 0 0 20px 20px ;
+  box-shadow: 0 14px 36px var(--dark-blue-3);
+  padding: 1.5rem;
+  transform: translateY(-30px);
 }
 
 summary {
   cursor: pointer;
 }
 
-@media (max-width: 720px) {
+@media (width <= 720px) {
   .profile-shell {
-    width: min(100% - 2rem, 1120px);
     padding: 1.5rem 0;
+    width: min(100% - 2rem, 1120px);
   }
 
   .panel-header {

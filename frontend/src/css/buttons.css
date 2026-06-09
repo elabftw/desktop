@@ -4,16 +4,16 @@ button {
 }
 
 .btn {
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 8px;
   cursor: pointer;
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  padding: 0.6rem 1rem;
-  border-radius: 8px;
-  border: 1px solid transparent;
   font-weight: 600;
+  gap: 0.4rem;
+  justify-content: center;
   line-height: 1;
+  padding: 0.6rem 1rem;
   transition: background-color 0.18s ease,
   border-color 0.18s ease,
   color 0.18s ease,
@@ -22,8 +22,8 @@ button {
 }
 
 .btn:disabled {
-  opacity: 0.6;
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .btn:active {
@@ -31,15 +31,15 @@ button {
 }
 
 .btn:focus-visible {
-  outline: none;
   box-shadow: var(--dark-blue-shadow);
+  outline: none;
 }
 
 .btn-primary {
   background: linear-gradient(180deg, var(--orange-light), var(--orange));
-  color: var(--orange-dark);
   border-color: var(--orange);
   box-shadow: 0 5px 24px var(--orange-shadow);
+  color: var(--orange-dark);
 }
 
 .btn-primary:hover {
@@ -48,8 +48,8 @@ button {
 
 .btn-secondary {
   background: var(--dark-blue-2);
-  color: var(--soft-white);
   border-color: var(--border-soft);
+  color: var(--soft-white);
 }
 
 .btn-secondary:hover {
@@ -58,8 +58,8 @@ button {
 
 .btn-danger {
   background: var(--red-background);
-  color: var(--red-light);
   border-color: var(--red-border);
+  color: var(--red-light);
 }
 
 .btn-danger:hover {
@@ -72,6 +72,6 @@ button {
 }
 
 .btn-danger:focus-visible {
-  outline: none;
   box-shadow: 0 0 0 3px var(--red-background);
+  outline: none;
 }
