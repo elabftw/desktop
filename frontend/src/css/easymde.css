@@ -45,7 +45,7 @@
 
 /* in preview, the titles appear in white (?) */
 .editor-preview h1,
-.editor-preview h2{
+.editor-preview h2 {
   color: var(--dark-blue);
 }
 
