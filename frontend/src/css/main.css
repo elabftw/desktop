@@ -3,6 +3,7 @@
 @import url('inputs.css');
 @import url('profiles.css');
 @import url('main-app.css');
+@import url('easymde.css');
 
 /* TODO: add stylelint */
 :root {

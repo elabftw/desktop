@@ -27,6 +27,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
   import type { AlertState } from './Alert.svelte';
   import InstancesView from './Instances/InstancesView.svelte';
   import InstancesPushModal from './Instances/InstancesPushModal.svelte';
+  import MarkdownEditor from "./MarkdownEditor.svelte";
 
   type Props = {
     profileUuid: string;
@@ -315,7 +316,11 @@ SPDX-License-Identifier: GPL-3.0-or-later
         </div>
 
         <label for='entryMainText' class='mt-2'>Entry main text</label>
-        <textarea id='entryMainText' bind:value={entryMainText} placeholder='The main text...'></textarea>
+<!--        <textarea id='entryMainText' bind:value={entryMainText} placeholder='The main text...'></textarea>-->
+        <MarkdownEditor
+          value={entryMainText}
+          onChange={(next) => entryMainText = next}
+        />
       </form>
     </section>
   {/if}
