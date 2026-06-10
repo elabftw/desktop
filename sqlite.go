@@ -32,6 +32,11 @@ func OpenProfileDB(profileDir string) (*sql.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open sqlite: %w", err)
 	}
+    // SQLite allows only one writer at a time.
+    // Keep a single DB connection per handle to avoid concurrent PRAGMA/migration/write
+    // operations locking the profile database.
+	db.SetMaxOpenConns(1)
+    db.SetMaxIdleConns(1)
 
 	// Good defaults for desktop apps
 	if _, err := db.Exec(`PRAGMA foreign_keys = ON;`); err != nil {

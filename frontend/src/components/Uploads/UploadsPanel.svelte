@@ -1,9 +1,9 @@
 <script lang='ts'>
   import {
-    ImportUpload,
-    ListEntryUploads,
     AttachUploadToEntry,
     DetachUploadFromEntry,
+    ImportUpload,
+    ListEntryUploads,
     SelectFile
   } from '../../../wailsjs/go/main/App';
   import type { main } from '../../../wailsjs/go/models';
@@ -76,7 +76,11 @@
   }
 
   $effect(() => {
-    void refreshUploads();
+    if (entryId) {
+      void refreshUploads();
+    } else {
+      uploads = [];
+    }
   });
 </script>
 

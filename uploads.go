@@ -93,6 +93,33 @@ func (a *App) ImportUpload(profileUUID string, sourcePath string) (*StoredUpload
 	}
 	defer db.Close()
 
+	var existing StoredUpload
+
+	err = db.QueryRow(`
+    	SELECT id, real_name, long_name, storage_name, hash, hash_algorithm, filesize, state, created_at, modified_at
+    	FROM uploads
+    	WHERE hash = ? AND hash_algorithm = ?
+    `, hash, hashAlgorithm).Scan(
+		&existing.ID,
+		&existing.RealName,
+		&existing.LongName,
+		&existing.StorageName,
+		&existing.Hash,
+		&existing.HashAlgorithm,
+		&existing.Filesize,
+		&existing.State,
+		&existing.CreatedAt,
+		&existing.ModifiedAt,
+	)
+
+	if err == nil {
+		return &existing, nil
+	}
+
+	if err != sql.ErrNoRows {
+		return nil, fmt.Errorf("query existing upload: %w", err)
+	}
+
 	res, err := db.Exec(`
 		INSERT INTO uploads (
 			real_name,
