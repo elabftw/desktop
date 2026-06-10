@@ -6,9 +6,7 @@
  * @copyright 2026 Nicolas CARPi
  * @see https://www.elabftw.net Official website
  * SPDX-License-Identifier: GPL-3.0-or-later
- */
-
-/*
+ *
  * This file handles the PUSHing of entries to configured eLabFTW instance
  */
 
@@ -420,4 +418,16 @@ func remoteModifiedConflictMessage(entityType string, remoteID int64) string {
 		entityType,
 		remoteID,
 	)
+}
+
+// handle uploads
+func elabftwUploadEntityType(entityType string) (string, error) {
+	switch entityType {
+	case "experiment":
+		return "experiments", nil
+	case "resource":
+		return "items", nil
+	default:
+		return "", fmt.Errorf("Invalid eLabFTW entity type")
+	}
 }

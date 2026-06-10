@@ -345,6 +345,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
         <!-- FILES TEST -->
         <UploadsPanel
           {profileUuid}
+          entryId={currentEntryId}
           onAlert={(nextAlert) => alert = nextAlert}
         />
         <!-- EOFT-->

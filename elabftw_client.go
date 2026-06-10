@@ -198,3 +198,40 @@ func (a *App) FetchElabftwInfo(profileUUID string, instanceID int64) (*ElabftwIn
 
 	return &out, nil
 }
+
+/* push formData (for uploads) */
+func (a *App) elabftwRequestWithContentType(
+	profileUUID string,
+	instanceID int64,
+	method string,
+	path string,
+	body io.Reader,
+	contentType string,
+) (*http.Response, error) {
+	cfg, err := a.loadElabftwClientConfig(profileUUID, instanceID)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(method, elabftwAPIBaseURL(cfg.SiteURL)+path, body)
+	if err != nil {
+		return nil, fmt.Errorf("create elabftw request: %w", err)
+	}
+
+	req.Header.Set("Authorization", cfg.APIKey)
+
+	if contentType != "" {
+		req.Header.Set("Content-Type", contentType)
+	}
+
+	req.Header.Set("Accept", "application/json")
+
+	client := elabftwHTTPClient(cfg.VerifyTLS)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("call elabftw %s %s: %w", method, path, err)
+	}
+
+	return resp, nil
+}

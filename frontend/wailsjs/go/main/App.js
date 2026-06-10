@@ -10,6 +10,10 @@ export function AddProfile(arg1, arg2) {
   return window['go']['main']['App']['AddProfile'](arg1, arg2);
 }
 
+export function AttachUploadToEntry(arg1, arg2, arg3) {
+  return window['go']['main']['App']['AttachUploadToEntry'](arg1, arg2, arg3);
+}
+
 export function DeleteElabftwInstance(arg1, arg2) {
   return window['go']['main']['App']['DeleteElabftwInstance'](arg1, arg2);
 }
@@ -20,6 +24,10 @@ export function DeleteEntry(arg1, arg2) {
 
 export function DeleteProfile(arg1, arg2) {
   return window['go']['main']['App']['DeleteProfile'](arg1, arg2);
+}
+
+export function DetachUploadFromEntry(arg1, arg2, arg3) {
+  return window['go']['main']['App']['DetachUploadFromEntry'](arg1, arg2, arg3);
 }
 
 export function FetchElabftwInfo(arg1, arg2) {
@@ -48,6 +56,10 @@ export function ListEntries(arg1) {
 
 export function ListEntryRemoteLinks(arg1, arg2) {
   return window['go']['main']['App']['ListEntryRemoteLinks'](arg1, arg2);
+}
+
+export function ListEntryUploads(arg1, arg2) {
+  return window['go']['main']['App']['ListEntryUploads'](arg1, arg2);
 }
 
 export function ListUploads(arg1) {

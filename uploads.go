@@ -92,7 +92,7 @@ func (a *App) ImportUpload(profileUUID string, sourcePath string) (*StoredUpload
 	defer db.Close()
 
 	res, err := db.Exec(`
-		INSERT INTO files (
+		INSERT INTO uploads (
 			real_name,
 			long_name,
 			storage_name,
@@ -124,6 +124,41 @@ func (a *App) ImportUpload(profileUUID string, sourcePath string) (*StoredUpload
 	}, nil
 }
 
+
+func (a *App) AttachUploadToEntry(profileUUID string, entryID int64, uploadID int64) error {
+	profileUUID, err := a.requireUnlockedProfile(profileUUID)
+	if err != nil {
+		return err
+	}
+	if entryID <= 0 {
+		return fmt.Errorf("Invalid entry id")
+	}
+	if uploadID <= 0 {
+		return fmt.Errorf("Invalid upload id")
+	}
+
+	pdir, err := profileDir(profileUUID)
+	if err != nil {
+		return err
+	}
+
+	db, err := OpenProfileDB(pdir)
+	if err != nil {
+		return fmt.Errorf("open profile db: %w", err)
+	}
+	defer db.Close()
+
+	_, err = db.Exec(`
+		INSERT OR IGNORE INTO entry_uploads (entry_id, upload_id)
+		VALUES (?, ?)
+	`, entryID, uploadID)
+	if err != nil {
+		return fmt.Errorf("attach upload to entry: %w", err)
+	}
+
+	return nil
+}
+
 func (a *App) ListUploads(profileUUID string) ([]StoredUpload, error) {
 	profileUUID, err := a.requireUnlockedProfile(profileUUID)
 	if err != nil {
@@ -153,11 +188,11 @@ func (a *App) ListUploads(profileUUID string) ([]StoredUpload, error) {
 			state,
 			created_at,
 			modified_at
-		FROM files
+		FROM uploads
 		ORDER BY modified_at DESC, id DESC
 	`)
 	if err != nil {
-		return nil, fmt.Errorf("query files: %w", err)
+		return nil, fmt.Errorf("query uploads: %w", err)
 	}
 	defer rows.Close()
 
@@ -188,4 +223,103 @@ func (a *App) ListUploads(profileUUID string) ([]StoredUpload, error) {
 	}
 
 	return out, nil
+}
+
+func (a *App) ListEntryUploads(profileUUID string, entryID int64) ([]StoredUpload, error) {
+	profileUUID, err := a.requireUnlockedProfile(profileUUID)
+	if err != nil {
+		return nil, err
+	}
+	if entryID <= 0 {
+		return nil, fmt.Errorf("Invalid entry id")
+	}
+
+	pdir, err := profileDir(profileUUID)
+	if err != nil {
+		return nil, err
+	}
+
+	db, err := OpenProfileDB(pdir)
+	if err != nil {
+		return nil, fmt.Errorf("open profile db: %w", err)
+	}
+	defer db.Close()
+
+	rows, err := db.Query(`
+		SELECT
+			u.id,
+			u.real_name,
+			u.long_name,
+			u.storage_name,
+			u.hash,
+			u.hash_algorithm,
+			u.filesize,
+			u.state,
+			u.created_at,
+			u.modified_at
+		FROM uploads u
+		JOIN entry_uploads eu ON eu.upload_id = u.id
+		WHERE eu.entry_id = ?
+		ORDER BY u.modified_at DESC, u.id DESC
+	`, entryID)
+	if err != nil {
+		return nil, fmt.Errorf("query entry uploads: %w", err)
+	}
+	defer rows.Close()
+
+	out := []StoredUpload{}
+
+	for rows.Next() {
+		var upload StoredUpload
+		if err := rows.Scan(
+			&upload.ID,
+			&upload.RealName,
+			&upload.LongName,
+			&upload.StorageName,
+			&upload.Hash,
+			&upload.HashAlgorithm,
+			&upload.Filesize,
+			&upload.State,
+			&upload.CreatedAt,
+			&upload.ModifiedAt,
+		); err != nil {
+			return nil, fmt.Errorf("scan entry upload: %w", err)
+		}
+
+		out = append(out, upload)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows error: %w", err)
+	}
+
+	return out, nil
+}
+
+func (a *App) DetachUploadFromEntry(profileUUID string, entryID int64, uploadID int64) error {
+	profileUUID, err := a.requireUnlockedProfile(profileUUID)
+	if err != nil {
+		return err
+	}
+
+	pdir, err := profileDir(profileUUID)
+	if err != nil {
+		return err
+	}
+
+	db, err := OpenProfileDB(pdir)
+	if err != nil {
+		return fmt.Errorf("open profile db: %w", err)
+	}
+	defer db.Close()
+
+	_, err = db.Exec(`
+		DELETE FROM entry_uploads
+		WHERE entry_id = ? AND upload_id = ?
+	`, entryID, uploadID)
+	if err != nil {
+		return fmt.Errorf("detach upload from entry: %w", err)
+	}
+
+	return nil
 }

@@ -148,5 +148,28 @@ PRAGMA user_version = 2;
 		v = 3
 	}
 
+    // joint table for uploads to entry
+    if v == 3 {
+        _, err := db.Exec(`
+    CREATE TABLE IF NOT EXISTS entry_uploads (
+        entry_id INTEGER NOT NULL,
+        upload_id INTEGER NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+
+        PRIMARY KEY (entry_id, upload_id),
+        FOREIGN KEY (entry_id) REFERENCES entries(id) ON DELETE CASCADE,
+        FOREIGN KEY (upload_id) REFERENCES uploads(id) ON DELETE CASCADE
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_entry_uploads_upload
+    ON entry_uploads(upload_id);
+
+    PRAGMA user_version = 4;
+    `)
+        if err != nil {
+            return fmt.Errorf("Create schema v4: %w", err)
+        }
+        v = 4
+    }
 	return nil
 }

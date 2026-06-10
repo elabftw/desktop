@@ -1,24 +1,36 @@
 <script lang='ts'>
-  import { ImportUpload, ListUploads, SelectFile } from '../../../wailsjs/go/main/App';
+  import {
+    ImportUpload,
+    ListEntryUploads,
+    AttachUploadToEntry,
+    DetachUploadFromEntry,
+    SelectFile
+  } from '../../../wailsjs/go/main/App';
   import type { main } from '../../../wailsjs/go/models';
   import { errorMessage } from '../../utils/helpers';
   import type { AlertState } from '../Alert.svelte';
 
   type Props = {
     profileUuid: string;
+    entryId: number | null;
     onAlert: (alert: AlertState | null) => void;
   };
 
-  let {profileUuid, onAlert}: Props = $props();
+  let {profileUuid, onAlert, entryId}: Props = $props();
 
   let uploads = $state<main.StoredUpload[]>([]);
   let loading = $state(false);
 
   async function refreshUploads(): Promise<void> {
+    if (!entryId) {
+      uploads = [];
+      return;
+    }
+
     loading = true;
 
     try {
-      uploads = await ListUploads(profileUuid);
+      uploads = await ListEntryUploads(profileUuid, entryId);
     } catch (e: unknown) {
       onAlert({type: 'error', message: errorMessage(e)});
     } finally {
@@ -27,13 +39,30 @@
   }
 
   async function importUpload(): Promise<void> {
+    if (!entryId) {
+      onAlert({type: 'warning', message: 'Save the entry before adding uploads.'});
+      return;
+    }
+
     try {
       const path = await SelectFile();
       if (!path) return;
 
       const upload = await ImportUpload(profileUuid, path);
-      onAlert({type: 'success', message: `Imported ${upload.realName} ✔`});
+      await AttachUploadToEntry(profileUuid, entryId, upload.id);
 
+      onAlert({type: 'success', message: `Imported ${upload.realName} ✔`});
+      await refreshUploads();
+    } catch (e: unknown) {
+      onAlert({type: 'error', message: errorMessage(e)});
+    }
+  }
+
+  async function detachUpload(uploadId: number): Promise<void> {
+    if (!entryId) return;
+
+    try {
+      await DetachUploadFromEntry(profileUuid, entryId, uploadId);
       await refreshUploads();
     } catch (e: unknown) {
       onAlert({type: 'error', message: errorMessage(e)});
@@ -84,6 +113,10 @@
           <span class='description text-ellipsis' title={upload.hash}>
             {upload.hash.slice(0, 12)}
           </span>
+
+          <button class='btn btn-danger' type='button' onclick={() => detachUpload(upload.id)}>
+            Remove
+          </button>
         </div>
       {/each}
     </div>
