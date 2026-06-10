@@ -62,10 +62,6 @@ export function ListEntryUploads(arg1, arg2) {
   return window['go']['main']['App']['ListEntryUploads'](arg1, arg2);
 }
 
-export function ListUploads(arg1) {
-  return window['go']['main']['App']['ListUploads'](arg1);
-}
-
 export function LockProfile() {
   return window['go']['main']['App']['LockProfile']();
 }

@@ -32,8 +32,6 @@ export function ListEntryRemoteLinks(arg1:string,arg2:number):Promise<Array<main
 
 export function ListEntryUploads(arg1:string,arg2:number):Promise<Array<main.StoredUpload>>;
 
-export function ListUploads(arg1:string):Promise<Array<main.StoredUpload>>;
-
 export function LockProfile():Promise<void>;
 
 export function PushAllEntriesToElabftw(arg1:string,arg2:number,arg3:string,arg4:boolean):Promise<Array<main.PushEntryResult>>;

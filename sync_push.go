@@ -206,6 +206,10 @@ func (a *App) patchExistingRemoteEntry(
 		return nil, err
 	}
 
+	if err := a.pushEntryUploadsToRemoteEntity(profileUUID, db, instanceID, entryID, entityType, remoteID); err != nil {
+		return nil, err
+	}
+
 	return &PushEntryResult{
 		LocalID:  entryID,
 		RemoteID: remoteID,
@@ -254,11 +258,15 @@ func (a *App) postNewRemoteEntry(
 	}
 
 	_, err = db.Exec(`
-		INSERT INTO local2remote (instance, remote_id, local_id, type, modified_at)
-		VALUES (?, ?, ?, ?, ?)
-	`, instanceID, remoteID, entryID, entityType, createdRemoteModifiedAt.Format(time.RFC3339Nano))
+    	INSERT INTO local2remote (instance, remote_id, local_id, type, modified_at)
+    	VALUES (?, ?, ?, ?, ?)
+    `, instanceID, remoteID, entryID, entityType, createdRemoteModifiedAt.Format(time.RFC3339Nano))
 	if err != nil {
 		return nil, fmt.Errorf("insert local2remote: %w", err)
+	}
+
+	if err := a.pushEntryUploadsToRemoteEntity(profileUUID, db, instanceID, entryID, entityType, remoteID); err != nil {
+		return nil, err
 	}
 
 	return &PushEntryResult{

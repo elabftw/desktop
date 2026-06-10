@@ -14,6 +14,7 @@ package main
 
 import (
 	"crypto/sha256"
+	"database/sql"
 	"encoding/hex"
 	"fmt"
 	"os"
@@ -158,33 +159,29 @@ func (a *App) AttachUploadToEntry(profileUUID string, entryID int64, uploadID in
 	return nil
 }
 
-func (a *App) ListUploads(profileUUID string) ([]StoredUpload, error) {
-	profileUUID, err := a.requireUnlockedProfile(profileUUID)
-	if err != nil {
-		return nil, err
-	}
-
-	db, err := a.openProfileDB(profileUUID)
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
-
+func listEntryUploadsFromDB(db *sql.DB, entryID int64) ([]StoredUpload, error) {
 	rows, err := db.Query(`
-		SELECT id, real_name, long_name, storage_name, hash, hash_algorithm,
-		       filesize, state, created_at, modified_at
-		FROM uploads
-		ORDER BY modified_at DESC, id DESC
-	`)
+		SELECT
+			u.id,
+			u.real_name,
+			u.long_name,
+			u.storage_name,
+			u.hash,
+			u.hash_algorithm,
+			u.filesize,
+			u.state,
+			u.created_at,
+			u.modified_at
+		FROM uploads u
+		JOIN entry_uploads eu ON eu.upload_id = u.id
+		WHERE eu.entry_id = ?
+		ORDER BY u.modified_at DESC, u.id DESC
+	`, entryID)
 	if err != nil {
-		return nil, fmt.Errorf("query uploads: %w", err)
+		return nil, fmt.Errorf("query entry uploads: %w", err)
 	}
 	defer rows.Close()
 
-	return scanUploads(rows)
-}
-
-func scanUploads(rows *sql.Rows) ([]StoredUpload, error) {
 	out := []StoredUpload{}
 
 	for rows.Next() {
@@ -202,7 +199,7 @@ func scanUploads(rows *sql.Rows) ([]StoredUpload, error) {
 			&upload.CreatedAt,
 			&upload.ModifiedAt,
 		); err != nil {
-			return nil, fmt.Errorf("scan upload: %w", err)
+			return nil, fmt.Errorf("scan entry upload: %w", err)
 		}
 
 		out = append(out, upload)
@@ -213,23 +210,6 @@ func scanUploads(rows *sql.Rows) ([]StoredUpload, error) {
 	}
 
 	return out, nil
-}
-
-func listEntryUploadsFromDB(db *sql.DB, entryID int64) ([]StoredUpload, error) {
-	rows, err := db.Query(`
-		SELECT u.id, u.real_name, u.long_name, u.storage_name, u.hash,
-		       u.hash_algorithm, u.filesize, u.state, u.created_at, u.modified_at
-		FROM uploads u
-		JOIN entry_uploads eu ON eu.upload_id = u.id
-		WHERE eu.entry_id = ?
-		ORDER BY u.modified_at DESC, u.id DESC
-	`, entryID)
-	if err != nil {
-		return nil, fmt.Errorf("query entry uploads: %w", err)
-	}
-	defer rows.Close()
-
-	return scanUploads(rows)
 }
 
 func (a *App) DetachUploadFromEntry(profileUUID string, entryID int64, uploadID int64) error {
@@ -258,4 +238,27 @@ func (a *App) DetachUploadFromEntry(profileUUID string, entryID int64, uploadID 
 	}
 
 	return nil
+}
+
+func (a *App) ListEntryUploads(profileUUID string, entryID int64) ([]StoredUpload, error) {
+	profileUUID, err := a.requireUnlockedProfile(profileUUID)
+	if err != nil {
+		return nil, err
+	}
+	if entryID <= 0 {
+		return nil, fmt.Errorf("Invalid entry id")
+	}
+
+	pdir, err := profileDir(profileUUID)
+	if err != nil {
+		return nil, err
+	}
+
+	db, err := OpenProfileDB(pdir)
+	if err != nil {
+		return nil, fmt.Errorf("open profile db: %w", err)
+	}
+	defer db.Close()
+
+	return listEntryUploadsFromDB(db, entryID)
 }

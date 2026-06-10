@@ -98,3 +98,25 @@ func (a *App) pushUploadToRemoteEntity(
 
 	return nil
 }
+
+func (a *App) pushEntryUploadsToRemoteEntity(
+	profileUUID string,
+	db *sql.DB,
+	instanceID int64,
+	entryID int64,
+	entityType string,
+	remoteEntityID int64,
+) error {
+	uploads, err := listEntryUploadsFromDB(db, entryID)
+	if err != nil {
+		return err
+	}
+
+	for _, upload := range uploads {
+		if err := a.pushUploadToRemoteEntity(profileUUID, db, instanceID, entityType, remoteEntityID, upload); err != nil {
+			return fmt.Errorf("push upload %d: %w", upload.ID, err)
+		}
+	}
+
+	return nil
+}
