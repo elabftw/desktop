@@ -111,18 +111,16 @@ func (a *App) elabftwRequest(
 	profileUUID string,
 	instanceID int64,
 	method string,
-	apiPath string,
+	path string,
 	body io.Reader,
+	headers ...map[string]string,
 ) (*http.Response, error) {
 	cfg, err := a.loadElabftwClientConfig(profileUUID, instanceID)
 	if err != nil {
 		return nil, err
 	}
 
-	apiPath = "/" + strings.TrimLeft(apiPath, "/")
-	url := elabftwAPIBaseURL(cfg.SiteURL) + apiPath
-
-	req, err := http.NewRequest(method, url, body)
+	req, err := http.NewRequest(method, elabftwAPIBaseURL(cfg.SiteURL)+path, body)
 	if err != nil {
 		return nil, fmt.Errorf("create elabftw request: %w", err)
 	}
@@ -130,13 +128,17 @@ func (a *App) elabftwRequest(
 	req.Header.Set("Authorization", cfg.APIKey)
 	req.Header.Set("Accept", "application/json")
 
-	if body != nil {
-		req.Header.Set("Content-Type", "application/json")
+	for _, h := range headers {
+		for k, v := range h {
+			req.Header.Set(k, v)
+		}
 	}
 
-	resp, err := elabftwHTTPClient(cfg.VerifyTLS).Do(req)
+	client := elabftwHTTPClient(cfg.VerifyTLS)
+
+	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("call elabftw %s %s: %w", method, apiPath, err)
+		return nil, fmt.Errorf("call elabftw %s %s: %w", method, path, err)
 	}
 
 	return resp, nil
@@ -197,41 +199,4 @@ func (a *App) FetchElabftwInfo(profileUUID string, instanceID int64) (*ElabftwIn
 	}
 
 	return &out, nil
-}
-
-/* push formData (for uploads) */
-func (a *App) elabftwRequestWithContentType(
-	profileUUID string,
-	instanceID int64,
-	method string,
-	path string,
-	body io.Reader,
-	contentType string,
-) (*http.Response, error) {
-	cfg, err := a.loadElabftwClientConfig(profileUUID, instanceID)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(method, elabftwAPIBaseURL(cfg.SiteURL)+path, body)
-	if err != nil {
-		return nil, fmt.Errorf("create elabftw request: %w", err)
-	}
-
-	req.Header.Set("Authorization", cfg.APIKey)
-
-	if contentType != "" {
-		req.Header.Set("Content-Type", contentType)
-	}
-
-	req.Header.Set("Accept", "application/json")
-
-	client := elabftwHTTPClient(cfg.VerifyTLS)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("call elabftw %s %s: %w", method, path, err)
-	}
-
-	return resp, nil
 }

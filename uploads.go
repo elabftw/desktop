@@ -20,6 +20,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 type StoredUpload struct {
@@ -262,3 +263,10 @@ func (a *App) ListEntryUploads(profileUUID string, entryID int64) ([]StoredUploa
 
 	return listEntryUploadsFromDB(db, entryID)
 }
+
+func (a *App) SelectFile() (string, error) {
+	return runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
+		Title: "Select file",
+	})
+}
+

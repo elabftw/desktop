@@ -8,6 +8,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * if new migration versions need to be done, follow schema: if v == 1 { ... set user_version = 2 }
+ * see ELN community handling of schemas
  */
 
 package main
