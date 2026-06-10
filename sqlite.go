@@ -138,8 +138,7 @@ PRAGMA user_version = 2;
     	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
     	modified_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
 
-    	FOREIGN KEY (entry_id) REFERENCES entries(id) ON DELETE CASCADE,
-    	UNIQUE(entry_id, hash, hash_algorithm)
+    	FOREIGN KEY (entry_id) REFERENCES entries(id) ON DELETE CASCADE
     );
 
     CREATE INDEX IF NOT EXISTS idx_uploads_entry
