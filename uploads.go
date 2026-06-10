@@ -17,10 +17,10 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"fmt"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"os"
 	"path/filepath"
 	"strings"
-	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 type StoredUpload struct {
@@ -269,4 +269,3 @@ func (a *App) SelectFile() (string, error) {
 		Title: "Select file",
 	})
 }
-

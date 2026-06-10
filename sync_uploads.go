@@ -81,15 +81,15 @@ func (a *App) pushUploadToRemoteEntity(
 	path := fmt.Sprintf("/%s/%d/uploads", remoteEntityType, remoteEntityID)
 
 	resp, err := a.elabftwRequest(
-    	profileUUID,
-    	instanceID,
-    	http.MethodPost,
-    	path,
-    	&body,
-    	map[string]string{
-    		"Content-Type": writer.FormDataContentType(),
-    	},
-    )
+		profileUUID,
+		instanceID,
+		http.MethodPost,
+		path,
+		&body,
+		map[string]string{
+			"Content-Type": writer.FormDataContentType(),
+		},
+	)
 	if err != nil {
 		return err
 	}

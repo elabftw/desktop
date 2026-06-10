@@ -178,20 +178,20 @@ func (a *App) patchExistingRemoteEntry(
 	}
 
 	reqBody, err := jsonBody(payload)
-    if err != nil {
-    	return nil, err
-    }
+	if err != nil {
+		return nil, err
+	}
 
-    resp, err = a.elabftwRequest(
-    	profileUUID,
-    	instanceID,
-    	http.MethodPatch,
-    	fmt.Sprintf("%s/%d", basePath, remoteID),
-    	reqBody,
-    )
-    if err != nil {
-    	return nil, err
-    }
+	resp, err = a.elabftwRequest(
+		profileUUID,
+		instanceID,
+		http.MethodPatch,
+		fmt.Sprintf("%s/%d", basePath, remoteID),
+		reqBody,
+	)
+	if err != nil {
+		return nil, err
+	}
 
 	if err := decodeElabftwJSONResponse(resp, nil); err != nil {
 		return nil, err
