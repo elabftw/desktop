@@ -138,7 +138,7 @@ export namespace main {
 	        this.type = source["type"];
 	    }
 	}
-	export class StoredFile {
+	export class StoredUpload {
 	    id: number;
 	    realName: string;
 	    longName: string;
@@ -151,7 +151,7 @@ export namespace main {
 	    modifiedAt: string;
 	
 	    static createFrom(source: any = {}) {
-	        return new StoredFile(source);
+	        return new StoredUpload(source);
 	    }
 	
 	    constructor(source: any = {}) {

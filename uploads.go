@@ -21,7 +21,7 @@ import (
 	"strings"
 )
 
-type StoredFile struct {
+type StoredUpload struct {
 	ID            int64  `json:"id"`
 	RealName      string `json:"realName"`
 	LongName      string `json:"longName"`
@@ -39,7 +39,7 @@ func fileSHA256(content []byte) string {
 	return hex.EncodeToString(sum[:])
 }
 
-func (a *App) ImportFile(profileUUID string, sourcePath string) (*StoredFile, error) {
+func (a *App) ImportUpload(profileUUID string, sourcePath string) (*StoredUpload, error) {
 	profileUUID, err := a.requireUnlockedProfile(profileUUID)
 	if err != nil {
 		return nil, err
@@ -62,23 +62,23 @@ func (a *App) ImportFile(profileUUID string, sourcePath string) (*StoredFile, er
 	longName := realName
 	storageName := hash
 
-	if _, err := ensureProfileFileHashDir(profileUUID, hash); err != nil {
+	if _, err := ensureProfileUploadHashDir(profileUUID, hash); err != nil {
 		return nil, err
 	}
 
-	destPath, err := encryptedProfileFilePath(profileUUID, hash)
-    if err != nil {
-    	return nil, err
-    }
+	destPath, err := encryptedProfileUploadPath(profileUUID, hash)
+	if err != nil {
+		return nil, err
+	}
 
-    encryptedContent, err := encryptRawBytes(a.activeKey, content)
-    if err != nil {
-    	return nil, fmt.Errorf("encrypt file: %w", err)
-    }
+	encryptedContent, err := encryptRawBytes(a.activeKey, content)
+	if err != nil {
+		return nil, fmt.Errorf("encrypt file: %w", err)
+	}
 
-    if err := os.WriteFile(destPath, encryptedContent, 0o600); err != nil {
-    	return nil, fmt.Errorf("write encrypted file: %w", err)
-    }
+	if err := os.WriteFile(destPath, encryptedContent, 0o600); err != nil {
+		return nil, fmt.Errorf("write encrypted file: %w", err)
+	}
 
 	pdir, err := profileDir(profileUUID)
 	if err != nil {
@@ -112,7 +112,7 @@ func (a *App) ImportFile(profileUUID string, sourcePath string) (*StoredFile, er
 		return nil, fmt.Errorf("get file id: %w", err)
 	}
 
-	return &StoredFile{
+	return &StoredUpload{
 		ID:            id,
 		RealName:      realName,
 		LongName:      longName,
@@ -124,7 +124,7 @@ func (a *App) ImportFile(profileUUID string, sourcePath string) (*StoredFile, er
 	}, nil
 }
 
-func (a *App) ListFiles(profileUUID string) ([]StoredFile, error) {
+func (a *App) ListUploads(profileUUID string) ([]StoredUpload, error) {
 	profileUUID, err := a.requireUnlockedProfile(profileUUID)
 	if err != nil {
 		return nil, err
@@ -161,10 +161,10 @@ func (a *App) ListFiles(profileUUID string) ([]StoredFile, error) {
 	}
 	defer rows.Close()
 
-	out := []StoredFile{}
+	out := []StoredUpload{}
 
 	for rows.Next() {
-		var file StoredFile
+		var file StoredUpload
 		if err := rows.Scan(
 			&file.ID,
 			&file.RealName,

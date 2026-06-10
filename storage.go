@@ -51,7 +51,7 @@ func appRootDir() (string, error) {
 	return filepath.Join(base, AppName), nil
 }
 
-func profileFilesDir(uuid string) (string, error) {
+func profileUploadsDir(uuid string) (string, error) {
 	dir, err := profileDir(uuid)
 	if err != nil {
 		return "", err
@@ -59,12 +59,12 @@ func profileFilesDir(uuid string) (string, error) {
 	return filepath.Join(dir, "files"), nil
 }
 
-func profileFileHashDir(uuid string, hash string) (string, error) {
+func profileUploadHashDir(uuid string, hash string) (string, error) {
 	if len(hash) < 3 {
 		return "", fmt.Errorf("hash is too short")
 	}
 
-	filesDir, err := profileFilesDir(uuid)
+	filesDir, err := profileUploadsDir(uuid)
 	if err != nil {
 		return "", err
 	}
@@ -72,8 +72,8 @@ func profileFileHashDir(uuid string, hash string) (string, error) {
 	return filepath.Join(filesDir, hash[:3]), nil
 }
 
-func encryptedProfileFilePath(uuid string, hash string) (string, error) {
-	dir, err := profileFileHashDir(uuid, hash)
+func encryptedProfileUploadPath(uuid string, hash string) (string, error) {
+	dir, err := profileUploadHashDir(uuid, hash)
 	if err != nil {
 		return "", err
 	}
@@ -81,8 +81,8 @@ func encryptedProfileFilePath(uuid string, hash string) (string, error) {
 	return filepath.Join(dir, hash), nil
 }
 
-func ensureProfileFileHashDir(uuid string, hash string) (string, error) {
-	dir, err := profileFileHashDir(uuid, hash)
+func ensureProfileUploadHashDir(uuid string, hash string) (string, error) {
+	dir, err := profileUploadHashDir(uuid, hash)
 	if err != nil {
 		return "", err
 	}

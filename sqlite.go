@@ -116,10 +116,10 @@ PRAGMA user_version = 2;
 		v = 2
 	}
 
-    // new migration to add files
-    if v == 2 {
-    	_, err := db.Exec(`
-    CREATE TABLE IF NOT EXISTS files (
+	// new migration to add uploads
+	if v == 2 {
+		_, err := db.Exec(`
+    CREATE TABLE IF NOT EXISTS uploads (
     	id INTEGER PRIMARY KEY AUTOINCREMENT,
     	real_name TEXT NOT NULL,
     	long_name TEXT NOT NULL,
@@ -134,19 +134,19 @@ PRAGMA user_version = 2;
     	UNIQUE(hash, hash_algorithm)
     );
 
-    CREATE INDEX IF NOT EXISTS idx_files_hash
-    ON files(hash, hash_algorithm);
+    CREATE INDEX IF NOT EXISTS idx_uploads_hash
+    ON uploads(hash, hash_algorithm);
 
-    CREATE INDEX IF NOT EXISTS idx_files_state
-    ON files(state);
+    CREATE INDEX IF NOT EXISTS idx_uploads_state
+    ON uploads(state);
 
     PRAGMA user_version = 3;
     `)
-    	if err != nil {
-    		return fmt.Errorf("Create schema v3: %w", err)
-    	}
-    	v = 3
-    }
+		if err != nil {
+			return fmt.Errorf("Create schema v3: %w", err)
+		}
+		v = 3
+	}
 
 	return nil
 }

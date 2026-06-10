@@ -330,6 +330,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
           value={entryMainText}
           onChange={(next) => entryMainText = next}
         />
+        <!-- FILES TEST -->
+        <!-- EOFT-->
       </form>
     </section>
   {/if}

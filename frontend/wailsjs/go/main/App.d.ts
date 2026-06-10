@@ -18,13 +18,13 @@ export function GetEntry(arg1:string,arg2:number):Promise<main.Entry>;
 
 export function GetProfileIndex():Promise<main.ProfileIndex>;
 
-export function ImportFile(arg1:string,arg2:string):Promise<main.StoredFile>;
+export function ImportUpload(arg1:string,arg2:string):Promise<main.StoredUpload>;
 
 export function ListElabftwInstances(arg1:string):Promise<Array<main.ElabftwInstance>>;
 
 export function ListEntries(arg1:string):Promise<Array<main.EntrySummary>>;
 
-export function ListFiles(arg1:string):Promise<Array<main.StoredFile>>;
+export function ListUploads(arg1:string):Promise<Array<main.StoredUpload>>;
 
 export function LockProfile():Promise<void>;
 
@@ -33,6 +33,8 @@ export function PushAllEntriesToElabftw(arg1:string,arg2:number,arg3:string,arg4
 export function PushEntryToElabftw(arg1:string,arg2:number,arg3:number,arg4:string,arg5:boolean):Promise<main.PushEntryResult>;
 
 export function SaveEntry(arg1:string,arg2:string,arg3:string):Promise<number>;
+
+export function SelectFile():Promise<string>;
 
 export function UnlockProfile(arg1:string,arg2:string):Promise<void>;
 

@@ -34,8 +34,8 @@ export function GetProfileIndex() {
   return window['go']['main']['App']['GetProfileIndex']();
 }
 
-export function ImportFile(arg1, arg2) {
-  return window['go']['main']['App']['ImportFile'](arg1, arg2);
+export function ImportUpload(arg1, arg2) {
+  return window['go']['main']['App']['ImportUpload'](arg1, arg2);
 }
 
 export function ListElabftwInstances(arg1) {
@@ -46,8 +46,8 @@ export function ListEntries(arg1) {
   return window['go']['main']['App']['ListEntries'](arg1);
 }
 
-export function ListFiles(arg1) {
-  return window['go']['main']['App']['ListFiles'](arg1);
+export function ListUploads(arg1) {
+  return window['go']['main']['App']['ListUploads'](arg1);
 }
 
 export function LockProfile() {
@@ -64,6 +64,10 @@ export function PushEntryToElabftw(arg1, arg2, arg3, arg4, arg5) {
 
 export function SaveEntry(arg1, arg2, arg3) {
   return window['go']['main']['App']['SaveEntry'](arg1, arg2, arg3);
+}
+
+export function SelectFile() {
+  return window['go']['main']['App']['SelectFile']();
 }
 
 export function UnlockProfile(arg1, arg2) {
