@@ -124,7 +124,6 @@ func (a *App) ImportUpload(profileUUID string, sourcePath string) (*StoredUpload
 	}, nil
 }
 
-
 func (a *App) AttachUploadToEntry(profileUUID string, entryID int64, uploadID int64) error {
 	profileUUID, err := a.requireUnlockedProfile(profileUUID)
 	if err != nil {
