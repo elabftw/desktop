@@ -130,7 +130,6 @@ PRAGMA user_version = 2;
     	entry_id INTEGER NOT NULL,
     	real_name TEXT NOT NULL,
     	long_name TEXT NOT NULL,
-    	storage_name TEXT NOT NULL UNIQUE,
     	hash TEXT NOT NULL,
     	hash_algorithm TEXT NOT NULL DEFAULT 'sha256',
     	filesize INTEGER NOT NULL,

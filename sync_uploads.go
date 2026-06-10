@@ -35,7 +35,7 @@ func (a *App) pushUploadToRemoteEntity(
 		return err
 	}
 
-	encryptedPath, err := encryptedProfileUploadPath(profileUUID, upload.Hash)
+	encryptedPath, err := encryptedProfileUploadPath(profileUUID, upload.Hash, upload.ID)
 	if err != nil {
 		return err
 	}

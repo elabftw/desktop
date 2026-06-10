@@ -59,41 +59,6 @@ func profileUploadsDir(uuid string) (string, error) {
 	return filepath.Join(dir, "files"), nil
 }
 
-func profileUploadHashDir(uuid string, hash string) (string, error) {
-	if len(hash) < 3 {
-		return "", fmt.Errorf("hash is too short")
-	}
-
-	filesDir, err := profileUploadsDir(uuid)
-	if err != nil {
-		return "", err
-	}
-
-	return filepath.Join(filesDir, hash[:3]), nil
-}
-
-func encryptedProfileUploadPath(uuid string, hash string) (string, error) {
-	dir, err := profileUploadHashDir(uuid, hash)
-	if err != nil {
-		return "", err
-	}
-
-	return filepath.Join(dir, hash), nil
-}
-
-func ensureProfileUploadHashDir(uuid string, hash string) (string, error) {
-	dir, err := profileUploadHashDir(uuid, hash)
-	if err != nil {
-		return "", err
-	}
-
-	if err := os.MkdirAll(dir, 0o700); err != nil {
-		return "", fmt.Errorf("mkdir profile file hash dir: %w", err)
-	}
-
-	return dir, nil
-}
-
 func profilesDir() (string, error) {
 	root, err := appRootDir()
 	if err != nil {
@@ -224,4 +189,22 @@ func writeProfileMetaFile(uuid string, content []byte) (string, error) {
 		return "", fmt.Errorf("write meta.json: %w", err)
 	}
 	return path, nil
+}
+
+func encryptedProfileUploadPath(uuid string, hash string, uploadID int64) (string, error) {
+	if len(hash) < 3 {
+		return "", fmt.Errorf("hash is too short")
+	}
+
+	filesDir, err := profileUploadsDir(uuid)
+	if err != nil {
+		return "", err
+	}
+
+	dir := filepath.Join(filesDir, hash[:3])
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return "", fmt.Errorf("mkdir upload hash dir: %w", err)
+	}
+
+	return filepath.Join(dir, fmt.Sprintf("%s-%d", hash, uploadID)), nil
 }

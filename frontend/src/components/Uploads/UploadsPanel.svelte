@@ -38,7 +38,7 @@
 
   async function importUpload(): Promise<void> {
     if (!entryId) {
-      onAlert({type: 'warning', message: 'Save the entry before adding uploads.'});
+      onAlert({type: 'warning', message: 'Save the entry before adding the first upload.'});
       return;
     }
 

@@ -17,10 +17,11 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"fmt"
-	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 type StoredUpload struct {
@@ -28,7 +29,6 @@ type StoredUpload struct {
 	EntryID       int64  `json:"entryId"`
 	RealName      string `json:"realName"`
 	LongName      string `json:"longName"`
-	StorageName   string `json:"storageName"`
 	Hash          string `json:"hash"`
 	HashAlgorithm string `json:"hashAlgorithm"`
 	Filesize      int64  `json:"filesize"`
@@ -67,24 +67,10 @@ func (a *App) ImportUpload(profileUUID string, entryID int64, sourcePath string)
 	filesize := int64(len(content))
 	realName := filepath.Base(sourcePath)
 	longName := realName
-	storageName := hash
-
-	if _, err := ensureProfileUploadHashDir(profileUUID, hash); err != nil {
-		return nil, err
-	}
-
-	destPath, err := encryptedProfileUploadPath(profileUUID, hash)
-	if err != nil {
-		return nil, err
-	}
 
 	encryptedContent, err := encryptRawBytes(a.activeKey, content)
 	if err != nil {
 		return nil, fmt.Errorf("encrypt file: %w", err)
-	}
-
-	if err := os.WriteFile(destPath, encryptedContent, 0o600); err != nil {
-		return nil, fmt.Errorf("write encrypted file: %w", err)
 	}
 
 	pdir, err := profileDir(profileUUID)
@@ -98,47 +84,18 @@ func (a *App) ImportUpload(profileUUID string, entryID int64, sourcePath string)
 	}
 	defer db.Close()
 
-	var existing StoredUpload
-
-	err = db.QueryRow(`
-		SELECT id, entry_id, real_name, long_name, storage_name, hash, hash_algorithm, filesize, state, created_at, modified_at
-		FROM uploads
-		WHERE entry_id = ? AND hash = ? AND hash_algorithm = ?
-	`, entryID, hash, hashAlgorithm).Scan(
-		&existing.ID,
-		&existing.EntryID,
-		&existing.RealName,
-		&existing.LongName,
-		&existing.StorageName,
-		&existing.Hash,
-		&existing.HashAlgorithm,
-		&existing.Filesize,
-		&existing.State,
-		&existing.CreatedAt,
-		&existing.ModifiedAt,
-	)
-
-	if err == nil {
-		return &existing, nil
-	}
-
-	if err != sql.ErrNoRows {
-		return nil, fmt.Errorf("query existing upload: %w", err)
-	}
-
 	res, err := db.Exec(`
 		INSERT INTO uploads (
 			entry_id,
 			real_name,
 			long_name,
-			storage_name,
 			hash,
 			hash_algorithm,
 			filesize,
 			state
 		)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-	`, entryID, realName, longName, storageName, hash, hashAlgorithm, filesize, "local")
+		VALUES (?, ?, ?, ?, ?, ?, ?)
+	`, entryID, realName, longName, hash, hashAlgorithm, filesize, "local")
 	if err != nil {
 		return nil, fmt.Errorf("insert file metadata: %w", err)
 	}
@@ -148,12 +105,20 @@ func (a *App) ImportUpload(profileUUID string, entryID int64, sourcePath string)
 		return nil, fmt.Errorf("get file id: %w", err)
 	}
 
+	destPath, err := encryptedProfileUploadPath(profileUUID, hash, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := os.WriteFile(destPath, encryptedContent, 0o600); err != nil {
+		return nil, fmt.Errorf("write encrypted file: %w", err)
+	}
+
 	return &StoredUpload{
 		ID:            id,
 		EntryID:       entryID,
 		RealName:      realName,
 		LongName:      longName,
-		StorageName:   storageName,
 		Hash:          hash,
 		HashAlgorithm: hashAlgorithm,
 		Filesize:      filesize,
@@ -168,7 +133,6 @@ func listEntryUploadsFromDB(db *sql.DB, entryID int64) ([]StoredUpload, error) {
 			entry_id,
 			real_name,
 			long_name,
-			storage_name,
 			hash,
 			hash_algorithm,
 			filesize,
@@ -194,7 +158,6 @@ func listEntryUploadsFromDB(db *sql.DB, entryID int64) ([]StoredUpload, error) {
 			&upload.EntryID,
 			&upload.RealName,
 			&upload.LongName,
-			&upload.StorageName,
 			&upload.Hash,
 			&upload.HashAlgorithm,
 			&upload.Filesize,
@@ -220,6 +183,7 @@ func (a *App) ListEntryUploads(profileUUID string, entryID int64) ([]StoredUploa
 	if err != nil {
 		return nil, err
 	}
+
 	if entryID <= 0 {
 		return nil, fmt.Errorf("Invalid entry id")
 	}
