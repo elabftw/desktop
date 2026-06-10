@@ -42,7 +42,7 @@ func elabftwEntityPath(entityType string) (string, error) {
 	}
 }
 
-func (a *App) PushEntryToElabftw(profileUUID string, entryID int64, instanceID int64, entityType string) (*PushEntryResult, error) {
+func (a *App) PushEntryToElabftw(profileUUID string, entryID int64, instanceID int64, entityType string, force bool) (*PushEntryResult, error) {
 	profileUUID, err := a.requireUnlockedProfile(profileUUID)
 	if err != nil {
 		return nil, err
@@ -121,6 +121,7 @@ func (a *App) PushEntryToElabftw(profileUUID string, entryID int64, instanceID i
 			remoteID,
 			lastSyncModifiedAt,
 			payload,
+			force,
 		)
 	}
 
@@ -145,6 +146,7 @@ func (a *App) patchExistingRemoteEntry(
 	remoteID int64,
 	lastSyncModifiedAt string,
 	payload map[string]any,
+	force bool,
 ) (*PushEntryResult, error) {
 	// First GET remote to check if someone edited it after our last successful sync.
 	resp, err := a.elabftwRequest(
@@ -173,7 +175,7 @@ func (a *App) patchExistingRemoteEntry(
 		return nil, err
 	}
 
-	if remoteModifiedAt.After(lastSyncAt) {
+	if !force && remoteModifiedAt.After(lastSyncAt) {
 		return nil, errors.New(remoteModifiedConflictMessage(entityType, remoteID))
 	}
 
@@ -304,7 +306,7 @@ func updateLocalRemoteModifiedAt(db *sql.DB, instanceID int64, entryID int64, en
 	return nil
 }
 
-func (a *App) PushAllEntriesToElabftw(profileUUID string, instanceID int64, entityType string) ([]PushEntryResult, error) {
+func (a *App) PushAllEntriesToElabftw(profileUUID string, instanceID int64, entityType string, force bool) ([]PushEntryResult, error) {
 	profileUUID, err := a.requireUnlockedProfile(profileUUID)
 	if err != nil {
 		return nil, err
@@ -335,7 +337,7 @@ func (a *App) PushAllEntriesToElabftw(profileUUID string, instanceID int64, enti
 			return nil, fmt.Errorf("scan entry id: %w", err)
 		}
 
-		result, err := a.PushEntryToElabftw(profileUUID, id, instanceID, entityType)
+		result, err := a.PushEntryToElabftw(profileUUID, id, instanceID, entityType, force)
 		if err != nil {
 			return nil, fmt.Errorf("push entry %d: %w", id, err)
 		}

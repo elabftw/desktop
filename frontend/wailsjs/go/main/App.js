@@ -46,12 +46,12 @@ export function LockProfile() {
   return window['go']['main']['App']['LockProfile']();
 }
 
-export function PushAllEntriesToElabftw(arg1, arg2, arg3) {
-  return window['go']['main']['App']['PushAllEntriesToElabftw'](arg1, arg2, arg3);
+export function PushAllEntriesToElabftw(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['PushAllEntriesToElabftw'](arg1, arg2, arg3, arg4);
 }
 
-export function PushEntryToElabftw(arg1, arg2, arg3, arg4) {
-  return window['go']['main']['App']['PushEntryToElabftw'](arg1, arg2, arg3, arg4);
+export function PushEntryToElabftw(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['main']['App']['PushEntryToElabftw'](arg1, arg2, arg3, arg4, arg5);
 }
 
 export function SaveEntry(arg1, arg2, arg3) {
