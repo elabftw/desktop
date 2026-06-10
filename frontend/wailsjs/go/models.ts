@@ -50,6 +50,28 @@ export namespace main {
 	        this.modifiedAt = source["modifiedAt"];
 	    }
 	}
+	export class EntryRemoteLink {
+	    localId: number;
+	    instanceId: number;
+	    siteUrl: string;
+	    remoteId: number;
+	    type: string;
+	    url: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new EntryRemoteLink(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.localId = source["localId"];
+	        this.instanceId = source["instanceId"];
+	        this.siteUrl = source["siteUrl"];
+	        this.remoteId = source["remoteId"];
+	        this.type = source["type"];
+	        this.url = source["url"];
+	    }
+	}
 	export class EntrySummary {
 	    id: number;
 	    title: string;

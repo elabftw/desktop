@@ -20,14 +20,16 @@ SPDX-License-Identifier: GPL-3.0-or-later
     LockProfile,
     PushEntryToElabftw,
     PushAllEntriesToElabftw,
+    ListEntryRemoteLinks,
   } from '../../wailsjs/go/main/App';
   import type { main } from '../../wailsjs/go/models';
-  import { autofocus, errorMessage, preventDefaultSubmit } from '../utils/helpers';
+  import { autofocus, errorMessage, openExternalURL, preventDefaultSubmit } from '../utils/helpers';
   import Alert from './Alert.svelte';
   import type { AlertState } from './Alert.svelte';
   import InstancesView from './Instances/InstancesView.svelte';
   import InstancesPushModal from './Instances/InstancesPushModal.svelte';
   import MarkdownEditor from "./MarkdownEditor.svelte";
+  import UploadsPanel from './Uploads/UploadsPanel.svelte';
 
   type Props = {
     profileUuid: string;
@@ -53,6 +55,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     instanceId: number;
     entityType: 'experiment' | 'resource';
   } | null>(null);
+  let remoteLinks = $state<main.EntryRemoteLink[]>([]);
 
   function toRelativeTime(iso: string, locale = 'en'): string {
     return DateTime.fromISO(iso).setLocale(locale).toRelative() ?? 'now';
@@ -65,6 +68,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
       const e: main.Entry = await GetEntry(profileUuid, id);
       entryTitle = e.title;
       entryMainText = e.body;
+      /* if entry already in eLabFTW, link to see it */
+      remoteLinks = await ListEntryRemoteLinks(profileUuid, id);
       view = 'editor';
     } catch (e: unknown) {
       alert = {type: 'error', message: errorMessage(e)};
@@ -104,6 +109,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     entryMainText = '';
     alert = null;
     currentEntryId = null;
+    remoteLinks = [];
   }
 
   // Save an entry // Update an existing entry
@@ -112,6 +118,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     try {
       if (currentEntryId) {
         await UpdateEntry(profileUuid, currentEntryId, entryTitle, entryMainText);
+        remoteLinks = await ListEntryRemoteLinks(profileUuid, currentEntryId);
         alert = {type: 'success', message: 'Entry updated ✔'};
       } else {
         const id = await SaveEntry(profileUuid, entryTitle, entryMainText);
@@ -304,6 +311,11 @@ SPDX-License-Identifier: GPL-3.0-or-later
         <div class='flex justify-between border-bottom mb-2'>
           <button class='btn btn-secondary' type='button' onclick={openIndex}>← Back</button>
           <div class='flex gap-1'>
+              {#each remoteLinks as link (`${link.instanceId}-${link.type}-${link.remoteId}`)}
+                <button type='button' class='btn btn-secondary' onclick={() => openExternalURL(link.url)}>
+                  See {link.type} #{link.remoteId} in eLabFTW
+                </button>
+              {/each}
             <button class='btn btn-secondary' type='button' disabled={!currentEntryId}
                     onclick={() => openPushModal('single', currentEntryId)}>
               Push to eLabFTW Instance
@@ -331,6 +343,10 @@ SPDX-License-Identifier: GPL-3.0-or-later
           onChange={(next) => entryMainText = next}
         />
         <!-- FILES TEST -->
+        <UploadsPanel
+          {profileUuid}
+          onAlert={(nextAlert) => alert = nextAlert}
+        />
         <!-- EOFT-->
       </form>
     </section>

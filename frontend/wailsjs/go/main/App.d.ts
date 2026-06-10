@@ -24,6 +24,8 @@ export function ListElabftwInstances(arg1:string):Promise<Array<main.ElabftwInst
 
 export function ListEntries(arg1:string):Promise<Array<main.EntrySummary>>;
 
+export function ListEntryRemoteLinks(arg1:string,arg2:number):Promise<Array<main.EntryRemoteLink>>;
+
 export function ListUploads(arg1:string):Promise<Array<main.StoredUpload>>;
 
 export function LockProfile():Promise<void>;

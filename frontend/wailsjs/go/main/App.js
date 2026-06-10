@@ -46,6 +46,10 @@ export function ListEntries(arg1) {
   return window['go']['main']['App']['ListEntries'](arg1);
 }
 
+export function ListEntryRemoteLinks(arg1, arg2) {
+  return window['go']['main']['App']['ListEntryRemoteLinks'](arg1, arg2);
+}
+
 export function ListUploads(arg1) {
   return window['go']['main']['App']['ListUploads'](arg1);
 }
