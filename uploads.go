@@ -25,6 +25,7 @@ import (
 
 type StoredUpload struct {
 	ID            int64  `json:"id"`
+	EntryID       int64  `json:"entryId"`
 	RealName      string `json:"realName"`
 	LongName      string `json:"longName"`
 	StorageName   string `json:"storageName"`
@@ -41,10 +42,14 @@ func fileSHA256(content []byte) string {
 	return hex.EncodeToString(sum[:])
 }
 
-func (a *App) ImportUpload(profileUUID string, sourcePath string) (*StoredUpload, error) {
+func (a *App) ImportUpload(profileUUID string, entryID int64, sourcePath string) (*StoredUpload, error) {
 	profileUUID, err := a.requireUnlockedProfile(profileUUID)
 	if err != nil {
 		return nil, err
+	}
+
+	if entryID <= 0 {
+		return nil, fmt.Errorf("Invalid entry id")
 	}
 
 	sourcePath = strings.TrimSpace(sourcePath)
@@ -96,11 +101,12 @@ func (a *App) ImportUpload(profileUUID string, sourcePath string) (*StoredUpload
 	var existing StoredUpload
 
 	err = db.QueryRow(`
-    	SELECT id, real_name, long_name, storage_name, hash, hash_algorithm, filesize, state, created_at, modified_at
-    	FROM uploads
-    	WHERE hash = ? AND hash_algorithm = ?
-    `, hash, hashAlgorithm).Scan(
+		SELECT id, entry_id, real_name, long_name, storage_name, hash, hash_algorithm, filesize, state, created_at, modified_at
+		FROM uploads
+		WHERE entry_id = ? AND hash = ? AND hash_algorithm = ?
+	`, entryID, hash, hashAlgorithm).Scan(
 		&existing.ID,
+		&existing.EntryID,
 		&existing.RealName,
 		&existing.LongName,
 		&existing.StorageName,
@@ -122,6 +128,7 @@ func (a *App) ImportUpload(profileUUID string, sourcePath string) (*StoredUpload
 
 	res, err := db.Exec(`
 		INSERT INTO uploads (
+			entry_id,
 			real_name,
 			long_name,
 			storage_name,
@@ -130,8 +137,8 @@ func (a *App) ImportUpload(profileUUID string, sourcePath string) (*StoredUpload
 			filesize,
 			state
 		)
-		VALUES (?, ?, ?, ?, ?, ?, ?)
-	`, realName, longName, storageName, hash, hashAlgorithm, filesize, "local")
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+	`, entryID, realName, longName, storageName, hash, hashAlgorithm, filesize, "local")
 	if err != nil {
 		return nil, fmt.Errorf("insert file metadata: %w", err)
 	}
@@ -143,6 +150,7 @@ func (a *App) ImportUpload(profileUUID string, sourcePath string) (*StoredUpload
 
 	return &StoredUpload{
 		ID:            id,
+		EntryID:       entryID,
 		RealName:      realName,
 		LongName:      longName,
 		StorageName:   storageName,
@@ -153,57 +161,23 @@ func (a *App) ImportUpload(profileUUID string, sourcePath string) (*StoredUpload
 	}, nil
 }
 
-func (a *App) AttachUploadToEntry(profileUUID string, entryID int64, uploadID int64) error {
-	profileUUID, err := a.requireUnlockedProfile(profileUUID)
-	if err != nil {
-		return err
-	}
-	if entryID <= 0 {
-		return fmt.Errorf("Invalid entry id")
-	}
-	if uploadID <= 0 {
-		return fmt.Errorf("Invalid upload id")
-	}
-
-	pdir, err := profileDir(profileUUID)
-	if err != nil {
-		return err
-	}
-
-	db, err := OpenProfileDB(pdir)
-	if err != nil {
-		return fmt.Errorf("open profile db: %w", err)
-	}
-	defer db.Close()
-
-	_, err = db.Exec(`
-		INSERT OR IGNORE INTO entry_uploads (entry_id, upload_id)
-		VALUES (?, ?)
-	`, entryID, uploadID)
-	if err != nil {
-		return fmt.Errorf("attach upload to entry: %w", err)
-	}
-
-	return nil
-}
-
 func listEntryUploadsFromDB(db *sql.DB, entryID int64) ([]StoredUpload, error) {
 	rows, err := db.Query(`
 		SELECT
-			u.id,
-			u.real_name,
-			u.long_name,
-			u.storage_name,
-			u.hash,
-			u.hash_algorithm,
-			u.filesize,
-			u.state,
-			u.created_at,
-			u.modified_at
-		FROM uploads u
-		JOIN entry_uploads eu ON eu.upload_id = u.id
-		WHERE eu.entry_id = ?
-		ORDER BY u.modified_at DESC, u.id DESC
+			id,
+			entry_id,
+			real_name,
+			long_name,
+			storage_name,
+			hash,
+			hash_algorithm,
+			filesize,
+			state,
+			created_at,
+			modified_at
+		FROM uploads
+		WHERE entry_id = ?
+		ORDER BY modified_at DESC, id DESC
 	`, entryID)
 	if err != nil {
 		return nil, fmt.Errorf("query entry uploads: %w", err)
@@ -217,6 +191,7 @@ func listEntryUploadsFromDB(db *sql.DB, entryID int64) ([]StoredUpload, error) {
 
 		if err := rows.Scan(
 			&upload.ID,
+			&upload.EntryID,
 			&upload.RealName,
 			&upload.LongName,
 			&upload.StorageName,
@@ -238,34 +213,6 @@ func listEntryUploadsFromDB(db *sql.DB, entryID int64) ([]StoredUpload, error) {
 	}
 
 	return out, nil
-}
-
-func (a *App) DetachUploadFromEntry(profileUUID string, entryID int64, uploadID int64) error {
-	profileUUID, err := a.requireUnlockedProfile(profileUUID)
-	if err != nil {
-		return err
-	}
-
-	pdir, err := profileDir(profileUUID)
-	if err != nil {
-		return err
-	}
-
-	db, err := OpenProfileDB(pdir)
-	if err != nil {
-		return fmt.Errorf("open profile db: %w", err)
-	}
-	defer db.Close()
-
-	_, err = db.Exec(`
-		DELETE FROM entry_uploads
-		WHERE entry_id = ? AND upload_id = ?
-	`, entryID, uploadID)
-	if err != nil {
-		return fmt.Errorf("detach upload from entry: %w", err)
-	}
-
-	return nil
 }
 
 func (a *App) ListEntryUploads(profileUUID string, entryID int64) ([]StoredUpload, error) {

@@ -127,6 +127,7 @@ PRAGMA user_version = 2;
 		_, err := db.Exec(`
     CREATE TABLE IF NOT EXISTS uploads (
     	id INTEGER PRIMARY KEY AUTOINCREMENT,
+    	entry_id INTEGER NOT NULL,
     	real_name TEXT NOT NULL,
     	long_name TEXT NOT NULL,
     	storage_name TEXT NOT NULL UNIQUE,
@@ -137,8 +138,12 @@ PRAGMA user_version = 2;
     	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
     	modified_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
 
-    	UNIQUE(hash, hash_algorithm)
+    	FOREIGN KEY (entry_id) REFERENCES entries(id) ON DELETE CASCADE,
+    	UNIQUE(entry_id, hash, hash_algorithm)
     );
+
+    CREATE INDEX IF NOT EXISTS idx_uploads_entry
+    ON uploads(entry_id);
 
     CREATE INDEX IF NOT EXISTS idx_uploads_hash
     ON uploads(hash, hash_algorithm);
@@ -152,30 +157,6 @@ PRAGMA user_version = 2;
 			return fmt.Errorf("Create schema v3: %w", err)
 		}
 		v = 3
-	}
-
-	// joint table for uploads to entry
-	if v == 3 {
-		_, err := db.Exec(`
-    CREATE TABLE IF NOT EXISTS entry_uploads (
-        entry_id INTEGER NOT NULL,
-        upload_id INTEGER NOT NULL,
-        created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
-
-        PRIMARY KEY (entry_id, upload_id),
-        FOREIGN KEY (entry_id) REFERENCES entries(id) ON DELETE CASCADE,
-        FOREIGN KEY (upload_id) REFERENCES uploads(id) ON DELETE CASCADE
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_entry_uploads_upload
-    ON entry_uploads(upload_id);
-
-    PRAGMA user_version = 4;
-    `)
-		if err != nil {
-			return fmt.Errorf("Create schema v4: %w", err)
-		}
-		v = 4
 	}
 	return nil
 }

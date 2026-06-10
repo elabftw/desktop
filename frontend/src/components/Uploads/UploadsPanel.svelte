@@ -1,7 +1,5 @@
 <script lang='ts'>
   import {
-    AttachUploadToEntry,
-    DetachUploadFromEntry,
     ImportUpload,
     ListEntryUploads,
     SelectFile
@@ -48,21 +46,9 @@
       const path = await SelectFile();
       if (!path) return;
 
-      const upload = await ImportUpload(profileUuid, path);
-      await AttachUploadToEntry(profileUuid, entryId, upload.id);
+      const upload = await ImportUpload(profileUuid, entryId, path);
 
       onAlert({type: 'success', message: `Imported ${upload.realName} ✔`});
-      await refreshUploads();
-    } catch (e: unknown) {
-      onAlert({type: 'error', message: errorMessage(e)});
-    }
-  }
-
-  async function detachUpload(uploadId: number): Promise<void> {
-    if (!entryId) return;
-
-    try {
-      await DetachUploadFromEntry(profileUuid, entryId, uploadId);
       await refreshUploads();
     } catch (e: unknown) {
       onAlert({type: 'error', message: errorMessage(e)});
@@ -117,10 +103,6 @@
           <span class='description text-ellipsis' title={upload.hash}>
             {upload.hash.slice(0, 12)}
           </span>
-
-          <button class='btn btn-danger' type='button' onclick={() => detachUpload(upload.id)}>
-            Remove
-          </button>
         </div>
       {/each}
     </div>

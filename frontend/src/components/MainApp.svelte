@@ -185,6 +185,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
         }
 
         const result = await PushEntryToElabftw(profileUuid, pushEntryId, instanceId, entityType, force);
+        remoteLinks = await ListEntryRemoteLinks(profileUuid, currentEntryId);
         alert = {
           type: 'success',
           message: `Entry ${result.action} as ${result.type} #${result.remoteId} ✔`,

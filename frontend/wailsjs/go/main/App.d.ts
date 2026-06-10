@@ -6,15 +6,11 @@ export function AddElabftwInstance(arg1:string,arg2:string,arg3:string,arg4:bool
 
 export function AddProfile(arg1:string,arg2:string):Promise<main.ProfileIndex>;
 
-export function AttachUploadToEntry(arg1:string,arg2:number,arg3:number):Promise<void>;
-
 export function DeleteElabftwInstance(arg1:string,arg2:number):Promise<void>;
 
 export function DeleteEntry(arg1:string,arg2:number):Promise<void>;
 
 export function DeleteProfile(arg1:string,arg2:string):Promise<main.ProfileIndex>;
-
-export function DetachUploadFromEntry(arg1:string,arg2:number,arg3:number):Promise<void>;
 
 export function FetchElabftwInfo(arg1:string,arg2:number):Promise<main.ElabftwInfo>;
 
@@ -22,7 +18,7 @@ export function GetEntry(arg1:string,arg2:number):Promise<main.Entry>;
 
 export function GetProfileIndex():Promise<main.ProfileIndex>;
 
-export function ImportUpload(arg1:string,arg2:string):Promise<main.StoredUpload>;
+export function ImportUpload(arg1:string,arg2:number,arg3:string):Promise<main.StoredUpload>;
 
 export function ListElabftwInstances(arg1:string):Promise<Array<main.ElabftwInstance>>;
 

@@ -162,6 +162,7 @@ export namespace main {
 	}
 	export class StoredUpload {
 	    id: number;
+	    entryId: number;
 	    realName: string;
 	    longName: string;
 	    storageName: string;
@@ -179,6 +180,7 @@ export namespace main {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.id = source["id"];
+	        this.entryId = source["entryId"];
 	        this.realName = source["realName"];
 	        this.longName = source["longName"];
 	        this.storageName = source["storageName"];
