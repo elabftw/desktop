@@ -41,23 +41,23 @@
   /* Red */
   --red-dark: #ffb8b6;
   --red-light: #ffb8b6;
-  --red-lighter: rgb(159 58 56 / 14%);
-  --red-border: rgb(255 120 116 / 28%);
-  --red-background: rgb(159 58 56 / 14%);
+  --red-lighter: #3a1f22;
+  --red-border: #8a4444;
+  --red-background: #3a1f22;
 
   /* Info alert */
-  --info-bg: rgb(49 112 143 / 14%);
-  --info-border: rgb(158 217 244 / 24%);
+  --info-bg: #1c3442;
+  --info-border: #3c6f86;
   --info-text: #9ed9f4;
 
   /* Success alert */
-  --success-bg: rgb(42 62 42 / 48%);
-  --success-border: rgb(121 156 121 / 48%);
+  --success-bg: #203a26;
+  --success-border: #4f7a50;
   --success-text: #8ff08f;
 
   /* Warning alert */
-  --warning-bg: rgb(250 185 91 / 10%);
-  --warning-border: rgb(250 185 91 / 28%);
+  --warning-bg: #3f301d;
+  --warning-border: #8a6730;
   --warning-text: var(--orange-light);
 }
 
