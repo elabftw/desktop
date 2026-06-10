@@ -128,6 +128,10 @@ func (a *App) elabftwRequest(
 	req.Header.Set("Authorization", cfg.APIKey)
 	req.Header.Set("Accept", "application/json")
 
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+
 	for _, h := range headers {
 		for k, v := range h {
 			req.Header.Set(k, v)
