@@ -39,11 +39,59 @@ type ProfileEntry struct {
 }
 
 func appRootDir() (string, error) {
-	base, err := os.UserConfigDir()
-	if err != nil {
-		return "", fmt.Errorf("os.UserConfigDir: %w", err)
+	base := os.Getenv("XDG_DATA_HOME")
+	if base == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", fmt.Errorf("os.UserHomeDir: %w", err)
+		}
+		base = filepath.Join(home, ".local", "share")
 	}
+
 	return filepath.Join(base, AppName), nil
+}
+
+func profileFilesDir(uuid string) (string, error) {
+	dir, err := profileDir(uuid)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, "files"), nil
+}
+
+func profileFileHashDir(uuid string, hash string) (string, error) {
+	if len(hash) < 3 {
+		return "", fmt.Errorf("hash is too short")
+	}
+
+	filesDir, err := profileFilesDir(uuid)
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Join(filesDir, hash[:3]), nil
+}
+
+func encryptedProfileFilePath(uuid string, hash string) (string, error) {
+	dir, err := profileFileHashDir(uuid, hash)
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Join(dir, hash), nil
+}
+
+func ensureProfileFileHashDir(uuid string, hash string) (string, error) {
+	dir, err := profileFileHashDir(uuid, hash)
+	if err != nil {
+		return "", err
+	}
+
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return "", fmt.Errorf("mkdir profile file hash dir: %w", err)
+	}
+
+	return dir, nil
 }
 
 func profilesDir() (string, error) {

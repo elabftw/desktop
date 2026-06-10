@@ -18,9 +18,13 @@ export function GetEntry(arg1:string,arg2:number):Promise<main.Entry>;
 
 export function GetProfileIndex():Promise<main.ProfileIndex>;
 
+export function ImportFile(arg1:string,arg2:string):Promise<main.StoredFile>;
+
 export function ListElabftwInstances(arg1:string):Promise<Array<main.ElabftwInstance>>;
 
 export function ListEntries(arg1:string):Promise<Array<main.EntrySummary>>;
+
+export function ListFiles(arg1:string):Promise<Array<main.StoredFile>>;
 
 export function LockProfile():Promise<void>;
 

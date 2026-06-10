@@ -6,6 +6,8 @@
  * @copyright 2026 Nicolas CARPi
  * @see https://www.elabftw.net Official website
  * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * if new migration versions need to be done, follow schema: if v == 1 { ... set user_version = 2 }
  */
 
 package main
@@ -74,8 +76,7 @@ PRAGMA user_version = 1;
 		v = 1
 	}
 
-	// Future migrations would go here:
-	// if v == 1 { ... set user_version = 2 }
+	// new migrations to add configurable elabftw instances:
 	if v == 1 {
 		_, err := db.Exec(`
 CREATE TABLE IF NOT EXISTS elabftw_instances (
@@ -114,6 +115,38 @@ PRAGMA user_version = 2;
 		}
 		v = 2
 	}
+
+    // new migration to add files
+    if v == 2 {
+    	_, err := db.Exec(`
+    CREATE TABLE IF NOT EXISTS files (
+    	id INTEGER PRIMARY KEY AUTOINCREMENT,
+    	real_name TEXT NOT NULL,
+    	long_name TEXT NOT NULL,
+    	storage_name TEXT NOT NULL UNIQUE,
+    	hash TEXT NOT NULL,
+    	hash_algorithm TEXT NOT NULL DEFAULT 'sha256',
+    	filesize INTEGER NOT NULL,
+    	state TEXT NOT NULL DEFAULT 'local',
+    	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+    	modified_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+
+    	UNIQUE(hash, hash_algorithm)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_files_hash
+    ON files(hash, hash_algorithm);
+
+    CREATE INDEX IF NOT EXISTS idx_files_state
+    ON files(state);
+
+    PRAGMA user_version = 3;
+    `)
+    	if err != nil {
+    		return fmt.Errorf("Create schema v3: %w", err)
+    	}
+    	v = 3
+    }
 
 	return nil
 }

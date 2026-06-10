@@ -78,21 +78,10 @@ func encryptBytes(key []byte, plaintext []byte) (string, error) {
 	// The nonce is not secret, so we store it next to the ciphertext.
 	// Stored format:
 	//   base64(nonce || ciphertext)
-	aead, err := chacha20poly1305.NewX(key)
-	if err != nil {
-		return "", fmt.Errorf("Create cipher: %w", err)
-	}
-
-	nonce, err := randomBytes(aead.NonceSize())
+	payload, err := encryptRawBytes(key, plaintext)
 	if err != nil {
 		return "", err
 	}
-
-	ciphertext := aead.Seal(nil, nonce, plaintext, nil)
-
-	payload := make([]byte, 0, len(nonce)+len(ciphertext))
-	payload = append(payload, nonce...)
-	payload = append(payload, ciphertext...)
 
 	return base64Encoding.EncodeToString(payload), nil
 }
@@ -105,25 +94,7 @@ func decryptBytes(key []byte, encoded string) ([]byte, error) {
 		return nil, fmt.Errorf("Decode ciphertext: %w", err)
 	}
 
-	aead, err := chacha20poly1305.NewX(key)
-	if err != nil {
-		return nil, fmt.Errorf("Create cipher: %w", err)
-	}
-
-	nonceSize := aead.NonceSize()
-	if len(payload) < nonceSize {
-		return nil, fmt.Errorf("Ciphertext is too short")
-	}
-
-	nonce := payload[:nonceSize]
-	ciphertext := payload[nonceSize:]
-
-	plaintext, err := aead.Open(nil, nonce, ciphertext, nil)
-	if err != nil {
-		return nil, fmt.Errorf("Decrypt: %w", err)
-	}
-
-	return plaintext, nil
+	return decryptRawBytes(key, payload)
 }
 
 func encryptString(key []byte, plaintext string) (string, error) {
@@ -191,4 +162,48 @@ func unlockProfileCryptoParams(profile *ProfileEntry, passphrase string) ([]byte
 	}
 
 	return key, nil
+}
+
+// encryptRawBytes encrypts binary data for file storage.
+// Unlike encryptBytes, it returns raw bytes instead of a base64 string.
+func encryptRawBytes(key []byte, plaintext []byte) ([]byte, error) {
+	aead, err := chacha20poly1305.NewX(key)
+	if err != nil {
+		return nil, fmt.Errorf("Create cipher: %w", err)
+	}
+
+	nonce, err := randomBytes(aead.NonceSize())
+	if err != nil {
+		return nil, err
+	}
+
+	ciphertext := aead.Seal(nil, nonce, plaintext, nil)
+
+	payload := make([]byte, 0, len(nonce)+len(ciphertext))
+	payload = append(payload, nonce...)
+	payload = append(payload, ciphertext...)
+
+	return payload, nil
+}
+
+func decryptRawBytes(key []byte, payload []byte) ([]byte, error) {
+	aead, err := chacha20poly1305.NewX(key)
+	if err != nil {
+		return nil, fmt.Errorf("Create cipher: %w", err)
+	}
+
+	nonceSize := aead.NonceSize()
+	if len(payload) < nonceSize {
+		return nil, fmt.Errorf("Ciphertext is too short")
+	}
+
+	nonce := payload[:nonceSize]
+	ciphertext := payload[nonceSize:]
+
+	plaintext, err := aead.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		return nil, fmt.Errorf("Decrypt: %w", err)
+	}
+
+	return plaintext, nil
 }

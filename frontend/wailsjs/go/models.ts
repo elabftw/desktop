@@ -138,6 +138,36 @@ export namespace main {
 	        this.type = source["type"];
 	    }
 	}
+	export class StoredFile {
+	    id: number;
+	    realName: string;
+	    longName: string;
+	    storageName: string;
+	    hash: string;
+	    hashAlgorithm: string;
+	    filesize: number;
+	    state: string;
+	    createdAt: string;
+	    modifiedAt: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new StoredFile(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.realName = source["realName"];
+	        this.longName = source["longName"];
+	        this.storageName = source["storageName"];
+	        this.hash = source["hash"];
+	        this.hashAlgorithm = source["hashAlgorithm"];
+	        this.filesize = source["filesize"];
+	        this.state = source["state"];
+	        this.createdAt = source["createdAt"];
+	        this.modifiedAt = source["modifiedAt"];
+	    }
+	}
 
 }
 

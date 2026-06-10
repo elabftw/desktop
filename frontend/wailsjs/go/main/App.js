@@ -34,12 +34,20 @@ export function GetProfileIndex() {
   return window['go']['main']['App']['GetProfileIndex']();
 }
 
+export function ImportFile(arg1, arg2) {
+  return window['go']['main']['App']['ImportFile'](arg1, arg2);
+}
+
 export function ListElabftwInstances(arg1) {
   return window['go']['main']['App']['ListElabftwInstances'](arg1);
 }
 
 export function ListEntries(arg1) {
   return window['go']['main']['App']['ListEntries'](arg1);
+}
+
+export function ListFiles(arg1) {
+  return window['go']['main']['App']['ListFiles'](arg1);
 }
 
 export function LockProfile() {
