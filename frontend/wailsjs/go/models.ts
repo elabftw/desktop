@@ -147,6 +147,7 @@ export namespace main {
 	    remoteId: number;
 	    action: string;
 	    type: string;
+	    uploadWarnings?: string[];
 	
 	    static createFrom(source: any = {}) {
 	        return new PushEntryResult(source);
@@ -158,6 +159,7 @@ export namespace main {
 	        this.remoteId = source["remoteId"];
 	        this.action = source["action"];
 	        this.type = source["type"];
+	        this.uploadWarnings = source["uploadWarnings"];
 	    }
 	}
 	export class StoredUpload {

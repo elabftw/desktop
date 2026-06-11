@@ -186,9 +186,12 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
         const result = await PushEntryToElabftw(profileUuid, pushEntryId, instanceId, entityType, force);
         remoteLinks = await ListEntryRemoteLinks(profileUuid, currentEntryId);
+
+        const warning = result.uploadWarnings?.length ? ` Upload warning: ${result.uploadWarnings.join(' ')}` : '';
+
         alert = {
-          type: 'success',
-          message: `Entry ${result.action} as ${result.type} #${result.remoteId} ✔`,
+          type: result.uploadWarnings?.length ? 'warning' : 'success',
+          message: `Entry ${result.action} as ${result.type} #${result.remoteId} ✔${warning}`,
         };
       }
 

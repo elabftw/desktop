@@ -23,10 +23,11 @@ import (
 )
 
 type PushEntryResult struct {
-	LocalID  int64  `json:"localId"`
-	RemoteID int64  `json:"remoteId"`
-	Action   string `json:"action"` // posted or patched
-	Type     string `json:"type"`
+	LocalID        int64    `json:"localId"`
+	RemoteID       int64    `json:"remoteId"`
+	Action         string   `json:"action"` // posted or patched
+	Type           string   `json:"type"`
+	UploadWarnings []string `json:"uploadWarnings,omitempty"`
 }
 
 func elabftwEntityPath(entityType string) (string, error) {
@@ -206,15 +207,14 @@ func (a *App) patchExistingRemoteEntry(
 		return nil, err
 	}
 
-	if err := a.pushEntryUploadsToRemoteEntity(profileUUID, db, instanceID, entryID, entityType, remoteID); err != nil {
-		return nil, err
-	}
+	uploadWarnings := a.pushEntryUploadsToRemoteEntity(profileUUID, db, instanceID, entryID, entityType, remoteID)
 
 	return &PushEntryResult{
-		LocalID:  entryID,
-		RemoteID: remoteID,
-		Action:   "patched",
-		Type:     entityType,
+		LocalID:        entryID,
+		RemoteID:       remoteID,
+		Action:         "patched",
+		Type:           entityType,
+		UploadWarnings: uploadWarnings,
 	}, nil
 }
 
@@ -265,15 +265,14 @@ func (a *App) postNewRemoteEntry(
 		return nil, fmt.Errorf("insert local2remote: %w", err)
 	}
 
-	if err := a.pushEntryUploadsToRemoteEntity(profileUUID, db, instanceID, entryID, entityType, remoteID); err != nil {
-		return nil, err
-	}
+	uploadWarnings := a.pushEntryUploadsToRemoteEntity(profileUUID, db, instanceID, entryID, entityType, remoteID)
 
 	return &PushEntryResult{
-		LocalID:  entryID,
-		RemoteID: remoteID,
-		Action:   "posted",
-		Type:     entityType,
+		LocalID:        entryID,
+		RemoteID:       remoteID,
+		Action:         "posted",
+		Type:           entityType,
+		UploadWarnings: uploadWarnings,
 	}, nil
 }
 

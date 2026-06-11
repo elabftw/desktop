@@ -40,6 +40,16 @@ func (a *App) pushUploadToRemoteEntity(
 		return err
 	}
 
+	// Prevent memory exhaustion from excessively large files
+	fileInfo, err := os.Stat(encryptedPath)
+	if err != nil {
+		return fmt.Errorf("stat encrypted upload: %w", err)
+	}
+	const maxUploadSize = 100 * 1024 * 1024 // See if we want bigger or smaller
+	if fileInfo.Size() > maxUploadSize {
+		return fmt.Errorf("encrypted upload too large: %d bytes (max %d)", fileInfo.Size(), maxUploadSize)
+	}
+
 	encryptedContent, err := os.ReadFile(encryptedPath)
 	if err != nil {
 		return fmt.Errorf("read encrypted upload: %w", err)
@@ -108,17 +118,19 @@ func (a *App) pushEntryUploadsToRemoteEntity(
 	entryID int64,
 	entityType string,
 	remoteEntityID int64,
-) error {
+) []string {
 	uploads, err := listEntryUploadsFromDB(db, entryID)
 	if err != nil {
-		return err
+		return []string{err.Error()}
 	}
+
+	warnings := []string{}
 
 	for _, upload := range uploads {
 		if err := a.pushUploadToRemoteEntity(profileUUID, db, instanceID, entityType, remoteEntityID, upload); err != nil {
-			return fmt.Errorf("push upload %d: %w", upload.ID, err)
+			warnings = append(warnings, fmt.Sprintf("Upload %s failed: %s", upload.RealName, err.Error()))
 		}
 	}
 
-	return nil
+	return warnings
 }
