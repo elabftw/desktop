@@ -198,6 +198,8 @@ func (a *App) patchExistingRemoteEntry(
 		return nil, err
 	}
 
+	uploadWarnings := a.pushEntryUploadsToRemoteEntity(profileUUID, db, instanceID, entryID, entityType, remoteID)
+
 	patchedRemoteModifiedAt, err := a.fetchRemoteModifiedAt(profileUUID, instanceID, basePath, remoteID)
 	if err != nil {
 		return nil, err
@@ -206,8 +208,6 @@ func (a *App) patchExistingRemoteEntry(
 	if err := updateLocalRemoteModifiedAt(db, instanceID, entryID, entityType, patchedRemoteModifiedAt); err != nil {
 		return nil, err
 	}
-
-	uploadWarnings := a.pushEntryUploadsToRemoteEntity(profileUUID, db, instanceID, entryID, entityType, remoteID)
 
 	return &PushEntryResult{
 		LocalID:        entryID,
@@ -252,20 +252,31 @@ func (a *App) postNewRemoteEntry(
 		return nil, err
 	}
 
-	createdRemoteModifiedAt, err := a.fetchRemoteModifiedAt(profileUUID, instanceID, basePath, remoteID)
-	if err != nil {
-		return nil, err
-	}
-
 	_, err = db.Exec(`
-    	INSERT INTO local2remote (instance, remote_id, local_id, type, modified_at)
-    	VALUES (?, ?, ?, ?, ?)
-    `, instanceID, remoteID, entryID, entityType, createdRemoteModifiedAt.Format(time.RFC3339Nano))
+		INSERT INTO local2remote (instance, remote_id, local_id, type, modified_at)
+		VALUES (?, ?, ?, ?, ?)
+	`, instanceID, remoteID, entryID, entityType, time.Now().UTC().Format(time.RFC3339Nano))
 	if err != nil {
 		return nil, fmt.Errorf("insert local2remote: %w", err)
 	}
 
-	uploadWarnings := a.pushEntryUploadsToRemoteEntity(profileUUID, db, instanceID, entryID, entityType, remoteID)
+	uploadWarnings := a.pushEntryUploadsToRemoteEntity(
+		profileUUID,
+		db,
+		instanceID,
+		entryID,
+		entityType,
+		remoteID,
+	)
+
+	remoteModifiedAt, err := a.fetchRemoteModifiedAt(profileUUID, instanceID, basePath, remoteID)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := updateLocalRemoteModifiedAt(db, instanceID, entryID, entityType, remoteModifiedAt); err != nil {
+		return nil, err
+	}
 
 	return &PushEntryResult{
 		LocalID:        entryID,
