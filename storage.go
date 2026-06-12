@@ -38,6 +38,7 @@ type ProfileEntry struct {
 	EncryptedVerifier string `json:"encrypted_verifier,omitempty"`
 }
 
+// either XDG_DATA_HOME or default to .local/share
 func appRootDir() (string, error) {
 	base := os.Getenv("XDG_DATA_HOME")
 	if base == "" {

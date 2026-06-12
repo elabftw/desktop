@@ -27,7 +27,7 @@ type PushEntryResult struct {
 	RemoteID       int64    `json:"remoteId"`
 	Action         string   `json:"action"` // posted or patched
 	Type           string   `json:"type"`
-	UploadWarnings []string `json:"uploadWarnings,omitempty"`
+	UploadWarnings []string `json:"uploadWarnings,omitempty"` // case: the entry returns 200 but the uploads error
 }
 
 func elabftwEntityPath(entityType string) (string, error) {

@@ -224,7 +224,7 @@ a, .link-button {
 }
 
 .description {
-  color: rgb(244 247 251 / 54%);
+  color: var(--light-gray);
   font-size: 0.95rem;
 }
 

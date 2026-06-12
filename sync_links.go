@@ -6,11 +6,10 @@
  * @copyright 2026 Nicolas CARPi
  * @see https://www.elabftw.net Official website
  * SPDX-License-Identifier: GPL-3.0-or-later
- */
-
-/*
+ *
  * This file's purpose is to have links related to current entry. "See in eLabFTW" will redirect to the exp/item
  */
+
 package main
 
 import "fmt"

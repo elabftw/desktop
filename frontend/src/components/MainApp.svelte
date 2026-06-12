@@ -68,7 +68,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
       const e: main.Entry = await GetEntry(profileUuid, id);
       entryTitle = e.title;
       entryMainText = e.body;
-      /* if entry already in eLabFTW, link to see it */
+      /* if entry already in eLabFTW, create a link to see it directly */
       remoteLinks = await ListEntryRemoteLinks(profileUuid, id);
       view = 'editor';
     } catch (e: unknown) {
@@ -186,7 +186,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
         const result = await PushEntryToElabftw(profileUuid, pushEntryId, instanceId, entityType, force);
         remoteLinks = await ListEntryRemoteLinks(profileUuid, currentEntryId);
-
         const warning = result.uploadWarnings?.length ? ` Upload warning: ${result.uploadWarnings.join(' ')}` : '';
 
         alert = {
@@ -346,13 +345,11 @@ SPDX-License-Identifier: GPL-3.0-or-later
           value={entryMainText}
           onChange={(next) => entryMainText = next}
         />
-        <!-- FILES TEST -->
         <UploadsPanel
           {profileUuid}
           entryId={currentEntryId}
           onAlert={(nextAlert) => alert = nextAlert}
         />
-        <!-- EOFT-->
       </form>
     </section>
   {/if}

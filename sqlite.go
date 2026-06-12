@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * if new migration versions need to be done, follow schema: if v == 1 { ... set user_version = 2 }
- * see ELN community handling of schemas
+ * TODO next PR (too much here) see ELN community handling of schemas
  */
 
 package main
@@ -34,7 +34,7 @@ func OpenProfileDB(profileDir string) (*sql.DB, error) {
 	}
 	// SQLite allows only one writer at a time.
 	// Keep a single DB connection per handle to avoid concurrent PRAGMA/migration/write
-	// operations locking the profile database.
+	// operations locking the profile database. Happened when tried to add uploads to different entries really fast
 	db.SetMaxOpenConns(1)
 	db.SetMaxIdleConns(1)
 

@@ -18,15 +18,14 @@
 
   let uploads = $state<main.StoredUpload[]>([]);
   let loading = $state(false);
+  const maxUploadSizeMb = 100;
 
   async function refreshUploads(): Promise<void> {
     if (!entryId) {
       uploads = [];
       return;
     }
-
     loading = true;
-
     try {
       uploads = await ListEntryUploads(profileUuid, entryId);
     } catch (e: unknown) {
@@ -37,6 +36,7 @@
   }
 
   async function importUpload(): Promise<void> {
+    // uploads need to be attached to an entry. Before clicking save, the entry doesn't have an id yet.
     if (!entryId) {
       onAlert({type: 'warning', message: 'Save the entry before adding the first upload.'});
       return;
@@ -45,9 +45,7 @@
     try {
       const path = await SelectFile();
       if (!path) return;
-
       const upload = await ImportUpload(profileUuid, entryId, path);
-
       onAlert({type: 'success', message: `Imported ${upload.realName} ✔`});
       await refreshUploads();
     } catch (e: unknown) {
@@ -55,6 +53,8 @@
     }
   }
 
+  // Display file sizes in a user-friendly format instead of raw bytes.
+  // Currently supports B, KB and MB.
   function formatFileSize(bytes: number): string {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -74,12 +74,10 @@
   <div class='flex justify-between items-center border-bottom mb-2'>
     <div>
       <h3>Uploads</h3>
-      <p class='description'>Encrypted local uploads for this profile.</p>
+      <p class='description'>File size limit: {maxUploadSizeMb} MB</p>
     </div>
 
-    <button class='btn btn-secondary' type='button' onclick={importUpload}>
-      Import upload
-    </button>
+    <button class='btn btn-secondary' type='button' onclick={importUpload}>Click to import a file</button>
   </div>
 
   {#if loading}
@@ -99,7 +97,6 @@
               {formatFileSize(upload.filesize)} · {upload.hashAlgorithm} · {upload.state}
             </span>
           </div>
-
           <span class='description text-ellipsis' title={upload.hash}>
             {upload.hash.slice(0, 12)}
           </span>
