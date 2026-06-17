@@ -1,0 +1,51 @@
+/* stylelint-disable selector-class-pattern */
+
+/* prevent the linter from flagging ".EasyMDEContainer" to be kebab-case
+ * as those classes come from easymde */
+
+/* the toolbar appears transparent with black text, we want blue-white */
+.editor-toolbar button {
+  color: var(--soft-white) !important;
+}
+
+.EasyMDEContainer {
+  margin-top: 1rem;
+}
+
+.editor-toolbar button:hover,
+.editor-toolbar button.active {
+  background: var(--dark-blue-2) !important;
+  color: var(--orange-light) !important;
+}
+
+/* the main text area */
+.EasyMDEContainer .CodeMirror {
+  background: var(--soft-white);
+  border-radius: 0 0 12px 12px;
+  color: var(--dark-blue);
+  min-height: 420px;
+}
+
+/* for fullscreen (the toolbar is not the same) */
+.editor-toolbar.fullscreen {
+  background: var(--surface-dark-soft) !important;
+}
+
+.CodeMirror-fullscreen,
+.EasyMDEContainer .CodeMirror.CodeMirror-fullscreen {
+  background: var(--soft-white);
+  color: var(--dark-blue);
+}
+
+.editor-preview-side {
+  background: var(--soft-white);
+  border-color: var(--border-soft);
+  color: var(--dark-blue);
+}
+
+/* in preview, the titles appear in white (?) */
+.editor-preview h1,
+.editor-preview h2 {
+  color: var(--dark-blue);
+}
+

@@ -34,6 +34,7 @@
     "vite": "^8.0.11"
   },
   "dependencies": {
+    "easymde": "^2.21.0",
     "luxon": "^3.7.2"
   }
 }

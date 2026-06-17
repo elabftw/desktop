@@ -27,6 +27,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
   import type { AlertState } from './Alert.svelte';
   import InstancesView from './Instances/InstancesView.svelte';
   import InstancesPushModal from './Instances/InstancesPushModal.svelte';
+  import MarkdownEditor from "./MarkdownEditor.svelte";
 
   type Props = {
     profileUuid: string;
@@ -48,6 +49,10 @@ SPDX-License-Identifier: GPL-3.0-or-later
   let pushModalOpen = $state(false);
   let pushMode = $state<'single' | 'all'>('single'); // from View of an entry, push a single entry. From list of entries, push all.
   let pushEntryId = $state<number | null>(null); // # currentEntryId. This is for the modal to push to eLab.
+  let lastFailedPush = $state<{
+    instanceId: number;
+    entityType: 'experiment' | 'resource';
+  } | null>(null);
 
   function toRelativeTime(iso: string, locale = 'en'): string {
     return DateTime.fromISO(iso).setLocale(locale).toRelative() ?? 'now';
@@ -157,10 +162,14 @@ SPDX-License-Identifier: GPL-3.0-or-later
     pushModalOpen = false;
   }
 
-  async function confirmPush(instanceId: number, entityType: 'experiment' | 'resource'): Promise<void> {
+  async function confirmPush(
+    instanceId: number,
+    entityType: 'experiment' | 'resource',
+    force = false,
+  ): Promise<void> {
     try {
       if (pushMode === 'all') {
-        const results = await PushAllEntriesToElabftw(profileUuid, instanceId, entityType);
+        const results = await PushAllEntriesToElabftw(profileUuid, instanceId, entityType, force);
         alert = {type: 'success', message: `Pushed ${results.length} entries ✔`};
       } else {
         if (!pushEntryId) {
@@ -168,20 +177,23 @@ SPDX-License-Identifier: GPL-3.0-or-later
           return;
         }
 
-        const result = await PushEntryToElabftw(profileUuid, pushEntryId, instanceId, entityType);
+        const result = await PushEntryToElabftw(profileUuid, pushEntryId, instanceId, entityType, force);
         alert = {
           type: 'success',
           message: `Entry ${result.action} as ${result.type} #${result.remoteId} ✔`,
         };
       }
 
+      lastFailedPush = null;
       pushModalOpen = false;
     } catch (e: unknown) {
       const message = errorMessage(e);
       // warning if remote data is more recent than desktop
       if (message.includes('was modified after your last sync')) {
+        lastFailedPush = { instanceId, entityType };
         alert = { type: 'warning', message };
       } else {
+        lastFailedPush = null;
         alert = { type: 'error', message };
       }
     }
@@ -191,7 +203,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
 <div class='container'>
   <header class='flex justify-between items-center mb-2 border-bottom'>
     <div class='w-100 text-ellipsis'>
-      <p class='header-subtitle'>Unlocked profile</p>
       {#if view === 'index'}
         <h1>My Entries</h1>
         <h2>Manage your saved entries.</h2>
@@ -272,9 +283,9 @@ SPDX-License-Identifier: GPL-3.0-or-later
           <button class='btn btn-secondary' onclick={() => openPushModal('all')}>Push all entries to eLabFTW</button>
         {/if}
         <!-- TODO next version fetch entries: discuss how we handle it -->
-        <button class='btn btn-secondary' disabled>Fetch entries from eLabFTW (next version)</button>
+        <!--        <button class='btn btn-secondary' disabled>Fetch entries from eLabFTW (next version)</button>-->
         <button class='btn btn-secondary' onclick={openInstances}>
-          See eLabFTW Instances
+          Manage your eLabFTW Instances
         </button>
 
       </div>
@@ -315,7 +326,11 @@ SPDX-License-Identifier: GPL-3.0-or-later
         </div>
 
         <label for='entryMainText' class='mt-2'>Entry main text</label>
-        <textarea id='entryMainText' bind:value={entryMainText} placeholder='The main text...'></textarea>
+        <MarkdownEditor
+          label='entryMainText'
+          value={entryMainText}
+          onChange={(next) => entryMainText = next}
+        />
       </form>
     </section>
   {/if}
@@ -328,6 +343,17 @@ SPDX-License-Identifier: GPL-3.0-or-later
     />
   {/if}
   {#if alert}
-    <Alert type={alert.type} message={alert.message}/>
+    <div class='flex flex-row-center items-center'>
+      <Alert type={alert.type} message={alert.message}></Alert>
+      <!-- when updating a remote entry that was modified more recently, allow "force pushing" -->
+      {#if lastFailedPush}
+        <div class='flex justify-end mt-1'>
+          <button class='btn btn-danger' type='button'
+                  onclick={() => confirmPush(lastFailedPush.instanceId, lastFailedPush.entityType, true)}>
+            Push anyway
+          </button>
+        </div>
+      {/if}
+    </div>
   {/if}
 </div>
