@@ -6,9 +6,10 @@
   type Props = {
     value: string;
     onChange?: (value: string) => void;
+    label: string;
   };
 
-  let { value, onChange }: Props = $props();
+  let { value, onChange, label }: Props = $props();
 
   let textarea: HTMLTextAreaElement;
   let editor: EasyMDE;
@@ -40,4 +41,4 @@
   });
 </script>
 
-<textarea bind:this={textarea}></textarea>
+<textarea aria-labelledby={label} bind:this={textarea}></textarea>
