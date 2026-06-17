@@ -327,6 +327,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
         <label for='entryMainText' class='mt-2'>Entry main text</label>
         <MarkdownEditor
+          label='entryMainText'
           value={entryMainText}
           onChange={(next) => entryMainText = next}
         />
