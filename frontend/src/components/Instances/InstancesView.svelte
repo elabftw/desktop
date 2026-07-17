@@ -136,7 +136,9 @@ log new instances, edit existing and delete. You can test the API as well
               onclick={() => openExternalURL('https://doc.elabftw.net/docs/usage/api')}>Documentation</button>
       to learn how to create a new API key.
     </span>
-    <button class='btn btn-secondary' type='button' onclick={onBack}>← Back</button>
+    <div class='page-back'>
+      <button class='btn btn-secondary' type='button' onclick={onBack}>← Back</button>
+    </div>
   </div>
 
   <form onsubmit={handleInstanceSubmit} class='grid gap-1'>

@@ -146,6 +146,7 @@ a, .link-button {
 
 /* below containers, the sub-container */
 .panel {
+  position: relative;
   background: var(--surface-dark-soft);
   border: 1px solid var(--border-soft);
   border-radius: 22px;

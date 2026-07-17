@@ -312,7 +312,9 @@ SPDX-License-Identifier: GPL-3.0-or-later
     <section class='panel'>
       <form onsubmit={handleSubmit}>
         <div class='flex justify-between border-bottom mb-2'>
-          <button class='btn btn-secondary' type='button' onclick={openIndex}>← Back</button>
+          <div class='page-back'>
+            <button class='btn btn-secondary' type='button' onclick={openIndex}>← Back</button>
+          </div>
           <div class='flex gap-1'>
               {#each remoteLinks as link (`${link.instanceId}-${link.type}-${link.remoteId}`)}
                 <button type='button' class='btn btn-secondary' onclick={() => openExternalURL(link.url)}>
