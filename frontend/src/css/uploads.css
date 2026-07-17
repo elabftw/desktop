@@ -5,30 +5,26 @@
 }
 
 .upload-card {
-  width: 220px;
-  height: 180px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
   align-items: center;
-  gap: 0.75rem;
-
+  background: var(--surface-dark-soft);
   border: 2px solid var(--border-soft);
   border-radius: 10px;
-
-  background: var(--surface-dark-soft);
   color: var(--soft-white);
-
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  height: 180px;
+  justify-content: center;
   transition:
           border-color .2s ease,
           background-color .2s ease;
-
-  cursor: pointer;
+  width: 220px;
 }
 
 .upload-card-add:hover {
-  border-color: var(--orange-light);
   background: var(--dark-blue-2);
+  border-color: var(--orange-light);
 }
 
 .upload-icon {
@@ -38,13 +34,12 @@
 
 .upload-name {
   font-weight: 700;
-  text-align: center;
+  overflow-wrap: break-word;
   padding: 0 .75rem;
-  word-break: break-word;
+  text-align: center;
 }
 
 .upload-meta {
   font-size: .9rem;
-  color: var(--text-muted);
   text-align: center;
 }

@@ -78,8 +78,8 @@ button {
 
 /* Back button always visible & same location */
 .page-back {
-  position: absolute;
   left: -1.5rem;
+  position: absolute;
   top: -1.5rem;
   z-index: 10;
 }
