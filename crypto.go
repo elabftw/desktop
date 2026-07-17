@@ -73,7 +73,7 @@ func deriveProfileKey(passphrase string, salt []byte) []byte {
 	)
 }
 
-func encryptToBase64(key []byte, plaintext []byte) (string, error) {
+func encodeToBase64(key []byte, plaintext []byte) (string, error) {
 	// XChaCha20-Poly1305 requires a unique nonce for each encryption.
 	// The nonce is not secret, so we store it next to the ciphertext.
 	// Stored format:
@@ -98,7 +98,7 @@ func decryptFromBase64(key []byte, encoded string) ([]byte, error) {
 }
 
 func encryptString(key []byte, plaintext string) (string, error) {
-	return encryptToBase64(key, []byte(plaintext))
+	return encodeToBase64(key, []byte(plaintext))
 }
 
 func decryptString(key []byte, encoded string) (string, error) {
