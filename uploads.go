@@ -28,7 +28,6 @@ type StoredUpload struct {
 	ID            int64  `json:"id"`
 	EntryID       int64  `json:"entryId"`
 	RealName      string `json:"realName"`
-	LongName      string `json:"longName"`
 	Hash          string `json:"hash"`
 	HashAlgorithm string `json:"hashAlgorithm"`
 	Filesize      int64  `json:"filesize"`
@@ -66,7 +65,6 @@ func (a *App) ImportUpload(profileUUID string, entryID int64, sourcePath string)
 	hashAlgorithm := "sha256"
 	filesize := int64(len(content))
 	realName := filepath.Base(sourcePath)
-	longName := realName
 
 	encryptedContent, err := encryptRawBytes(a.activeKey, content)
 	if err != nil {
@@ -88,14 +86,13 @@ func (a *App) ImportUpload(profileUUID string, entryID int64, sourcePath string)
 		INSERT INTO uploads (
 			entry_id,
 			real_name,
-			long_name,
 			hash,
 			hash_algorithm,
 			filesize,
 			state
 		)
-		VALUES (?, ?, ?, ?, ?, ?, ?)
-	`, entryID, realName, longName, hash, hashAlgorithm, filesize, "local")
+		VALUES (?, ?, ?, ?, ?, ?)
+	`, entryID, realName, hash, hashAlgorithm, filesize, "local")
 	if err != nil {
 		return nil, fmt.Errorf("insert file metadata: %w", err)
 	}
@@ -118,7 +115,6 @@ func (a *App) ImportUpload(profileUUID string, entryID int64, sourcePath string)
 		ID:            id,
 		EntryID:       entryID,
 		RealName:      realName,
-		LongName:      longName,
 		Hash:          hash,
 		HashAlgorithm: hashAlgorithm,
 		Filesize:      filesize,
@@ -132,7 +128,6 @@ func listEntryUploadsFromDB(db *sql.DB, entryID int64) ([]StoredUpload, error) {
 			id,
 			entry_id,
 			real_name,
-			long_name,
 			hash,
 			hash_algorithm,
 			filesize,
@@ -157,7 +152,6 @@ func listEntryUploadsFromDB(db *sql.DB, entryID int64) ([]StoredUpload, error) {
 			&upload.ID,
 			&upload.EntryID,
 			&upload.RealName,
-			&upload.LongName,
 			&upload.Hash,
 			&upload.HashAlgorithm,
 			&upload.Filesize,

@@ -86,7 +86,7 @@ func encodeToBase64(key []byte, plaintext []byte) (string, error) {
 	return base64Encoding.EncodeToString(payload), nil
 }
 
-func decryptFromBase64(key []byte, encoded string) ([]byte, error) {
+func decodeFromBase64(key []byte, encoded string) ([]byte, error) {
 	// The encrypted payload is stored as base64(nonce || ciphertext).
 	// Split the nonce back out before opening the ciphertext.
 	payload, err := base64Encoding.DecodeString(encoded)
@@ -102,7 +102,7 @@ func encryptString(key []byte, plaintext string) (string, error) {
 }
 
 func decryptString(key []byte, encoded string) (string, error) {
-	plaintext, err := decryptFromBase64(key, encoded)
+	plaintext, err := decodeFromBase64(key, encoded)
 	if err != nil {
 		return "", err
 	}
@@ -164,7 +164,7 @@ func unlockProfileCryptoParams(profile *ProfileEntry, passphrase string) ([]byte
 	return key, nil
 }
 
-// encryptRawBytes encrypts binary data for file storage.
+// encryptRawBytes encrypts binary data with chacha20poly1305
 func encryptRawBytes(key []byte, plaintext []byte) ([]byte, error) {
 	aead, err := chacha20poly1305.NewX(key)
 	if err != nil {

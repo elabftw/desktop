@@ -88,7 +88,7 @@
 
       {#each uploads as upload (upload.id)}
         <div class='upload-card'>
-          <div class='upload-name'>{upload.longName}</div>
+          <div class='upload-name'>{upload.realName}</div>
           <div class='description'>
             {formatFileSize(upload.filesize)}
           </div>

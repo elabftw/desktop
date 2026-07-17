@@ -129,7 +129,6 @@ PRAGMA user_version = 2;
     	id INTEGER PRIMARY KEY AUTOINCREMENT,
     	entry_id INTEGER NOT NULL,
     	real_name TEXT NOT NULL,
-    	long_name TEXT NOT NULL,
     	hash TEXT NOT NULL,
     	hash_algorithm TEXT NOT NULL DEFAULT 'sha256',
     	filesize INTEGER NOT NULL,

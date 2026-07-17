@@ -84,12 +84,6 @@ func (a *App) pushUploadToRemoteEntity(
 		return 0, fmt.Errorf("write upload form file: %w", err)
 	}
 
-	if upload.LongName != "" && upload.LongName != upload.RealName {
-		if err := writer.WriteField("comment", upload.LongName); err != nil {
-			return 0, fmt.Errorf("write upload comment: %w", err)
-		}
-	}
-
 	if err := writer.Close(); err != nil {
 		return 0, fmt.Errorf("close multipart writer: %w", err)
 	}

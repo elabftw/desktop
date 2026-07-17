@@ -166,7 +166,6 @@ export namespace main {
 	    id: number;
 	    entryId: number;
 	    realName: string;
-	    longName: string;
 	    hash: string;
 	    hashAlgorithm: string;
 	    filesize: number;
@@ -183,7 +182,6 @@ export namespace main {
 	        this.id = source["id"];
 	        this.entryId = source["entryId"];
 	        this.realName = source["realName"];
-	        this.longName = source["longName"];
 	        this.hash = source["hash"];
 	        this.hashAlgorithm = source["hashAlgorithm"];
 	        this.filesize = source["filesize"];
