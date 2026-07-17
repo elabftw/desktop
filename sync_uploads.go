@@ -7,7 +7,7 @@
  * @see https://www.elabftw.net Official website
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * This file handles pushing uploads to an eLabFTW entry
+ * Handle upload synchronization with eLabFTW entries.
  */
 
 package main
@@ -15,6 +15,7 @@ package main
 import (
 	"bytes"
 	"database/sql"
+	"errors"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -22,42 +23,53 @@ import (
 	"os"
 )
 
+const maxUploadSize = 100 * 1024 * 1024
+
+// pushUploadToRemoteEntity creates one upload on an eLabFTW experiment or item
+// and returns the ID assigned to the new remote upload.
 func (a *App) pushUploadToRemoteEntity(
 	profileUUID string,
-	db *sql.DB,
 	instanceID int64,
 	entityType string,
 	remoteEntityID int64,
 	upload StoredUpload,
-) error {
+) (int64, error) {
 	remoteEntityType, err := elabftwUploadEntityType(entityType)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	encryptedPath, err := encryptedProfileUploadPath(profileUUID, upload.Hash, upload.ID)
+	encryptedPath, err := encryptedProfileUploadPath(
+		profileUUID,
+		upload.Hash,
+		upload.ID,
+	)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	// Prevent memory exhaustion from excessively large files
+	// Refuse unexpectedly large encrypted files before reading them into memory
 	fileInfo, err := os.Stat(encryptedPath)
 	if err != nil {
-		return fmt.Errorf("stat encrypted upload: %w", err)
+		return 0, fmt.Errorf("stat encrypted upload: %w", err)
 	}
-	const maxUploadSize = 100 * 1024 * 1024 // See if we want bigger or smaller
+
 	if fileInfo.Size() > maxUploadSize {
-		return fmt.Errorf("encrypted upload too large: %d bytes (max %d)", fileInfo.Size(), maxUploadSize)
+		return 0, fmt.Errorf(
+			"encrypted upload too large: %d bytes (max %d)",
+			fileInfo.Size(),
+			maxUploadSize,
+		)
 	}
 
 	encryptedContent, err := os.ReadFile(encryptedPath)
 	if err != nil {
-		return fmt.Errorf("read encrypted upload: %w", err)
+		return 0, fmt.Errorf("read encrypted upload: %w", err)
 	}
 
 	plaintext, err := decryptRawBytes(a.activeKey, encryptedContent)
 	if err != nil {
-		return fmt.Errorf("decrypt upload: %w", err)
+		return 0, fmt.Errorf("decrypt upload: %w", err)
 	}
 
 	var body bytes.Buffer
@@ -65,30 +77,28 @@ func (a *App) pushUploadToRemoteEntity(
 
 	fileWriter, err := writer.CreateFormFile("file", upload.RealName)
 	if err != nil {
-		return fmt.Errorf("create upload form file: %w", err)
+		return 0, fmt.Errorf("create upload form file: %w", err)
 	}
 
 	if _, err := io.Copy(fileWriter, bytes.NewReader(plaintext)); err != nil {
-		return fmt.Errorf("write upload form file: %w", err)
-	}
-
-	if upload.State != "" {
-		if err := writer.WriteField("state", upload.State); err != nil {
-			return fmt.Errorf("write upload state: %w", err)
-		}
+		return 0, fmt.Errorf("write upload form file: %w", err)
 	}
 
 	if upload.LongName != "" && upload.LongName != upload.RealName {
 		if err := writer.WriteField("comment", upload.LongName); err != nil {
-			return fmt.Errorf("write upload comment: %w", err)
+			return 0, fmt.Errorf("write upload comment: %w", err)
 		}
 	}
 
 	if err := writer.Close(); err != nil {
-		return fmt.Errorf("close multipart writer: %w", err)
+		return 0, fmt.Errorf("close multipart writer: %w", err)
 	}
 
-	path := fmt.Sprintf("/%s/%d/uploads", remoteEntityType, remoteEntityID)
+	path := fmt.Sprintf(
+		"/%s/%d/uploads",
+		remoteEntityType,
+		remoteEntityID,
+	)
 
 	resp, err := a.elabftwRequest(
 		profileUUID,
@@ -101,16 +111,28 @@ func (a *App) pushUploadToRemoteEntity(
 		},
 	)
 	if err != nil {
-		return err
+		return 0, err
 	}
+
+	// The new upload ID is returned through the Location header
+	// Save it before decodeElabftwJSONResponse closes the response body
+	location := resp.Header.Get("Location")
 
 	if err := decodeElabftwJSONResponse(resp, nil); err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
+	remoteUploadID, err := remoteIDFromLocation(location)
+	if err != nil {
+		return 0, fmt.Errorf("parse remote upload id: %w", err)
+	}
+
+	return remoteUploadID, nil
 }
 
+// pushEntryUploadsToRemoteEntity pushes uploads attached to an entry that do
+// not already have a remote mapping. Failures are returned as warnings because
+// the parent entry may already have been successfully posted or patched
 func (a *App) pushEntryUploadsToRemoteEntity(
 	profileUUID string,
 	db *sql.DB,
@@ -124,13 +146,135 @@ func (a *App) pushEntryUploadsToRemoteEntity(
 		return []string{err.Error()}
 	}
 
-	warnings := []string{}
+	warnings := make([]string, 0)
 
 	for _, upload := range uploads {
-		if err := a.pushUploadToRemoteEntity(profileUUID, db, instanceID, entityType, remoteEntityID, upload); err != nil {
-			warnings = append(warnings, fmt.Sprintf("Upload %s failed: %s", upload.RealName, err.Error()))
+		_, alreadyPushed, err := findRemoteUploadID(
+			db,
+			instanceID,
+			upload.ID,
+			remoteEntityID,
+			entityType,
+		)
+		if err != nil {
+			warnings = append(warnings, err.Error())
+			continue
+		}
+
+		// This local upload is already attached to this remote entity.
+		if alreadyPushed {
+			continue
+		}
+
+		remoteUploadID, err := a.pushUploadToRemoteEntity(
+			profileUUID,
+			instanceID,
+			entityType,
+			remoteEntityID,
+			upload,
+		)
+		if err != nil {
+			warnings = append(
+				warnings,
+				fmt.Sprintf(
+					"upload %q failed: %s",
+					upload.RealName,
+					err,
+				),
+			)
+			continue
+		}
+
+		if err := rememberRemoteUpload(
+			db,
+			instanceID,
+			entryID,
+			upload.ID,
+			remoteEntityID,
+			remoteUploadID,
+			entityType,
+		); err != nil {
+			warnings = append(
+				warnings,
+				fmt.Sprintf(
+					"remember remote upload %q: %s",
+					upload.RealName,
+					err,
+				),
+			)
 		}
 	}
 
 	return warnings
+}
+
+// findRemoteUploadID checks whether a local upload has already been pushed to
+// the specified remote entity
+func findRemoteUploadID(
+	db *sql.DB,
+	instanceID int64,
+	localUploadID int64,
+	remoteEntityID int64,
+	entityType string,
+) (int64, bool, error) {
+	var remoteUploadID int64
+
+	err := db.QueryRow(`
+		SELECT remote_upload_id
+		FROM upload2remote
+		WHERE instance = ?
+		  AND local_upload_id = ?
+		  AND remote_entity_id = ?
+		  AND type = ?
+	`,
+		instanceID,
+		localUploadID,
+		remoteEntityID,
+		entityType,
+	).Scan(&remoteUploadID)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return 0, false, nil
+	}
+	if err != nil {
+		return 0, false, fmt.Errorf("query upload2remote: %w", err)
+	}
+
+	return remoteUploadID, true, nil
+}
+
+// rememberRemoteUpload records the correspondence between a local upload and
+// the remote upload created on an eLabFTW experiment or item
+func rememberRemoteUpload(
+	db *sql.DB,
+	instanceID int64,
+	entryID int64,
+	localUploadID int64,
+	remoteEntityID int64,
+	remoteUploadID int64,
+	entityType string,
+) error {
+	_, err := db.Exec(`
+		INSERT INTO upload2remote (
+			instance,
+			local_upload_id,
+			local_entry_id,
+			remote_entity_id,
+			remote_upload_id,
+			type
+		)
+		VALUES (?, ?, ?, ?, ?, ?)
+	`,
+		instanceID,
+		localUploadID,
+		entryID,
+		remoteEntityID,
+		remoteUploadID,
+		entityType,
+	)
+	if err != nil {
+		return fmt.Errorf("insert upload2remote: %w", err)
+	}
+
+	return nil
 }

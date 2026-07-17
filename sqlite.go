@@ -156,5 +156,49 @@ PRAGMA user_version = 2;
 		}
 		v = 3
 	}
+    // todo next version have a correct schema versioning
+    if v == 3 {
+        _, err := db.Exec(`
+    CREATE TABLE IF NOT EXISTS upload2remote (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        instance INTEGER NOT NULL,
+        local_upload_id INTEGER NOT NULL,
+        local_entry_id INTEGER NOT NULL,
+        remote_entity_id INTEGER NOT NULL,
+        remote_upload_id INTEGER NOT NULL,
+        type TEXT NOT NULL CHECK (type IN ('experiment', 'resource')),
+        created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+
+        FOREIGN KEY (instance)
+            REFERENCES elabftw_instances(id)
+            ON DELETE CASCADE,
+
+        FOREIGN KEY (local_upload_id)
+            REFERENCES uploads(id)
+            ON DELETE CASCADE,
+
+        FOREIGN KEY (local_entry_id)
+            REFERENCES entries(id)
+            ON DELETE CASCADE,
+
+        UNIQUE (
+            instance,
+            local_upload_id,
+            remote_entity_id,
+            type
+        )
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_upload2remote_entry
+    ON upload2remote(instance, local_entry_id, type);
+
+    PRAGMA user_version = 4;
+    `)
+        if err != nil {
+            return fmt.Errorf("Create schema v5: %w", err)
+        }
+
+        v = 4
+    }
 	return nil
 }

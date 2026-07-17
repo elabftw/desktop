@@ -7,7 +7,7 @@
  * @see https://www.elabftw.net Official website
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * Handle uploads
+ * Handle uploads locally
  */
 
 package main
