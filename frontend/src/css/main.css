@@ -265,6 +265,7 @@ a, .link-button {
 }
 
 .modal {
+  background: var(--dark-blue);
   width: min(520px, calc(100vw - 2rem));
 }
 
