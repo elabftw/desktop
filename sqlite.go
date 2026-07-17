@@ -156,9 +156,9 @@ PRAGMA user_version = 2;
 		}
 		v = 3
 	}
-    // todo next version have a correct schema versioning
-    if v == 3 {
-        _, err := db.Exec(`
+	// todo next version have a correct schema versioning
+	if v == 3 {
+		_, err := db.Exec(`
     CREATE TABLE IF NOT EXISTS upload2remote (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         instance INTEGER NOT NULL,
@@ -194,11 +194,11 @@ PRAGMA user_version = 2;
 
     PRAGMA user_version = 4;
     `)
-        if err != nil {
-            return fmt.Errorf("Create schema v5: %w", err)
-        }
+		if err != nil {
+			return fmt.Errorf("Create schema v5: %w", err)
+		}
 
-        v = 4
-    }
+		v = 4
+	}
 	return nil
 }
