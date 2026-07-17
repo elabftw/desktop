@@ -4,6 +4,7 @@
 @import url('profiles.css');
 @import url('main-app.css');
 @import url('easymde.css');
+@import url('uploads.css');
 
 /* TODO: add stylelint */
 :root {
@@ -198,7 +199,7 @@ a, .link-button {
 }
 
 .text-strong {
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .text-gray {

@@ -71,35 +71,27 @@
 </script>
 
 <section class='panel mt-2'>
-  <div class='flex justify-between items-center border-bottom mb-2'>
-    <div>
-      <h3>Uploads</h3>
-      <p class='description'>File size limit: {maxUploadSizeMb} MB</p>
-    </div>
-
-    <button class='btn btn-secondary' type='button' onclick={importUpload}>Click to import a file</button>
+  <div class='border-bottom mb-2'>
+    <h3>Uploads</h3>
+    <p class='description'>File size limit: {maxUploadSizeMb} MB</p>
   </div>
 
   {#if loading}
     <div class='empty-state'>Loading uploads...</div>
-  {:else if uploads.length === 0}
-    <div class='empty-state'>
-      <h3>No uploads yet</h3>
-      <p>Import a file to store it encrypted in this profile.</p>
-    </div>
   {:else}
-    <div class='grid gap-1'>
+    <div class='uploads-grid'>
+      <!-- Always visible import button -->
+      <button type='button' class='upload-card upload-card-add' onclick={importUpload}>
+        <span class='upload-icon' aria-hidden='true'>+</span>
+        <span class='text-strong'>Import a file</span>
+      </button>
+
       {#each uploads as upload (upload.id)}
-        <div class='flex justify-between items-center gap-1'>
-          <div class='grid gap-03'>
-            <span class='text-white text-strong'>{upload.longName}</span>
-            <span class='description'>
-              {formatFileSize(upload.filesize)} · {upload.hashAlgorithm} · {upload.state}
-            </span>
+        <div class='upload-card'>
+          <div class='upload-name'>{upload.longName}</div>
+          <div class='description'>
+            {formatFileSize(upload.filesize)}
           </div>
-          <span class='description text-ellipsis' title={upload.hash}>
-            {upload.hash.slice(0, 12)}
-          </span>
         </div>
       {/each}
     </div>
