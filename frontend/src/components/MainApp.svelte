@@ -226,7 +226,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     </div>
 
     <div class='flex gap-1 items-center'>
-      <div class='profile-pill flex items-center gap-1' title={profileName}>
+      <div class='profile-pill flex items-center' title={profileName}>
         <span class='profile-avatar'>{profileName.slice(0, 2).toUpperCase()}</span>
         <span class='text-strong'>{profileName}</span>
       </div>
@@ -312,9 +312,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     <section class='panel'>
       <form onsubmit={handleSubmit}>
         <div class='flex justify-between border-bottom mb-2'>
-          <div class='page-back'>
-            <button class='btn btn-secondary' type='button' onclick={openIndex}>← Back</button>
-          </div>
+          <button class='btn btn-secondary' type='button' onclick={openIndex}>← Back</button>
           <div class='flex gap-1'>
               {#each remoteLinks as link (`${link.instanceId}-${link.type}-${link.remoteId}`)}
                 <button type='button' class='btn btn-secondary' onclick={() => openExternalURL(link.url)}>

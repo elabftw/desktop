@@ -75,11 +75,3 @@ button {
   box-shadow: 0 0 0 3px var(--red-background);
   outline: none;
 }
-
-/* Back button always visible & same location */
-.page-back {
-  left: -1.5rem;
-  position: absolute;
-  top: -1.5rem;
-  z-index: 10;
-}

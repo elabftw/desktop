@@ -127,7 +127,9 @@ log new instances, edit existing and delete. You can test the API as well
 </script>
 
 <section class='panel'>
-  <div class='flex justify-between border-bottom mb-2 items-center'>
+  <div class='border-bottom mb-2'>
+    <button class='btn btn-secondary mb-2' type='button' onclick={onBack}>← Back</button>
+    <br>
     <span>
       Add the site URL and your API key to allow communication between the desktop app and your eLabFTW instance.
       <br/>
@@ -136,9 +138,6 @@ log new instances, edit existing and delete. You can test the API as well
               onclick={() => openExternalURL('https://doc.elabftw.net/docs/usage/api')}>Documentation</button>
       to learn how to create a new API key.
     </span>
-    <div class='page-back'>
-      <button class='btn btn-secondary' type='button' onclick={onBack}>← Back</button>
-    </div>
   </div>
 
   <form onsubmit={handleInstanceSubmit} class='grid gap-1'>
