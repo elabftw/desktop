@@ -39,7 +39,6 @@ log new instances, edit existing and delete. You can test the API as well
   let instances = $state<main.ElabftwInstance[]>([]);
   let instanceSiteUrl = $state('');
   let instanceApiKey = $state('');
-  let showInstanceApiKey = $state(false);
   let instanceVerifyTls = $state(true);
   let editingInstanceId = $state<number | null>(null);
   let elabftwInfoOutput = $state('');
@@ -108,7 +107,6 @@ log new instances, edit existing and delete. You can test the API as well
     instanceSiteUrl = instance.siteUrl;
     instanceApiKey = '';
     instanceVerifyTls = instance.verifyTls;
-    showInstanceApiKey = false;
     onAlert({type: 'info', message: 'Editing instance. Leave API key empty to keep the current key.'});
   }
 
@@ -122,7 +120,6 @@ log new instances, edit existing and delete. You can test the API as well
     instanceSiteUrl = '';
     instanceApiKey = '';
     instanceVerifyTls = true;
-    showInstanceApiKey = false;
   }
 
   const handleInstanceSubmit = preventDefaultSubmit(saveInstance);
