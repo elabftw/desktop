@@ -75,21 +75,45 @@ func (a *App) pushUploadToRemoteEntity(
 		return 0, fmt.Errorf("decrypt upload: %w", err)
 	}
 
-	var body bytes.Buffer
-	writer := multipart.NewWriter(&body)
+	// The encrypted content is no longer needed after decryption.
+	encryptedContent = nil
+	defer zeroBytes(plaintext)
 
-	fileWriter, err := writer.CreateFormFile("file", upload.RealName)
-	if err != nil {
-		return 0, fmt.Errorf("create upload form file: %w", err)
-	}
+	pipeReader, pipeWriter := io.Pipe()
+	writer := multipart.NewWriter(pipeWriter)
+	contentType := writer.FormDataContentType()
 
-	if _, err := io.Copy(fileWriter, bytes.NewReader(plaintext)); err != nil {
-		return 0, fmt.Errorf("write upload form file: %w", err)
-	}
+	writeErr := make(chan error, 1)
 
-	if err := writer.Close(); err != nil {
-		return 0, fmt.Errorf("close multipart writer: %w", err)
-	}
+	go func() {
+		fileWriter, err := writer.CreateFormFile("file", upload.RealName)
+		if err != nil {
+			_ = pipeWriter.CloseWithError(
+				fmt.Errorf("create upload form file: %w", err),
+			)
+			writeErr <- err
+			return
+		}
+
+		if _, err := io.Copy(fileWriter, bytes.NewReader(plaintext)); err != nil {
+			_ = pipeWriter.CloseWithError(
+				fmt.Errorf("write upload form file: %w", err),
+			)
+			writeErr <- err
+			return
+		}
+
+		if err := writer.Close(); err != nil {
+			_ = pipeWriter.CloseWithError(
+				fmt.Errorf("close multipart writer: %w", err),
+			)
+			writeErr <- err
+			return
+		}
+
+		_ = pipeWriter.Close()
+		writeErr <- nil
+	}()
 
 	path := fmt.Sprintf(
 		"/%s/%d/uploads",
@@ -102,17 +126,23 @@ func (a *App) pushUploadToRemoteEntity(
 		instanceID,
 		http.MethodPost,
 		path,
-		&body,
+		pipeReader,
 		map[string]string{
-			"Content-Type": writer.FormDataContentType(),
+			"Content-Type": contentType,
 		},
 	)
 	if err != nil {
+		_ = pipeReader.Close()
+		<-writeErr
+		return 0, err
+	}
+
+	if err := <-writeErr; err != nil {
+		_ = resp.Body.Close()
 		return 0, err
 	}
 
 	// The new upload ID is returned through the Location header
-	// Save it before decodeElabftwJSONResponse closes the response body
 	location := resp.Header.Get("Location")
 
 	if err := decodeElabftwJSONResponse(resp, nil); err != nil {
