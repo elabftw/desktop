@@ -79,12 +79,17 @@ func (a *App) pushUploadToRemoteEntity(
 	encryptedContent = nil
 	defer zeroBytes(plaintext)
 
+	// Stream the multipart request body directly to the HTTP request instead of
+	// buffering the complete payload in memory
 	pipeReader, pipeWriter := io.Pipe()
 	writer := multipart.NewWriter(pipeWriter)
 	contentType := writer.FormDataContentType()
 
+	// Report any error that occurs while producing the multipart body.
 	writeErr := make(chan error, 1)
 
+	// Build the multipart request body concurrently while the HTTP client reads
+	// from the pipe. This avoids creating a second full copy of the upload.
 	go func() {
 		fileWriter, err := writer.CreateFormFile("file", upload.RealName)
 		if err != nil {
