@@ -21,6 +21,7 @@ log new instances, edit existing and delete. You can test the API as well
     DeleteElabftwInstance,
     FetchElabftwInfo,
   } from '../../../wailsjs/go/main/App';
+  import PasswordInput from '../PasswordInput.svelte';
 
   import type { main } from '../../../wailsjs/go/models';
   import { errorMessage, preventDefaultSubmit, openExternalURL } from '../../utils/helpers';
@@ -38,6 +39,7 @@ log new instances, edit existing and delete. You can test the API as well
   let instances = $state<main.ElabftwInstance[]>([]);
   let instanceSiteUrl = $state('');
   let instanceApiKey = $state('');
+  let showInstanceApiKey = $state(false);
   let instanceVerifyTls = $state(true);
   let editingInstanceId = $state<number | null>(null);
   let elabftwInfoOutput = $state('');
@@ -106,6 +108,7 @@ log new instances, edit existing and delete. You can test the API as well
     instanceSiteUrl = instance.siteUrl;
     instanceApiKey = '';
     instanceVerifyTls = instance.verifyTls;
+    showInstanceApiKey = false;
     onAlert({type: 'info', message: 'Editing instance. Leave API key empty to keep the current key.'});
   }
 
@@ -119,6 +122,7 @@ log new instances, edit existing and delete. You can test the API as well
     instanceSiteUrl = '';
     instanceApiKey = '';
     instanceVerifyTls = true;
+    showInstanceApiKey = false;
   }
 
   const handleInstanceSubmit = preventDefaultSubmit(saveInstance);
@@ -127,13 +131,10 @@ log new instances, edit existing and delete. You can test the API as well
 </script>
 
 <section class='panel'>
-  <div class='border-bottom mb-2'>
+  <div class='border-bottom mb-2 flex flex-column items-center'>
     <button class='btn btn-secondary mb-2' type='button' onclick={onBack}>← Back</button>
-    <br>
-    <span>
-      Add the site URL and your API key to allow communication between the desktop app and your eLabFTW instance.
-      <br/>
-      See the
+    <span>To allow communication between the desktop app and your eLabFTW instance, add the site URL and your API key.</span>
+    <span>See the
       <button type='button' class='link-button'
               onclick={() => openExternalURL('https://doc.elabftw.net/docs/usage/api')}>Documentation</button>
       to learn how to create a new API key.
@@ -154,14 +155,15 @@ log new instances, edit existing and delete. You can test the API as well
     </div>
 
     <div>
-      <label for='instanceApiKey'>API key</label>
-      <input
-        required
-        id='instanceApiKey'
-        type='password'
-        class='input'
+      <label for="instanceApiKey">API key</label>
+
+      <PasswordInput
+        id="instanceApiKey"
         bind:value={instanceApiKey}
-        placeholder={editingInstanceId ? 'Leave empty to keep current API key' : 'Your eLabFTW API key'}
+        required={!editingInstanceId}
+        placeholder={editingInstanceId
+      ? 'Leave empty to keep current API key'
+      : 'Your eLabFTW API key'}
       />
     </div>
 

@@ -11,6 +11,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 <script lang='ts'>
   import { autofocus, preventDefaultSubmit } from '../../utils/helpers';
   import Alert from '../Alert.svelte';
+  import PasswordInput from "../PasswordInput.svelte";
 
   type Props = {
     addError: string;
@@ -45,13 +46,11 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
     <div>
       <label for='profilePassphrase' class='mt-2'>Passphrase</label>
-      <input
-        required
+      <PasswordInput
         id='profilePassphrase'
-        class='input'
-        placeholder='Passphrase'
-        type='password'
         bind:value={passphrase}
+        required
+        placeholder='Passphrase'
       />
     </div>
 
