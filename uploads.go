@@ -24,6 +24,8 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
+const maxUploadSize int64 = 100 * 1024 * 1024 // 100 MiB
+
 type StoredUpload struct {
 	ID            int64  `json:"id"`
 	EntryID       int64  `json:"entryId"`
@@ -54,6 +56,20 @@ func (a *App) ImportUpload(profileUUID string, entryID int64, sourcePath string)
 	sourcePath = strings.TrimSpace(sourcePath)
 	if sourcePath == "" {
 		return nil, fmt.Errorf("source path is empty")
+	}
+
+	// Enforce the user-facing file limit before loading the source into memory.
+	fileInfo, err := os.Stat(sourcePath)
+	if err != nil {
+		return nil, fmt.Errorf("stat source file: %w", err)
+	}
+
+	if fileInfo.Size() > maxUploadSize {
+		return nil, fmt.Errorf(
+			"file too large: %d bytes (max %d)",
+			fileInfo.Size(),
+			maxUploadSize,
+		)
 	}
 
 	content, err := os.ReadFile(sourcePath)

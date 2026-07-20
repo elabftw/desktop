@@ -194,7 +194,7 @@ PRAGMA user_version = 2;
     PRAGMA user_version = 4;
     `)
 		if err != nil {
-			return fmt.Errorf("Create schema v5: %w", err)
+			return fmt.Errorf("Create schema v4: %w", err)
 		}
 
 		v = 4
