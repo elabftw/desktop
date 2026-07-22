@@ -16,6 +16,7 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -216,4 +217,190 @@ func (a *App) SelectFile() (string, error) {
 	return runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
 		Title: "Select file",
 	})
+}
+
+// getUploadFromDB fetches one upload and ensures that it belongs to the expected entry
+func getUploadFromDB(
+	db *sql.DB,
+	entryID int64,
+	uploadID int64,
+) (*StoredUpload, error) {
+	var upload StoredUpload
+
+	err := db.QueryRow(`
+		SELECT
+			id,
+			entry_id,
+			real_name,
+			hash,
+			hash_algorithm,
+			filesize,
+			state,
+			created_at,
+			modified_at
+		FROM uploads
+		WHERE id = ?
+		  AND entry_id = ?
+	`, uploadID, entryID).Scan(
+		&upload.ID,
+		&upload.EntryID,
+		&upload.RealName,
+		&upload.Hash,
+		&upload.HashAlgorithm,
+		&upload.Filesize,
+		&upload.State,
+		&upload.CreatedAt,
+		&upload.ModifiedAt,
+	)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, fmt.Errorf("upload not found")
+	}
+	if err != nil {
+		return nil, fmt.Errorf("query upload: %w", err)
+	}
+
+	return &upload, nil
+}
+
+// DownloadUpload decrypts an upload and exports it to a location selected by
+// the user. An empty returned path means that the user cancelled the dialog!
+func (a *App) DownloadUpload(
+	profileUUID string,
+	entryID int64,
+	uploadID int64,
+) (string, error) {
+	profileUUID, err := a.requireUnlockedProfile(profileUUID)
+	if err != nil {
+		return "", err
+	}
+
+	if entryID <= 0 || uploadID <= 0 {
+		return "", fmt.Errorf("invalid entry or upload id")
+	}
+
+	pdir, err := profileDir(profileUUID)
+	if err != nil {
+		return "", err
+	}
+
+	db, err := OpenProfileDB(pdir)
+	if err != nil {
+		return "", fmt.Errorf("open profile db: %w", err)
+	}
+	defer db.Close()
+
+	upload, err := getUploadFromDB(db, entryID, uploadID)
+	if err != nil {
+		return "", err
+	}
+
+	encryptedPath, err := encryptedProfileUploadPath(
+		profileUUID,
+		upload.Hash,
+		upload.ID,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	encryptedContent, err := os.ReadFile(encryptedPath)
+	if err != nil {
+		return "", fmt.Errorf("read encrypted upload: %w", err)
+	}
+
+	plaintext, err := decryptRawBytes(a.activeKey, encryptedContent)
+	if err != nil {
+		return "", fmt.Errorf("decrypt upload: %w", err)
+	}
+	defer zeroBytes(plaintext)
+
+	destinationPath, err := runtime.SaveFileDialog(
+		a.ctx,
+		runtime.SaveDialogOptions{
+			Title:           "Save upload",
+			DefaultFilename: upload.RealName,
+		},
+	)
+	if err != nil {
+		return "", fmt.Errorf("select destination: %w", err)
+	}
+
+	// When user cancelled the dialog:
+	if destinationPath == "" {
+		return "", nil
+	}
+
+	if err := os.WriteFile(destinationPath, plaintext, 0o600); err != nil {
+		return "", fmt.Errorf("write downloaded upload: %w", err)
+	}
+
+	return destinationPath, nil
+}
+
+// DeleteUpload removes a locally stored upload.
+// This deletes the local encrypted file and local database record. It does not
+// delete an upload that has already been pushed to an eLabFTW instance.
+func (a *App) DeleteUpload(
+	profileUUID string,
+	entryID int64,
+	uploadID int64,
+) error {
+	profileUUID, err := a.requireUnlockedProfile(profileUUID)
+	if err != nil {
+		return err
+	}
+
+	if entryID <= 0 || uploadID <= 0 {
+		return fmt.Errorf("invalid entry or upload id")
+	}
+
+	pdir, err := profileDir(profileUUID)
+	if err != nil {
+		return err
+	}
+
+	db, err := OpenProfileDB(pdir)
+	if err != nil {
+		return fmt.Errorf("open profile db: %w", err)
+	}
+	defer db.Close()
+
+	upload, err := getUploadFromDB(db, entryID, uploadID)
+	if err != nil {
+		return err
+	}
+
+	encryptedPath, err := encryptedProfileUploadPath(
+		profileUUID,
+		upload.Hash,
+		upload.ID,
+	)
+	if err != nil {
+		return err
+	}
+
+	// Remove the physical file first. Missing files are tolerated so users can
+	// still clean up stale database records.
+	if err := os.Remove(encryptedPath); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("delete encrypted upload: %w", err)
+	}
+
+	result, err := db.Exec(`
+		DELETE FROM uploads
+		WHERE id = ?
+		  AND entry_id = ?
+	`, uploadID, entryID)
+	if err != nil {
+		return fmt.Errorf("delete upload metadata: %w", err)
+	}
+
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("read deleted row count: %w", err)
+	}
+	if affected == 0 {
+		return fmt.Errorf("upload not found")
+	}
+
+	return nil
 }
