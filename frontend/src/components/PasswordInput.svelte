@@ -1,4 +1,6 @@
 <script lang='ts'>
+  import { autofocus } from "../utils/helpers";
+
   type Props = {
     id: string;
     value: string;
@@ -20,6 +22,7 @@
 
 <div class='password-input-wrapper'>
   <input
+    {@attach autofocus}
     {id}
     bind:value
     type={showPassword ? 'text' : 'password'}

@@ -22,6 +22,14 @@ export function DeleteProfile(arg1, arg2) {
   return window['go']['main']['App']['DeleteProfile'](arg1, arg2);
 }
 
+export function DeleteUpload(arg1, arg2, arg3) {
+  return window['go']['main']['App']['DeleteUpload'](arg1, arg2, arg3);
+}
+
+export function DownloadUpload(arg1, arg2, arg3) {
+  return window['go']['main']['App']['DownloadUpload'](arg1, arg2, arg3);
+}
+
 export function FetchElabftwInfo(arg1, arg2) {
   return window['go']['main']['App']['FetchElabftwInfo'](arg1, arg2);
 }

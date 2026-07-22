@@ -12,6 +12,10 @@ export function DeleteEntry(arg1:string,arg2:number):Promise<void>;
 
 export function DeleteProfile(arg1:string,arg2:string):Promise<main.ProfileIndex>;
 
+export function DeleteUpload(arg1:string,arg2:number,arg3:number):Promise<void>;
+
+export function DownloadUpload(arg1:string,arg2:number,arg3:number):Promise<string>;
+
 export function FetchElabftwInfo(arg1:string,arg2:number):Promise<main.ElabftwInfo>;
 
 export function GetEntry(arg1:string,arg2:number):Promise<main.Entry>;
