@@ -23,10 +23,6 @@ import (
 	"os"
 )
 
-// XChaCha20-Poly1305 stores a 24-byte nonce and adds a 16-byte
-// authentication tag to the encrypted upload.
-const maxEncryptedUploadSize int64 = maxUploadSize + 40
-
 // pushUploadToRemoteEntity creates one upload on an eLabFTW experiment or item
 // and returns the ID assigned to the new remote upload.
 func (a *App) pushUploadToRemoteEntity(
@@ -48,21 +44,6 @@ func (a *App) pushUploadToRemoteEntity(
 	)
 	if err != nil {
 		return 0, err
-	}
-
-	// Refuse unexpectedly large encrypted files before reading them into memory.
-	// This is an encrypted-storage bound, not the user-facing plaintext limit.
-	fileInfo, err := os.Stat(encryptedPath)
-	if err != nil {
-		return 0, fmt.Errorf("stat encrypted upload: %w", err)
-	}
-
-	if fileInfo.Size() > maxEncryptedUploadSize {
-		return 0, fmt.Errorf(
-			"encrypted upload too large: %d bytes (max %d)",
-			fileInfo.Size(),
-			maxEncryptedUploadSize,
-		)
 	}
 
 	encryptedContent, err := os.ReadFile(encryptedPath)

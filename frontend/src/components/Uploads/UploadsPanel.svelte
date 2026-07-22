@@ -20,7 +20,6 @@
 
   let uploads = $state<main.StoredUpload[]>([]);
   let loading = $state(false);
-  const maxUploadSizeMb = 100;
   let busyUploadId = $state<number | null>(null); // state when upload is being downloaded or deleted, modal popup
 
   async function refreshUploads(): Promise<void> {
@@ -124,6 +123,13 @@
     return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
   }
 
+  function formatDate(timestamp: string): string {
+    return new Intl.DateTimeFormat(undefined, {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(new Date(timestamp));
+  }
+
   $effect(() => {
     if (entryId) {
       void refreshUploads();
@@ -136,7 +142,6 @@
 <section class='panel mt-2'>
   <div class='border-bottom mb-2'>
     <h3>Uploads</h3>
-    <p class='description'>File size limit: {maxUploadSizeMb} MB</p>
   </div>
 
   {#if loading}
@@ -154,6 +159,9 @@
           <div class='upload-name'>{upload.realName}</div>
           <div class='description'>
             {formatFileSize(upload.filesize)}
+          </div>
+          <div class="description upload-date">
+            Added {formatDate(upload.createdAt)}
           </div>
           <div class='flex gap-03'>
             <button aria-label='Download file' class='btn btn-secondary' type='button' disabled={busyUploadId === upload.id} onclick={() => downloadUpload(upload)}>
