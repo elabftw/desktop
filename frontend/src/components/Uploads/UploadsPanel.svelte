@@ -13,10 +13,11 @@
   type Props = {
     profileUuid: string;
     entryId: number | null;
+    ensureEntrySaved: () => Promise<number | null>;
     onAlert: (alert: AlertState | null) => void;
   };
 
-  let {profileUuid, onAlert, entryId}: Props = $props();
+  let {profileUuid, entryId, ensureEntrySaved, onAlert}: Props = $props();
 
   let uploads = $state<main.StoredUpload[]>([]);
   let loading = $state(false);
@@ -38,16 +39,13 @@
   }
 
   async function importUpload(): Promise<void> {
-    // uploads need to be attached to an entry. Before clicking save, the entry doesn't have an id yet.
-    if (!entryId) {
-      onAlert({type: 'warning', message: 'Save the entry before adding the first upload.'});
-      return;
-    }
+    const uploadEntryId = await ensureEntrySaved();
+    if (!uploadEntryId) return;
 
     try {
       const path = await SelectFile();
       if (!path) return;
-      const upload = await ImportUpload(profileUuid, entryId, path);
+      const upload = await ImportUpload(profileUuid, uploadEntryId, path);
       onAlert({type: 'success', message: `Imported ${upload.realName} ✔`});
       await refreshUploads();
     } catch (e: unknown) {

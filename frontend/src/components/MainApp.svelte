@@ -132,6 +132,12 @@ SPDX-License-Identifier: GPL-3.0-or-later
     }
   }
 
+  // use for Uploads to check the entry Id. Pass it to UploadsPAnel so that we dont need to check and warn
+  async function ensureEntrySaved(): Promise<number | null> {
+    if (!currentEntryId) await saveOrUpdateEntry();
+    return currentEntryId;
+  }
+
   async function deleteEntry(id: number, title: string): Promise<void> {
     alert = null;
     const confirmed = window.confirm(`Delete "${title}"? This cannot be undone.`);
@@ -348,6 +354,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
         <UploadsPanel
           {profileUuid}
           entryId={currentEntryId}
+          {ensureEntrySaved}
           onAlert={(nextAlert) => alert = nextAlert}
         />
       </form>
