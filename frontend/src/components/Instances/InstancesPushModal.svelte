@@ -39,10 +39,19 @@ with "Instance Name" for cross platform data share.
   let selectedInstanceId = $state<number | null>(null);
   let entityType = $state<EntityType>('experiment');
 
-  async function refreshInstances(): Promise<void> {
+  async function refreshInstances(previousIds?: Set<number>): Promise<void> {
     loading = true;
     try {
       instances = await ListElabftwInstances(profileUuid);
+      if (previousIds) {
+        const created = instances.find(instance => !previousIds.has(instance.id));
+        if (created) {
+          selectedInstanceId = created.id;
+          return;
+        }
+      }
+      if (selectedInstanceId !== null && instances.some(instance => instance.id === selectedInstanceId)) return;
+      selectedInstanceId = instances.length === 1 ? instances[0].id : null;
     } catch (e: unknown) {
       onAlert({type: 'error', message: errorMessage(e)});
     } finally {
@@ -51,10 +60,7 @@ with "Instance Name" for cross platform data share.
   }
 
   async function createInstanceFromModal(): Promise<void> {
-    const previousIds = new Set(
-      instances.map(instance => instance.id),
-    );
-
+    const previousIds = new Set(instances.map(instance => instance.id));
     await refreshInstances(previousIds);
     showCreateForm = false;
   }
@@ -101,8 +107,8 @@ with "Instance Name" for cross platform data share.
     <div class='grid gap-1'>
       {#if instances.length === 1}
         <div>
-          <span class='description'>Instance</span>
-          <p>{instances[0].siteUrl}</p>
+          <h1>Instance</h1>
+          <p class='text-white'>{instances[0].siteUrl}</p>
         </div>
       {:else}
         <div>
