@@ -163,10 +163,36 @@ func decodeElabftwJSONResponse(resp *http.Response, target any) error {
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
 		msg := strings.TrimSpace(string(body))
-		if msg == "" {
-			return fmt.Errorf("elabftw returned HTTP %d", resp.StatusCode)
+
+		switch resp.StatusCode {
+		case http.StatusUnauthorized:
+			return fmt.Errorf(
+				"Authentication failed. Please check your API key.",
+			)
+
+		case http.StatusForbidden:
+			return fmt.Errorf(
+				"Access denied. Your API key does not have permission to perform this action.",
+			)
+
+		case http.StatusNotFound:
+			return fmt.Errorf(
+				"The requested eLabFTW endpoint was not found. Please check the instance URL.",
+			)
+
+		case http.StatusBadGateway,
+			http.StatusServiceUnavailable,
+			http.StatusGatewayTimeout:
+			return fmt.Errorf(
+				"The eLabFTW server is currently unavailable. Please try again later.",
+			)
 		}
-		return fmt.Errorf("elabftw returned HTTP %d: %s", resp.StatusCode, msg)
+
+		if msg == "" {
+			return fmt.Errorf("eLabFTW returned HTTP %d", resp.StatusCode)
+		}
+
+		return fmt.Errorf("eLabFTW returned HTTP %d: %s", resp.StatusCode, msg)
 	}
 
 	if target == nil {

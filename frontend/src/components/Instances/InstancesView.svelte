@@ -91,8 +91,14 @@ log new instances, edit existing and delete. You can test the API as well
   async function testInstance(id: number): Promise<void> {
     onAlert({type: 'info', message: 'Testing connection...'});
     try {
-      await FetchElabftwInfo(profileUuid, id);
-      onAlert({type: 'success', message: 'Connection successful ✔'});
+      const info = await FetchElabftwInfo(profileUuid, id);
+      const version = info.raw?.elabftw_version;
+      onAlert({
+        type: 'success',
+        message: version
+          ? `Connected to eLabFTW ${version} ✔`
+          : 'Connected to eLabFTW ✔',
+      });
     } catch (e: unknown) {
       onAlert({type: 'error', message: errorMessage(e)});
     }
