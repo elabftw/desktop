@@ -315,8 +315,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
           <button class='btn btn-secondary' type='button' onclick={openIndex}>← Back</button>
           <div class='flex gap-1'>
               {#each remoteLinks as link (`${link.instanceId}-${link.type}-${link.remoteId}`)}
-                <button type='button' class='btn btn-secondary' onclick={() => openExternalURL(link.url)}>
-                  See {link.type} #{link.remoteId} in eLabFTW
+                <button type='button' class='link-button' onclick={() => openExternalURL(link.url)}>
+                  See {link.type} #{link.remoteId} at {link.siteUrl}
                 </button>
               {/each}
             <button class='btn btn-secondary' type='button' disabled={!currentEntryId}

@@ -155,10 +155,10 @@ log new instances, edit existing and delete. You can test the API as well
     </div>
 
     <div>
-      <label for="instanceApiKey">API key</label>
+      <label for='instanceApiKey'>API key</label>
 
       <PasswordInput
-        id="instanceApiKey"
+        id='instanceApiKey'
         bind:value={instanceApiKey}
         required={!editingInstanceId}
         placeholder={editingInstanceId
