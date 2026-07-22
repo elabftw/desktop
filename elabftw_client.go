@@ -14,6 +14,7 @@ import (
 	"crypto/tls"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -173,18 +174,18 @@ func decodeElabftwJSONResponse(resp *http.Response, target any) error {
 		if err := json.Unmarshal(body, &apiErr); err == nil {
 			// Prefer a detailed description if available.
 			if apiErr.Description != "" {
-				return fmt.Errorf(apiErr.Description)
+				return errors.New(apiErr.Description)
 			}
 
 			if apiErr.Message != "" {
-				return fmt.Errorf(apiErr.Message)
+				return errors.New(apiErr.Message)
 			}
 		}
 
 		// Fallback if the response isn't JSON.
 		msg := strings.TrimSpace(string(body))
 		if msg != "" {
-			return fmt.Errorf(msg)
+			return errors.New(msg)
 		}
 
 		return fmt.Errorf("eLabFTW returned HTTP %d", resp.StatusCode)
