@@ -41,7 +41,6 @@ log new instances, edit existing and delete. You can test the API as well
   let instanceApiKey = $state('');
   let instanceVerifyTls = $state(true);
   let editingInstanceId = $state<number | null>(null);
-  let elabftwInfoOutput = $state('');
 
   async function refreshInstances(): Promise<void> {
     loading = true;
@@ -90,12 +89,10 @@ log new instances, edit existing and delete. You can test the API as well
 
   /* send a GET request to info endpoint and ensure the connection is ok */
   async function testInstance(id: number): Promise<void> {
-    onAlert({type: 'info', message: 'Fetching eLabFTW /info...'});
-    elabftwInfoOutput = '';
+    onAlert({type: 'info', message: 'Testing connection...'});
     try {
-      const info = await FetchElabftwInfo(profileUuid, id);
-      elabftwInfoOutput = JSON.stringify(info.raw, null, 2);
-      onAlert({type: 'success', message: 'Connected to eLabFTW ✔'});
+      await FetchElabftwInfo(profileUuid, id);
+      onAlert({type: 'success', message: 'Connection successful ✔'});
     } catch (e: unknown) {
       onAlert({type: 'error', message: errorMessage(e)});
     }
@@ -210,13 +207,6 @@ log new instances, edit existing and delete. You can test the API as well
           </div>
         </div>
       {/each}
-      <!-- output of the Info GET response -->
-      {#if elabftwInfoOutput}
-        <div class='mt-2'>
-          <h3>eLabFTW /info response</h3>
-          <pre class='panel'>{elabftwInfoOutput}</pre>
-        </div>
-      {/if}
     </div>
   {/if}
 </section>
