@@ -32,6 +32,12 @@ type ElabftwInfo struct {
 	Raw map[string]any `json:"raw"`
 }
 
+type elabftwErrorResponse struct {
+	Code        int    `json:"code"`
+	Message     string `json:"message"`
+	Description string `json:"description"`
+}
+
 func (a *App) loadElabftwClientConfig(profileUUID string, instanceID int64) (*elabftwClientConfig, error) {
 	profileUUID, err := a.requireUnlockedProfile(profileUUID)
 	if err != nil {
@@ -162,37 +168,26 @@ func decodeElabftwJSONResponse(resp *http.Response, target any) error {
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
+
+		var apiErr elabftwErrorResponse
+		if err := json.Unmarshal(body, &apiErr); err == nil {
+			// Prefer a detailed description if available.
+			if apiErr.Description != "" {
+				return fmt.Errorf(apiErr.Description)
+			}
+
+			if apiErr.Message != "" {
+				return fmt.Errorf(apiErr.Message)
+			}
+		}
+
+		// Fallback if the response isn't JSON.
 		msg := strings.TrimSpace(string(body))
-
-		switch resp.StatusCode {
-		case http.StatusUnauthorized:
-			return fmt.Errorf(
-				"Authentication failed. Please check your API key.",
-			)
-
-		case http.StatusForbidden:
-			return fmt.Errorf(
-				"Access denied. Your API key does not have permission to perform this action.",
-			)
-
-		case http.StatusNotFound:
-			return fmt.Errorf(
-				"The requested eLabFTW endpoint was not found. Please check the instance URL.",
-			)
-
-		case http.StatusBadGateway,
-			http.StatusServiceUnavailable,
-			http.StatusGatewayTimeout:
-			return fmt.Errorf(
-				"The eLabFTW server is currently unavailable. Please try again later.",
-			)
+		if msg != "" {
+			return fmt.Errorf(msg)
 		}
 
-		if msg == "" {
-			return fmt.Errorf("eLabFTW returned HTTP %d", resp.StatusCode)
-		}
-
-		return fmt.Errorf("eLabFTW returned HTTP %d: %s", resp.StatusCode, msg)
+		return fmt.Errorf("eLabFTW returned HTTP %d", resp.StatusCode)
 	}
 
 	if target == nil {
