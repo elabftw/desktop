@@ -15,7 +15,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
   type Props = {
     profiles: main.ProfileEntry[];
     activeProfile: string | null;
-    addError: string;
     openAddProfile: () => void;
     selectProfile: (uuid: string, name: string) => void;
     clearProfileSelection: () => void;
@@ -26,7 +25,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
   let {
     profiles,
     activeProfile,
-    addError,
     openAddProfile,
     selectProfile,
     clearProfileSelection,
@@ -86,7 +84,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
           {#if activeProfile === profile.uuid}
             <div class='profile-inline-unlock'>
               <ProfileSelectorUnlockForm
-                {addError}
                 {clearProfileSelection}
                 {unlock}
                 {deleteSelectedProfile}

@@ -16,21 +16,14 @@ It is used in the Instances View page and in the Modal called from the
   import { AddElabftwInstance } from '../../../wailsjs/go/main/App';
   import { errorMessage, preventDefaultSubmit } from '../../utils/helpers';
   import PasswordInput from '../PasswordInput.svelte';
-  import type { AlertState } from '../Alert.svelte';
-
+  import { showAlert } from "../stores/alert.svelte";
   type Props = {
     profileUuid: string;
-    onAlert: (alert: AlertState | null) => void;
     onCreated: () => void | Promise<void>;
     submitLabel?: string;
   };
 
-  let {
-    profileUuid,
-    onAlert,
-    onCreated,
-    submitLabel = 'Add instance',
-  }: Props = $props();
+  let {profileUuid, onCreated, submitLabel = 'Add instance'}: Props = $props();
 
   let siteUrl = $state('');
   let apiKey = $state('');
@@ -43,12 +36,12 @@ It is used in the Instances View page and in the Modal called from the
     }
 
     saving = true;
-    onAlert({type: 'info', message: 'Adding instance...'});
+    showAlert({type: 'info', message: 'Adding instance...'});
 
     try {
       await AddElabftwInstance(profileUuid, siteUrl.trim(), apiKey, verifyTls);
 
-      onAlert({
+      showAlert({
         type: 'success',
         message: 'eLabFTW instance added ✔',
       });
@@ -59,7 +52,7 @@ It is used in the Instances View page and in the Modal called from the
 
       await onCreated();
     } catch (error: unknown) {
-      onAlert({
+      showAlert({
         type: 'error',
         message: errorMessage(error),
       });

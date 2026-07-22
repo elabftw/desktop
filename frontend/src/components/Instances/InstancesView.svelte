@@ -25,15 +25,13 @@ log new instances, edit existing and delete. You can test the API as well
 
   import type { main } from '../../../wailsjs/go/models';
   import { errorMessage, preventDefaultSubmit, openExternalURL } from '../../utils/helpers';
-  import type { AlertState } from '../Alert.svelte';
-
+  import { showAlert } from "../stores/alert.svelte";
   type Props = {
     profileUuid: string;
     onBack: () => void;
-    onAlert: (alert: AlertState | null) => void;
   };
 
-  let {profileUuid, onBack, onAlert}: Props = $props();
+  let {profileUuid, onBack}: Props = $props();
 
   let loading = $state(false);
   let instances = $state<main.ElabftwInstance[]>([]);
@@ -47,7 +45,7 @@ log new instances, edit existing and delete. You can test the API as well
     try {
       instances = await ListElabftwInstances(profileUuid);
     } catch (e: unknown) {
-      onAlert({type: 'error', message: errorMessage(e)});
+      showAlert({type: 'error', message: errorMessage(e)});
     } finally {
       loading = false;
     }
@@ -55,7 +53,7 @@ log new instances, edit existing and delete. You can test the API as well
 
   // save or update an instance
   async function saveInstance(): Promise<void> {
-    onAlert({
+    showAlert({
       type: 'info',
       message: editingInstanceId ? 'Updating instance...' : 'Adding instance...',
     });
@@ -63,16 +61,16 @@ log new instances, edit existing and delete. You can test the API as well
     try {
       if (editingInstanceId) {
         await UpdateElabftwInstance(profileUuid, editingInstanceId, instanceSiteUrl, instanceApiKey, instanceVerifyTls);
-        onAlert({type: 'success', message: 'eLabFTW instance updated ✔'});
+        showAlert({type: 'success', message: 'eLabFTW instance updated ✔'});
       } else {
         await AddElabftwInstance(profileUuid, instanceSiteUrl, instanceApiKey, instanceVerifyTls);
-        onAlert({type: 'success', message: 'eLabFTW instance added ✔'});
+        showAlert({type: 'success', message: 'eLabFTW instance added ✔'});
       }
 
       resetForm();
       await refreshInstances();
     } catch (e: unknown) {
-      onAlert({type: 'error', message: errorMessage(e)});
+      showAlert({type: 'error', message: errorMessage(e)});
     }
   }
 
@@ -83,24 +81,24 @@ log new instances, edit existing and delete. You can test the API as well
       await DeleteElabftwInstance(profileUuid, id);
       await refreshInstances();
     } catch (e: unknown) {
-      onAlert({type: 'error', message: errorMessage(e)});
+      showAlert({type: 'error', message: errorMessage(e)});
     }
   }
 
   /* send a GET request to info endpoint and ensure the connection is ok */
   async function testInstance(id: number): Promise<void> {
-    onAlert({type: 'info', message: 'Testing connection...'});
+    showAlert({type: 'info', message: 'Testing connection...'});
     try {
       const info = await FetchElabftwInfo(profileUuid, id);
       const version = info.raw?.elabftw_version;
-      onAlert({
+      showAlert({
         type: 'success',
         message: version
           ? `Connected to eLabFTW ${version} ✔`
           : 'Connected to eLabFTW ✔',
       });
     } catch (e: unknown) {
-      onAlert({type: 'error', message: errorMessage(e)});
+      showAlert({type: 'error', message: errorMessage(e)});
     }
   }
 
@@ -110,12 +108,12 @@ log new instances, edit existing and delete. You can test the API as well
     instanceSiteUrl = instance.siteUrl;
     instanceApiKey = '';
     instanceVerifyTls = instance.verifyTls;
-    onAlert({type: 'info', message: 'Editing instance. Leave API key empty to keep the current key.'});
+    showAlert({type: 'info', message: 'Editing instance. Leave API key empty to keep the current key.'});
   }
 
   function cancelEditInstance(): void {
     resetForm();
-    onAlert(null);
+    showAlert(null);
   }
 
   function resetForm(): void {

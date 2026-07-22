@@ -8,16 +8,14 @@
   } from '../../../wailsjs/go/main/App';
   import type { main } from '../../../wailsjs/go/models';
   import { errorMessage } from '../../utils/helpers';
-  import type { AlertState } from '../Alert.svelte';
-
+  import { showAlert } from "../stores/alert.svelte";
   type Props = {
     profileUuid: string;
     entryId: number | null;
     ensureEntrySaved: () => Promise<number | null>;
-    onAlert: (alert: AlertState | null) => void;
   };
 
-  let {profileUuid, entryId, ensureEntrySaved, onAlert}: Props = $props();
+  let {profileUuid, entryId, ensureEntrySaved}: Props = $props();
 
   let uploads = $state<main.StoredUpload[]>([]);
   let loading = $state(false);
@@ -32,7 +30,7 @@
     try {
       uploads = await ListEntryUploads(profileUuid, entryId);
     } catch (e: unknown) {
-      onAlert({type: 'error', message: errorMessage(e)});
+      showAlert({type: 'error', message: errorMessage(e)});
     } finally {
       loading = false;
     }
@@ -46,10 +44,10 @@
       const path = await SelectFile();
       if (!path) return;
       const upload = await ImportUpload(profileUuid, uploadEntryId, path);
-      onAlert({type: 'success', message: `Imported ${upload.realName} ✔`});
+      showAlert({type: 'success', message: `Imported ${upload.realName} ✔`});
       await refreshUploads();
     } catch (e: unknown) {
-      onAlert({type: 'error', message: errorMessage(e)});
+      showAlert({type: 'error', message: errorMessage(e)});
     }
   }
 
@@ -68,12 +66,12 @@
       // Empty means the save dialog was cancelled.
       if (!destination) return;
 
-      onAlert({
+      showAlert({
         type: 'success',
         message: `Saved ${upload.realName} ✔`
       });
     } catch (e: unknown) {
-      onAlert({
+      showAlert({
         type: 'error',
         message: errorMessage(e)
       });
@@ -99,12 +97,12 @@
       // Update immediately rather than doing another database read.
       uploads = uploads.filter((item) => item.id !== upload.id);
 
-      onAlert({
+      showAlert({
         type: 'success',
         message: `Deleted ${upload.realName} ✔`
       });
     } catch (e: unknown) {
-      onAlert({
+      showAlert({
         type: 'error',
         message: errorMessage(e)
       });

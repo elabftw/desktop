@@ -18,7 +18,7 @@ with "Instance Name" for cross platform data share.
   import type { main } from '../../../wailsjs/go/models';
   import { errorMessage } from '../../utils/helpers';
   import Modal from '../Modal.svelte';
-  import type { AlertState } from '../Alert.svelte';
+  import { showAlert } from "../stores/alert.svelte";
   import ElabftwInstanceCreateForm from './ElabftwInstanceCreateForm.svelte';
 
   type EntityType = 'experiment' | 'resource';
@@ -26,11 +26,10 @@ with "Instance Name" for cross platform data share.
   type Props = {
     profileUuid: string;
     onClose: () => void;
-    onAlert: (alert: AlertState | null) => void;
     onPush: (instanceId: number, entityType: EntityType) => Promise<void>;
   };
 
-  let {profileUuid, onClose, onAlert, onPush}: Props = $props();
+  let {profileUuid, onClose, onPush}: Props = $props();
 
   let loading = $state(true);
   let pushing = $state(false);
@@ -53,7 +52,7 @@ with "Instance Name" for cross platform data share.
       if (selectedInstanceId !== null && instances.some(instance => instance.id === selectedInstanceId)) return;
       selectedInstanceId = instances.length === 1 ? instances[0].id : null;
     } catch (e: unknown) {
-      onAlert({type: 'error', message: errorMessage(e)});
+      showAlert({type: 'error', message: errorMessage(e)});
     } finally {
       loading = false;
     }
@@ -67,7 +66,7 @@ with "Instance Name" for cross platform data share.
 
   async function confirmPush(): Promise<void> {
     if (selectedInstanceId === null) {
-      onAlert({type: 'error', message: 'Select an eLabFTW instance.'});
+      showAlert({type: 'error', message: 'Select an eLabFTW instance.'});
       return;
     }
     pushing = true;
@@ -97,7 +96,6 @@ with "Instance Name" for cross platform data share.
 
       <ElabftwInstanceCreateForm
         {profileUuid}
-        {onAlert}
         onCreated={createInstanceFromModal}
         submitLabel='Add and continue'
       />
@@ -140,7 +138,6 @@ with "Instance Name" for cross platform data share.
       {#if showCreateForm}
         <ElabftwInstanceCreateForm
           {profileUuid}
-          {onAlert}
           onCreated={createInstanceFromModal}
           submitLabel='Add and select'
         />

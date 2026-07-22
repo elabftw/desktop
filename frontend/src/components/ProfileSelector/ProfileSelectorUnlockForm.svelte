@@ -10,18 +10,15 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 <script lang='ts'>
   import { autofocus, preventDefaultSubmit } from '../../utils/helpers';
-  import Alert from '../Alert.svelte';
   import PasswordInput from "../PasswordInput.svelte";
 
   type Props = {
-    addError: string;
     clearProfileSelection: () => void;
     unlock: (passphrase: string) => void | Promise<void>;
     deleteSelectedProfile: (passphrase: string) => void | Promise<void>;
   };
 
   let {
-    addError,
     clearProfileSelection,
     unlock,
     deleteSelectedProfile
@@ -44,8 +41,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
         placeholder='Enter your passphrase to continue.'
       />
     </div>
-
-    <Alert type='error' message={addError}/>
 
     <div class='flex gap-1 mt-2 justify-end'>
       <button class='btn btn-secondary' type='button' onclick={clearProfileSelection}>

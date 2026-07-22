@@ -24,11 +24,10 @@ SPDX-License-Identifier: GPL-3.0-or-later
   } from '../../wailsjs/go/main/App';
   import type { main } from '../../wailsjs/go/models';
   import { autofocus, errorMessage, openExternalURL, preventDefaultSubmit } from '../utils/helpers';
-  import Alert from './Alert.svelte';
-  import type { AlertState } from './Alert.svelte';
   import InstancesView from './Instances/InstancesView.svelte';
   import InstancesPushModal from './Instances/InstancesPushModal.svelte';
   import MarkdownEditor from "./MarkdownEditor.svelte";
+  import { showAlert } from "./stores/alert.svelte";
   import UploadsPanel from './Uploads/UploadsPanel.svelte';
 
   type Props = {
@@ -46,7 +45,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
   let entries = $state<main.EntrySummary[]>([]);
   let view = $state<View>('index');
   let loading = $state(false);
-  let alert = $state<AlertState | null>(null);
   let currentEntryId = $state<number | null>(null); // if not null, Update entry. else Save
   let pushModalOpen = $state(false);
   let pushMode = $state<'single' | 'all'>('single'); // from View of an entry, push a single entry. From list of entries, push all.
@@ -62,7 +60,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
   }
 
   async function openEntry(id: number): Promise<void> {
-    alert = null;
+    showAlert(null);
     currentEntryId = id;
     try {
       const e: main.Entry = await GetEntry(profileUuid, id);
@@ -72,7 +70,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
       remoteLinks = await ListEntryRemoteLinks(profileUuid, id);
       view = 'editor';
     } catch (e: unknown) {
-      alert = {type: 'error', message: errorMessage(e)};
+      showAlert({type: 'error', message: errorMessage(e)});
     }
   }
 
@@ -82,7 +80,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
       entries = await ListEntries(profileUuid);
     } catch (e: unknown) {
       console.error(e);
-      alert = {type: 'error', message: errorMessage(e)};
+      showAlert({type: 'error', message: errorMessage(e)});
     } finally {
       loading = false;
     }
@@ -90,7 +88,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
   async function openIndex(): Promise<void> {
     await refreshEntries();
-    alert = null;
+    showAlert(null);
     view = 'index';
   }
 
@@ -99,7 +97,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
       await LockProfile();
       onLogout?.();
     } catch (e: unknown) {
-      alert = {type: 'error', message: errorMessage(e)};
+      showAlert({type: 'error', message: errorMessage(e)});
     }
   }
 
@@ -107,28 +105,28 @@ SPDX-License-Identifier: GPL-3.0-or-later
     view = 'editor';
     entryTitle = '';
     entryMainText = '';
-    alert = null;
+    showAlert(null);
     currentEntryId = null;
     remoteLinks = [];
   }
 
   // Save an entry // Update an existing entry
   async function saveOrUpdateEntry(): Promise<void> {
-    alert = {type: 'info', message: currentEntryId ? 'Updating...' : 'Saving...'};
+    showAlert({type: 'info', message: currentEntryId ? 'Updating...' : 'Saving...'});
     try {
       if (currentEntryId) {
         await UpdateEntry(profileUuid, currentEntryId, entryTitle, entryMainText);
         remoteLinks = await ListEntryRemoteLinks(profileUuid, currentEntryId);
-        alert = {type: 'success', message: 'Entry updated ✔'};
+        showAlert({type: 'success', message: 'Entry updated ✔'});
       } else {
         const id = await SaveEntry(profileUuid, entryTitle, entryMainText);
         currentEntryId = id;
-        alert = {type: 'success', message: `Saved with id ${id} ✔`};
+        showAlert({type: 'success', message: `Saved with id ${id} ✔`});
       }
 
       await refreshEntries();
     } catch (e: unknown) {
-      alert = {type: 'error', message: errorMessage(e)};
+      showAlert({type: 'error', message: errorMessage(e)});
     }
   }
 
@@ -139,7 +137,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
   }
 
   async function deleteEntry(id: number, title: string): Promise<void> {
-    alert = null;
+    showAlert(null);
     const confirmed = window.confirm(`Delete "${title}"? This cannot be undone.`);
     if (!confirmed) {
       return;
@@ -148,18 +146,19 @@ SPDX-License-Identifier: GPL-3.0-or-later
       await DeleteEntry(profileUuid, id);
       await refreshEntries();
     } catch (e: unknown) {
-      alert = {type: 'error', message: errorMessage(e)};
+      showAlert({type: 'error', message: errorMessage(e)});
     }
   }
 
   const handleSubmit = preventDefaultSubmit(saveOrUpdateEntry);
 
   onMount(() => {
+    showAlert(null);
     void refreshEntries();
   });
 
   function openInstances(): void {
-    alert = null;
+    showAlert(null);
     view = 'instances';
   }
 
@@ -167,7 +166,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
   function openPushModal(mode: 'single' | 'all', entryId: number | null = null): void {
     pushMode = mode;
     pushEntryId = entryId;
-    alert = null;
+    showAlert(null);
     pushModalOpen = true;
   }
 
@@ -183,10 +182,10 @@ SPDX-License-Identifier: GPL-3.0-or-later
     try {
       if (pushMode === 'all') {
         const results = await PushAllEntriesToElabftw(profileUuid, instanceId, entityType, force);
-        alert = {type: 'success', message: `Pushed ${results.length} entries ✔`};
+        showAlert({type: 'success', message: `Pushed ${results.length} entries ✔`});
       } else {
         if (!pushEntryId) {
-          alert = {type: 'error', message: 'No entry selected.'};
+          showAlert({type: 'error', message: 'No entry selected.'});
           return;
         }
 
@@ -194,10 +193,10 @@ SPDX-License-Identifier: GPL-3.0-or-later
         remoteLinks = await ListEntryRemoteLinks(profileUuid, currentEntryId);
         const warning = result.uploadWarnings?.length ? ` Upload warning: ${result.uploadWarnings.join(' ')}` : '';
 
-        alert = {
+        showAlert({
           type: result.uploadWarnings?.length ? 'warning' : 'success',
           message: `Entry ${result.action} as ${result.type} #${result.remoteId} ✔${warning}`,
-        };
+        });
       }
 
       lastFailedPush = null;
@@ -207,10 +206,10 @@ SPDX-License-Identifier: GPL-3.0-or-later
       // warning if remote data is more recent than desktop
       if (message.includes('was modified after your last sync')) {
         lastFailedPush = { instanceId, entityType };
-        alert = { type: 'warning', message };
+        showAlert({ type: 'warning', message });
       } else {
         lastFailedPush = null;
-        alert = { type: 'error', message };
+        showAlert({ type: 'error', message });
       }
     }
   }
@@ -311,7 +310,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
     <InstancesView
       {profileUuid}
       onBack={openIndex}
-      onAlert={(nextAlert) => alert = nextAlert}
     />
     <!-- VIEW EDITOR MODE -->
   {:else if view === 'editor'}
@@ -355,7 +353,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
           {profileUuid}
           entryId={currentEntryId}
           {ensureEntrySaved}
-          onAlert={(nextAlert) => alert = nextAlert}
         />
       </form>
     </section>
@@ -364,22 +361,17 @@ SPDX-License-Identifier: GPL-3.0-or-later
     <InstancesPushModal
       {profileUuid}
       onClose={closePushModal}
-      onAlert={(nextAlert) => alert = nextAlert}
       onPush={confirmPush}
     />
   {/if}
-  {#if alert}
+  {#if lastFailedPush}
     <div class='flex flex-row-center items-center'>
-      <Alert type={alert.type} message={alert.message}></Alert>
-      <!-- when updating a remote entry that was modified more recently, allow "force pushing" -->
-      {#if lastFailedPush}
-        <div class='flex justify-end mt-1'>
-          <button class='btn btn-danger' type='button'
-                  onclick={() => confirmPush(lastFailedPush.instanceId, lastFailedPush.entityType, true)}>
-            Push anyway
-          </button>
-        </div>
-      {/if}
+      <div class='flex justify-end mt-1'>
+        <button class='btn btn-danger' type='button'
+                onclick={() => confirmPush(lastFailedPush.instanceId, lastFailedPush.entityType, true)}>
+          Push anyway
+        </button>
+      </div>
     </div>
   {/if}
 </div>
