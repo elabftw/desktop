@@ -192,7 +192,7 @@ func writeProfileMetaFile(uuid string, content []byte) (string, error) {
 	return path, nil
 }
 
-func encryptedProfileUploadPath(uuid string, hash string, uploadID int64) (string, error) {
+func encryptedProfileUploadPath(uuid string, hash string) (string, error) {
 	if len(hash) < 3 {
 		return "", fmt.Errorf("hash is too short")
 	}
@@ -207,5 +207,5 @@ func encryptedProfileUploadPath(uuid string, hash string, uploadID int64) (strin
 		return "", fmt.Errorf("mkdir upload hash dir: %w", err)
 	}
 
-	return filepath.Join(dir, fmt.Sprintf("%s-%d", hash, uploadID)), nil
+	return filepath.Join(dir, hash), nil
 }
