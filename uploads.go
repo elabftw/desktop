@@ -103,13 +103,27 @@ func (a *App) ImportUpload(profileUUID string, entryID int64, sourcePath string)
 		return nil, fmt.Errorf("get file id: %w", err)
 	}
 
-	destPath, err := encryptedProfileUploadPath(profileUUID, hash, id)
+	destPath, err := encryptedProfileUploadPath(profileUUID, hash)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := os.WriteFile(destPath, encryptedContent, 0o600); err != nil {
-		return nil, fmt.Errorf("write encrypted file: %w", err)
+	// SHA-only storage means identical content shares one physical file.
+	// If the encrypted file already exists, another upload row already references
+	// the same plaintext content, so there is no need to write another copy.
+	_, err = os.Stat(destPath)
+
+	switch {
+	case err == nil:
+		// File already exists. Keep the existing encrypted copy.
+
+	case errors.Is(err, os.ErrNotExist):
+		if err := os.WriteFile(destPath, encryptedContent, 0o600); err != nil {
+			return nil, fmt.Errorf("write encrypted file: %w", err)
+		}
+
+	default:
+		return nil, fmt.Errorf("stat encrypted file: %w", err)
 	}
 
 	return &StoredUpload{
@@ -281,7 +295,6 @@ func (a *App) DownloadUpload(
 	encryptedPath, err := encryptedProfileUploadPath(
 		profileUUID,
 		upload.Hash,
-		upload.ID,
 	)
 	if err != nil {
 		return "", err
@@ -357,7 +370,6 @@ func (a *App) DeleteUpload(
 	encryptedPath, err := encryptedProfileUploadPath(
 		profileUUID,
 		upload.Hash,
-		upload.ID,
 	)
 	if err != nil {
 		return err
