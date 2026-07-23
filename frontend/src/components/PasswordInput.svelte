@@ -1,12 +1,11 @@
 <script lang='ts'>
-  import { autofocus } from "../utils/helpers";
-
   type Props = {
     id: string;
     value: string;
     placeholder?: string;
     required?: boolean;
     class?: string;
+    autofocus?: boolean;
   };
 
   let {
@@ -15,6 +14,7 @@
     placeholder = '',
     required = false,
     class: className = '',
+    autofocus = false,
   }: Props = $props();
 
   let showPassword = $state(false);
@@ -22,12 +22,12 @@
 
 <div class='password-input-wrapper'>
   <input
-    {@attach autofocus}
     {id}
     bind:value
     type={showPassword ? 'text' : 'password'}
     placeholder={placeholder}
     {required}
+    {autofocus}
     class={`input password-input ${className}`}
   />
 

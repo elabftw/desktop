@@ -34,7 +34,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     <div>
       <label for='unlockPassphrase' class='text-big mt-2'>Passphrase</label>
       <PasswordInput
-        {@attach autofocus}
+        autofocus
         id='unlockPassphrase'
         bind:value={passphrase}
         required

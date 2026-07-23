@@ -335,8 +335,12 @@ func (a *App) DownloadUpload(
 }
 
 // DeleteUpload removes a locally stored upload.
-// This deletes the local encrypted file and local database record. It does not
-// delete an upload that has already been pushed to an eLabFTW instance.
+//
+// Each upload record belongs to one entry
+// The encrypted file is stored by its SHA-256 hash and may therefore be
+// shared by multiple upload records
+// The physical file is removed only after the final database reference to that
+// hash has been deleted.
 func (a *App) DeleteUpload(
 	profileUUID string,
 	entryID int64,
@@ -375,13 +379,22 @@ func (a *App) DeleteUpload(
 		return err
 	}
 
-	// Remove the physical file first. Missing files are tolerated so users can
-	// still clean up stale database records.
-	if err := os.Remove(encryptedPath); err != nil && !errors.Is(err, os.ErrNotExist) {
-		return fmt.Errorf("delete encrypted upload: %w", err)
+	tx, err := db.Begin()
+	if err != nil {
+		return fmt.Errorf("begin delete upload transaction: %w", err)
 	}
 
-	result, err := db.Exec(`
+	// Roll back the transaction if we exit before committing it
+	committed := false
+
+	defer func() {
+		if !committed {
+			_ = tx.Rollback()
+		}
+	}()
+
+	// Remove the upload from the database
+	result, err := tx.Exec(`
 		DELETE FROM uploads
 		WHERE id = ?
 		  AND entry_id = ?
@@ -390,12 +403,42 @@ func (a *App) DeleteUpload(
 		return fmt.Errorf("delete upload metadata: %w", err)
 	}
 
+	// Ensure the upload actually existed
 	affected, err := result.RowsAffected()
 	if err != nil {
 		return fmt.Errorf("read deleted row count: %w", err)
 	}
+
 	if affected == 0 {
 		return fmt.Errorf("upload not found")
+	}
+
+	// Check whether another upload still references the same SHA-256 file
+	var remainingReferences int
+
+	err = tx.QueryRow(`
+		SELECT COUNT(*)
+		FROM uploads
+		WHERE hash = ?
+		  AND hash_algorithm = ?
+	`, upload.Hash, upload.HashAlgorithm).Scan(&remainingReferences)
+	if err != nil {
+		return fmt.Errorf("count remaining upload references: %w", err)
+	}
+
+	// save the database changes
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit upload deletion: %w", err)
+	}
+
+	committed = true
+
+	// Delete the en crypted file only if no uploads still reference it.
+	if remainingReferences == 0 {
+		if err := os.Remove(encryptedPath); err != nil &&
+			!errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("delete encrypted upload: %w", err)
+		}
 	}
 
 	return nil
