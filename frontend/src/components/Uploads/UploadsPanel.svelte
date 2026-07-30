@@ -66,15 +66,9 @@
       // Empty means the save dialog was cancelled.
       if (!destination) return;
 
-      showAlert({
-        type: 'success',
-        message: `Saved ${upload.realName} ✔`
-      });
+      showAlert({type: 'success', message: `Saved ${upload.realName} ✔`});
     } catch (e: unknown) {
-      showAlert({
-        type: 'error',
-        message: errorMessage(e)
-      });
+      showAlert({type: 'error', message: errorMessage(e)});
     } finally {
       busyUploadId = null;
     }
@@ -97,15 +91,9 @@
       // Update immediately rather than doing another database read.
       uploads = uploads.filter((item) => item.id !== upload.id);
 
-      showAlert({
-        type: 'success',
-        message: `Deleted ${upload.realName} ✔`
-      });
+      showAlert({type: 'success', message: `Deleted ${upload.realName} ✔`});
     } catch (e: unknown) {
-      showAlert({
-        type: 'error',
-        message: errorMessage(e)
-      });
+      showAlert({type: 'error', message: errorMessage(e)});
     } finally {
       busyUploadId = null;
     }

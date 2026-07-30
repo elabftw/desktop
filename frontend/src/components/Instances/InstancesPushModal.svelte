@@ -145,7 +145,6 @@ with "Instance Name" for cross platform data share.
 
       <div>
         <label for='push-entity-type'>Remote type</label>
-
         <select id='push-entity-type' class='input' bind:value={entityType}>
           <option value='experiment'>Experiment</option>
           <option value='resource'>Resource</option>
@@ -168,12 +167,7 @@ with "Instance Name" for cross platform data share.
       <button
         class='btn btn-primary'
         type='button'
-        disabled={
-          loading ||
-          pushing ||
-          selectedInstanceId === null ||
-          showCreateForm
-        }
+        disabled={loading || pushing ||selectedInstanceId === null || showCreateForm}
         onclick={confirmPush}
       >
         {pushing ? 'Pushing...' : 'Push'}

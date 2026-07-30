@@ -14,12 +14,11 @@ SPDX-License-Identifier: GPL-3.0-or-later
   import PasswordInput from "../PasswordInput.svelte";
 
   type Props = {
-    addError: string;
     closeAddProfile: () => void;
     confirmAddProfile: (name: string, passphrase: string) => void | Promise<void>;
   };
 
-  let {addError, closeAddProfile, confirmAddProfile}: Props = $props();
+  let {closeAddProfile, confirmAddProfile}: Props = $props();
 
   let name = $state('');
   let passphrase = $state('');
@@ -53,8 +52,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
         placeholder='Passphrase'
       />
     </div>
-
-    <Alert type='error' message={addError}/>
 
     <div class='flex gap-1 mt-2 justify-end'>
       <button type='button' class='btn btn-secondary' onclick={closeAddProfile}>

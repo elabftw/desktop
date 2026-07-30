@@ -17,6 +17,7 @@ It is used in the Instances View page and in the Modal called from the
   import { errorMessage, preventDefaultSubmit } from '../../utils/helpers';
   import PasswordInput from '../PasswordInput.svelte';
   import { showAlert } from "../stores/alert.svelte";
+
   type Props = {
     profileUuid: string;
     onCreated: () => void | Promise<void>;
@@ -31,9 +32,7 @@ It is used in the Instances View page and in the Modal called from the
   let saving = $state(false);
 
   async function createInstance(): Promise<void> {
-    if (saving) {
-      return;
-    }
+    if (saving) return;
 
     saving = true;
     showAlert({type: 'info', message: 'Adding instance...'});
@@ -41,10 +40,7 @@ It is used in the Instances View page and in the Modal called from the
     try {
       await AddElabftwInstance(profileUuid, siteUrl.trim(), apiKey, verifyTls);
 
-      showAlert({
-        type: 'success',
-        message: 'eLabFTW instance added ✔',
-      });
+      showAlert({type: 'success', message: 'eLabFTW instance added ✔'});
 
       siteUrl = '';
       apiKey = '';
@@ -52,10 +48,7 @@ It is used in the Instances View page and in the Modal called from the
 
       await onCreated();
     } catch (error: unknown) {
-      showAlert({
-        type: 'error',
-        message: errorMessage(error),
-      });
+      showAlert({type: 'error', message: errorMessage(error)});
     } finally {
       saving = false;
     }
