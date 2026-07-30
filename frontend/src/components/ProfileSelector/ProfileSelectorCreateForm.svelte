@@ -10,7 +10,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 <script lang='ts'>
   import { autofocus, preventDefaultSubmit } from '../../utils/helpers';
-  import Alert from '../Alert.svelte';
   import PasswordInput from "../PasswordInput.svelte";
 
   type Props = {
