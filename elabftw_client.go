@@ -106,7 +106,6 @@ func elabftwHTTPClient(verifyTLS bool, upload bool) *http.Client {
 		},
 	}
 
-
 	// regular API requests should fail quickly if the server is unreachable
 	// but Uploads get a much longer timeout because the deadline covers the entire
 	// request, including sending the file, which may take several minutes on
@@ -153,7 +152,7 @@ func (a *App) elabftwRequest(
 		}
 	}
 
-    client := elabftwHTTPClient(cfg.VerifyTLS, upload)
+	client := elabftwHTTPClient(cfg.VerifyTLS, upload)
 
 	resp, err := client.Do(req)
 	if err != nil {
