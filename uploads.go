@@ -54,12 +54,12 @@ func (a *App) ImportUpload(profileUUID string, entryID int64, sourcePath string)
 
 	sourcePath = strings.TrimSpace(sourcePath)
 	if sourcePath == "" {
-		return nil, fmt.Errorf("source path is empty")
+		return nil, fmt.Errorf("Source path is empty")
 	}
 
 	content, err := os.ReadFile(sourcePath)
 	if err != nil {
-		return nil, fmt.Errorf("read source file: %w", err)
+		return nil, fmt.Errorf("Read source file: %w", err)
 	}
 
 	hash := fileSHA256(content)
@@ -70,6 +70,28 @@ func (a *App) ImportUpload(profileUUID string, entryID int64, sourcePath string)
 	encryptedContent, err := encryptRawBytes(a.activeKey, content)
 	if err != nil {
 		return nil, fmt.Errorf("encrypt file: %w", err)
+	}
+
+	destPath, err := encryptedProfileUploadPath(profileUUID, hash)
+	if err != nil {
+		return nil, err
+	}
+
+	// SHA-only storage means identical content shares one physical file.
+	// If the encrypted file already exists, another upload row already references
+	// the same plaintext content, so there is no need to write another copy
+	_, err = os.Stat(destPath)
+	switch {
+	case err == nil:
+		// File already exists. Keep the existing encrypted copy.
+
+	case errors.Is(err, os.ErrNotExist):
+		if err := os.WriteFile(destPath, encryptedContent, 0o600); err != nil {
+			return nil, fmt.Errorf("write encrypted file: %w", err)
+		}
+
+	default:
+		return nil, fmt.Errorf("stat encrypted file: %w", err)
 	}
 
 	pdir, err := profileDir(profileUUID)
@@ -101,29 +123,6 @@ func (a *App) ImportUpload(profileUUID string, entryID int64, sourcePath string)
 	id, err := res.LastInsertId()
 	if err != nil {
 		return nil, fmt.Errorf("get file id: %w", err)
-	}
-
-	destPath, err := encryptedProfileUploadPath(profileUUID, hash)
-	if err != nil {
-		return nil, err
-	}
-
-	// SHA-only storage means identical content shares one physical file.
-	// If the encrypted file already exists, another upload row already references
-	// the same plaintext content, so there is no need to write another copy.
-	_, err = os.Stat(destPath)
-
-	switch {
-	case err == nil:
-		// File already exists. Keep the existing encrypted copy.
-
-	case errors.Is(err, os.ErrNotExist):
-		if err := os.WriteFile(destPath, encryptedContent, 0o600); err != nil {
-			return nil, fmt.Errorf("write encrypted file: %w", err)
-		}
-
-	default:
-		return nil, fmt.Errorf("stat encrypted file: %w", err)
 	}
 
 	return &StoredUpload{
