@@ -154,6 +154,7 @@ func (a *App) patchExistingRemoteEntry(
 		http.MethodGet,
 		fmt.Sprintf("%s/%d", basePath, remoteID),
 		nil,
+		false,
 	)
 	if err != nil {
 		return nil, err
@@ -189,6 +190,7 @@ func (a *App) patchExistingRemoteEntry(
 		http.MethodPatch,
 		fmt.Sprintf("%s/%d", basePath, remoteID),
 		reqBody,
+		false,
 	)
 	if err != nil {
 		return nil, err
@@ -238,6 +240,7 @@ func (a *App) postNewRemoteEntry(
 		http.MethodPost,
 		basePath,
 		reqBody,
+		false,
 	)
 	if err != nil {
 		return nil, err
@@ -296,6 +299,7 @@ func (a *App) fetchRemoteModifiedAt(profileUUID string, instanceID int64, basePa
 		http.MethodGet,
 		fmt.Sprintf("%s/%d", basePath, remoteID),
 		nil,
+		false,
 	)
 	if err != nil {
 		return time.Time{}, err

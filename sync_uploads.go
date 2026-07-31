@@ -112,6 +112,7 @@ func (a *App) pushUploadToRemoteEntity(
 		http.MethodPost,
 		path,
 		pipeReader,
+		true,
 		map[string]string{
 			"Content-Type": contentType,
 		},

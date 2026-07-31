@@ -98,7 +98,7 @@ func (a *App) loadElabftwClientConfig(profileUUID string, instanceID int64) (*el
 	return &cfg, nil
 }
 
-func elabftwHTTPClient(verifyTLS bool) *http.Client {
+func elabftwHTTPClient(verifyTLS bool, upload bool) *http.Client {
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{
 			// Only false when the user explicitly disables TLS verification.
@@ -106,10 +106,17 @@ func elabftwHTTPClient(verifyTLS bool) *http.Client {
 		},
 	}
 
-	// timeout prevents the desktop app from hanging forever if the server is unreachable
-	// Transport carries our TLS configuration, including whether to verify certificates
+
+	// regular API requests should fail quickly if the server is unreachable
+	// but Uploads get a much longer timeout because the deadline covers the entire
+	// request, including sending the file, which may take several minutes on
+	// slower connections
+	timeout := 30 * time.Second // 30 sec
+	if upload {
+		timeout = 10 * time.Minute // 10 mins
+	}
 	return &http.Client{
-		Timeout:   30 * time.Second,
+		Timeout:   timeout,
 		Transport: transport,
 	}
 }
@@ -120,6 +127,7 @@ func (a *App) elabftwRequest(
 	method string,
 	path string,
 	body io.Reader,
+	upload bool,
 	headers ...map[string]string,
 ) (*http.Response, error) {
 	cfg, err := a.loadElabftwClientConfig(profileUUID, instanceID)
@@ -145,7 +153,7 @@ func (a *App) elabftwRequest(
 		}
 	}
 
-	client := elabftwHTTPClient(cfg.VerifyTLS)
+    client := elabftwHTTPClient(cfg.VerifyTLS, upload)
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -212,7 +220,7 @@ func jsonBody(v any) (*bytes.Reader, error) {
 
 /* ---------- INFO ENDPOINT ---------- */
 func (a *App) FetchElabftwInfo(profileUUID string, instanceID int64) (*ElabftwInfo, error) {
-	resp, err := a.elabftwRequest(profileUUID, instanceID, http.MethodGet, "/info", nil)
+	resp, err := a.elabftwRequest(profileUUID, instanceID, http.MethodGet, "/info", nil, false)
 	if err != nil {
 		return nil, err
 	}
