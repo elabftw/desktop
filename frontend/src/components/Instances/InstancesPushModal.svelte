@@ -25,11 +25,21 @@ with "Instance Name" for cross platform data share.
 
   type Props = {
     profileUuid: string;
+    force?: boolean;
     onClose: () => void;
-    onPush: (instanceId: number, entityType: EntityType) => Promise<void>;
+    onPush: (
+      instanceId: number,
+      entityType: EntityType,
+      force?: boolean,
+    ) => Promise<void>;
   };
 
-  let {profileUuid, onClose, onPush}: Props = $props();
+  let {
+    profileUuid,
+    force = false,
+    onClose,
+    onPush,
+  }: Props = $props();
 
   let loading = $state(true);
   let pushing = $state(false);
@@ -72,7 +82,7 @@ with "Instance Name" for cross platform data share.
     pushing = true;
 
     try {
-      await onPush(selectedInstanceId, entityType);
+      await onPush(selectedInstanceId, entityType, force);
     } finally {
       pushing = false;
     }
@@ -152,12 +162,12 @@ with "Instance Name" for cross platform data share.
 
     {#if instances.length > 0}
       <button
-        class='btn btn-primary'
+        class={`btn ${force ? 'btn-danger' : 'btn-primary'}`}
         type='button'
-        disabled={loading || pushing ||selectedInstanceId === null || showCreateForm}
+        disabled={loading || pushing || selectedInstanceId === null || showCreateForm}
         onclick={confirmPush}
       >
-        {pushing ? 'Pushing...' : 'Push'}
+        {pushing ? 'Pushing...' : force ? 'Push anyway' : 'Push'}
       </button>
     {/if}
   </svelte:fragment>

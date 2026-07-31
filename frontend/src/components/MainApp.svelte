@@ -172,6 +172,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
   function closePushModal(): void {
     pushModalOpen = false;
+    lastFailedPush = null;
   }
 
   async function confirmPush(
@@ -360,18 +361,9 @@ SPDX-License-Identifier: GPL-3.0-or-later
   {#if pushModalOpen}
     <InstancesPushModal
       {profileUuid}
+      force={lastFailedPush !== null}
       onClose={closePushModal}
       onPush={confirmPush}
     />
-  {/if}
-  {#if lastFailedPush}
-    <div class='flex flex-row-center items-center'>
-      <div class='flex justify-end mt-1'>
-        <button class='btn btn-danger' type='button'
-                onclick={() => confirmPush(lastFailedPush.instanceId, lastFailedPush.entityType, true)}>
-          Push anyway
-        </button>
-      </div>
-    </div>
   {/if}
 </div>
