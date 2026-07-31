@@ -436,7 +436,7 @@ func parseSyncTime(value string, label string) (time.Time, error) {
 
 func remoteModifiedConflictMessage(entityType string, remoteID int64) string {
 	return fmt.Sprintf(
-		"Remote %s #%d was modified after your last sync. Pull or review the online version before pushing.",
+		"Remote %s #%d was modified after your last sync. Please review the online version before overwriting with the 'Push anyway' button.",
 		entityType,
 		remoteID,
 	)

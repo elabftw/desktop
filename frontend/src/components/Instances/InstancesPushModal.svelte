@@ -122,19 +122,6 @@ with "Instance Name" for cross platform data share.
         </div>
       {/if}
 
-      <button
-        type='button'
-        class='link-button'
-        aria-expanded={showCreateForm}
-        onclick={() => {
-          showCreateForm = !showCreateForm;
-        }}
-      >
-        {showCreateForm
-          ? 'Cancel adding instance'
-          : 'Add another instance'}
-      </button>
-
       {#if showCreateForm}
         <ElabftwInstanceCreateForm
           {profileUuid}
