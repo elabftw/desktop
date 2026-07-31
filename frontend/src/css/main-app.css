@@ -9,7 +9,7 @@
 
 .icon, .icon-sm, .profile-avatar {
   background: var(--blue-glow-soft);
-  border-radius: 999px;
+  border-radius: 10px;
   color: var(--orange);
   display: grid;
   font-size: 1.35rem;
@@ -26,6 +26,7 @@
   background: var(--orange);
   color: var(--orange-dark);
   font-weight: 900;
+  transform: scale(.7) translateX(-12px);
 }
 
 .entry-card {

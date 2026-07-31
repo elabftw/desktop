@@ -50,6 +50,28 @@ export namespace main {
 	        this.modifiedAt = source["modifiedAt"];
 	    }
 	}
+	export class EntryRemoteLink {
+	    localId: number;
+	    instanceId: number;
+	    siteUrl: string;
+	    remoteId: number;
+	    type: string;
+	    url: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new EntryRemoteLink(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.localId = source["localId"];
+	        this.instanceId = source["instanceId"];
+	        this.siteUrl = source["siteUrl"];
+	        this.remoteId = source["remoteId"];
+	        this.type = source["type"];
+	        this.url = source["url"];
+	    }
+	}
 	export class EntrySummary {
 	    id: number;
 	    title: string;
@@ -125,6 +147,7 @@ export namespace main {
 	    remoteId: number;
 	    action: string;
 	    type: string;
+	    uploadWarnings?: string[];
 	
 	    static createFrom(source: any = {}) {
 	        return new PushEntryResult(source);
@@ -136,6 +159,35 @@ export namespace main {
 	        this.remoteId = source["remoteId"];
 	        this.action = source["action"];
 	        this.type = source["type"];
+	        this.uploadWarnings = source["uploadWarnings"];
+	    }
+	}
+	export class StoredUpload {
+	    id: number;
+	    entryId: number;
+	    realName: string;
+	    hash: string;
+	    hashAlgorithm: string;
+	    filesize: number;
+	    state: string;
+	    createdAt: string;
+	    modifiedAt: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new StoredUpload(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.entryId = source["entryId"];
+	        this.realName = source["realName"];
+	        this.hash = source["hash"];
+	        this.hashAlgorithm = source["hashAlgorithm"];
+	        this.filesize = source["filesize"];
+	        this.state = source["state"];
+	        this.createdAt = source["createdAt"];
+	        this.modifiedAt = source["modifiedAt"];
 	    }
 	}
 

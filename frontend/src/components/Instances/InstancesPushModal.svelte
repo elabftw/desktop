@@ -18,42 +18,74 @@ with "Instance Name" for cross platform data share.
   import type { main } from '../../../wailsjs/go/models';
   import { errorMessage } from '../../utils/helpers';
   import Modal from '../Modal.svelte';
-  import type { AlertState } from '../Alert.svelte';
+  import { showAlert } from "../stores/alert.svelte";
+  import ElabftwInstanceCreateForm from './ElabftwInstanceCreateForm.svelte';
 
   type EntityType = 'experiment' | 'resource';
 
   type Props = {
     profileUuid: string;
+    force?: boolean;
     onClose: () => void;
-    onAlert: (alert: AlertState | null) => void;
-    onPush: (instanceId: number, entityType: EntityType) => Promise<void>;
+    onPush: (
+      instanceId: number,
+      entityType: EntityType,
+      force?: boolean,
+    ) => Promise<void>;
   };
 
-  let {profileUuid, onClose, onAlert, onPush}: Props = $props();
+  let {
+    profileUuid,
+    force = false,
+    onClose,
+    onPush,
+  }: Props = $props();
 
-  let loading = $state(false);
+  let loading = $state(true);
+  let pushing = $state(false);
+  let showCreateForm = $state(false);
   let instances = $state<main.ElabftwInstance[]>([]);
   let selectedInstanceId = $state<number | null>(null);
   let entityType = $state<EntityType>('experiment');
 
-  async function refreshInstances(): Promise<void> {
+  async function refreshInstances(previousIds?: Set<number>): Promise<void> {
     loading = true;
     try {
       instances = await ListElabftwInstances(profileUuid);
+      if (previousIds) {
+        const created = instances.find(instance => !previousIds.has(instance.id));
+        if (created) {
+          selectedInstanceId = created.id;
+          return;
+        }
+      }
+      if (selectedInstanceId !== null && instances.some(instance => instance.id === selectedInstanceId)) return;
       selectedInstanceId = instances.length === 1 ? instances[0].id : null;
     } catch (e: unknown) {
-      onAlert({type: 'error', message: errorMessage(e)});
+      showAlert({type: 'error', message: errorMessage(e)});
     } finally {
       loading = false;
     }
   }
 
+  async function createInstanceFromModal(): Promise<void> {
+    const previousIds = new Set(instances.map(instance => instance.id));
+    await refreshInstances(previousIds);
+    showCreateForm = false;
+  }
+
   async function confirmPush(): Promise<void> {
-    if (!selectedInstanceId) {
-      onAlert({type: 'error', message: 'Select an eLabFTW instance.'});
+    if (selectedInstanceId === null) {
+      showAlert({type: 'error', message: 'Select an eLabFTW instance.'});
       return;
     }
-    await onPush(selectedInstanceId, entityType);
+    pushing = true;
+
+    try {
+      await onPush(selectedInstanceId, entityType, force);
+    } finally {
+      pushing = false;
+    }
   }
 
   $effect(() => void refreshInstances());
@@ -61,35 +93,82 @@ with "Instance Name" for cross platform data share.
 
 <Modal title='Push to eLabFTW' onClose={onClose}>
   {#if loading}
-    <p class='description'>Loading eLabFTW instances...</p>
-  {:else if instances.length > 1}
-    <!-- Many instances: Select between the options -->
-    <label for='pushInstance'>Instance</label>
-    <select id='pushInstance' class='input' bind:value={selectedInstanceId}>
-      <option value={null}>Select instance...</option>
-      {#each instances as instance (instance.id)}
-        <option value={instance.id}>{instance.siteUrl}</option>
-      {/each}
-    </select>
-  {:else if instances.length === 1}
-    <!-- One instance: select it by default and show url -->
-    <p class='description'>Instance: {instances[0].siteUrl}</p>
+    <p class='description'>
+      Loading eLabFTW instances...
+    </p>
+
+  {:else if instances.length === 0}
+    <div class='grid gap-1'>
+      <p class='description'>
+        No eLabFTW instance is configured.
+        Add one to continue.
+      </p>
+
+      <ElabftwInstanceCreateForm
+        {profileUuid}
+        onCreated={createInstanceFromModal}
+        submitLabel='Add and continue'
+      />
+    </div>
+
   {:else}
-    <p class='description'>No eLabFTW instances configured.</p>
+    <div class='grid gap-1'>
+      {#if instances.length === 1}
+        <div>
+          <h1>Instance</h1>
+          <p class='text-white'>{instances[0].siteUrl}</p>
+        </div>
+      {:else}
+        <div>
+          <label for='push-instance'>Instance</label>
+          <select id='push-instance' class='input' bind:value={selectedInstanceId}>
+            <option value={null}>Select instance...</option>
+            {#each instances as instance (instance.id)}
+              <option value={instance.id}>
+                {instance.siteUrl}
+              </option>
+            {/each}
+          </select>
+        </div>
+      {/if}
+
+      {#if showCreateForm}
+        <ElabftwInstanceCreateForm
+          {profileUuid}
+          onCreated={createInstanceFromModal}
+          submitLabel='Add and select'
+        />
+      {/if}
+
+      <div>
+        <label for='push-entity-type'>Remote type</label>
+        <select id='push-entity-type' class='input' bind:value={entityType}>
+          <option value='experiment'>Experiment</option>
+          <option value='resource'>Resource</option>
+        </select>
+      </div>
+    </div>
   {/if}
 
-  <!-- Choose entity type: currently, Experiment/Resource. See later if we want templates as well? TODO -->
-  <label for='pushEntityType' class='mt-2'>Remote type</label>
-  <select id='pushEntityType' class='input' bind:value={entityType}>
-    <option value='experiment'>Experiment</option>
-    <option value='resource'>Resource</option>
-  </select>
-
   <svelte:fragment slot='actions'>
-    <button class='btn btn-secondary' type='button' onclick={onClose}>Cancel</button>
-    <button class='btn btn-primary' type='button' disabled={loading || instances.length === 0} onclick={confirmPush}>
-      Push
+    <button
+      class='btn btn-secondary'
+      type='button'
+      disabled={pushing}
+      onclick={onClose}
+    >
+      Cancel
     </button>
+
+    {#if instances.length > 0}
+      <button
+        class={`btn ${force ? 'btn-danger' : 'btn-primary'}`}
+        type='button'
+        disabled={loading || pushing || selectedInstanceId === null || showCreateForm}
+        onclick={confirmPush}
+      >
+        {pushing ? 'Pushing...' : force ? 'Push anyway' : 'Push'}
+      </button>
+    {/if}
   </svelte:fragment>
 </Modal>
-

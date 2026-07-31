@@ -6,9 +6,7 @@
  * @copyright 2026 Nicolas CARPi
  * @see https://www.elabftw.net Official website
  * SPDX-License-Identifier: GPL-3.0-or-later
- */
-
-/*
+ *
  * This file handles the PUSHing of entries to configured eLabFTW instance
  */
 
@@ -25,10 +23,11 @@ import (
 )
 
 type PushEntryResult struct {
-	LocalID  int64  `json:"localId"`
-	RemoteID int64  `json:"remoteId"`
-	Action   string `json:"action"` // posted or patched
-	Type     string `json:"type"`
+	LocalID        int64    `json:"localId"`
+	RemoteID       int64    `json:"remoteId"`
+	Action         string   `json:"action"` // posted or patched
+	Type           string   `json:"type"`
+	UploadWarnings []string `json:"uploadWarnings,omitempty"` // case: the entry returns 200 but the uploads error
 }
 
 func elabftwEntityPath(entityType string) (string, error) {
@@ -155,6 +154,7 @@ func (a *App) patchExistingRemoteEntry(
 		http.MethodGet,
 		fmt.Sprintf("%s/%d", basePath, remoteID),
 		nil,
+		false,
 	)
 	if err != nil {
 		return nil, err
@@ -190,6 +190,7 @@ func (a *App) patchExistingRemoteEntry(
 		http.MethodPatch,
 		fmt.Sprintf("%s/%d", basePath, remoteID),
 		reqBody,
+		false,
 	)
 	if err != nil {
 		return nil, err
@@ -198,6 +199,8 @@ func (a *App) patchExistingRemoteEntry(
 	if err := decodeElabftwJSONResponse(resp, nil); err != nil {
 		return nil, err
 	}
+
+	uploadWarnings := a.pushEntryUploadsToRemoteEntity(profileUUID, db, instanceID, entryID, entityType, remoteID)
 
 	patchedRemoteModifiedAt, err := a.fetchRemoteModifiedAt(profileUUID, instanceID, basePath, remoteID)
 	if err != nil {
@@ -209,10 +212,11 @@ func (a *App) patchExistingRemoteEntry(
 	}
 
 	return &PushEntryResult{
-		LocalID:  entryID,
-		RemoteID: remoteID,
-		Action:   "patched",
-		Type:     entityType,
+		LocalID:        entryID,
+		RemoteID:       remoteID,
+		Action:         "patched",
+		Type:           entityType,
+		UploadWarnings: uploadWarnings,
 	}, nil
 }
 
@@ -236,6 +240,7 @@ func (a *App) postNewRemoteEntry(
 		http.MethodPost,
 		basePath,
 		reqBody,
+		false,
 	)
 	if err != nil {
 		return nil, err
@@ -250,24 +255,38 @@ func (a *App) postNewRemoteEntry(
 		return nil, err
 	}
 
-	createdRemoteModifiedAt, err := a.fetchRemoteModifiedAt(profileUUID, instanceID, basePath, remoteID)
-	if err != nil {
-		return nil, err
-	}
-
 	_, err = db.Exec(`
 		INSERT INTO local2remote (instance, remote_id, local_id, type, modified_at)
 		VALUES (?, ?, ?, ?, ?)
-	`, instanceID, remoteID, entryID, entityType, createdRemoteModifiedAt.Format(time.RFC3339Nano))
+	`, instanceID, remoteID, entryID, entityType, time.Now().UTC().Format(time.RFC3339Nano))
 	if err != nil {
 		return nil, fmt.Errorf("insert local2remote: %w", err)
 	}
 
+	uploadWarnings := a.pushEntryUploadsToRemoteEntity(
+		profileUUID,
+		db,
+		instanceID,
+		entryID,
+		entityType,
+		remoteID,
+	)
+
+	remoteModifiedAt, err := a.fetchRemoteModifiedAt(profileUUID, instanceID, basePath, remoteID)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := updateLocalRemoteModifiedAt(db, instanceID, entryID, entityType, remoteModifiedAt); err != nil {
+		return nil, err
+	}
+
 	return &PushEntryResult{
-		LocalID:  entryID,
-		RemoteID: remoteID,
-		Action:   "posted",
-		Type:     entityType,
+		LocalID:        entryID,
+		RemoteID:       remoteID,
+		Action:         "posted",
+		Type:           entityType,
+		UploadWarnings: uploadWarnings,
 	}, nil
 }
 
@@ -280,6 +299,7 @@ func (a *App) fetchRemoteModifiedAt(profileUUID string, instanceID int64, basePa
 		http.MethodGet,
 		fmt.Sprintf("%s/%d", basePath, remoteID),
 		nil,
+		false,
 	)
 	if err != nil {
 		return time.Time{}, err
@@ -416,8 +436,20 @@ func parseSyncTime(value string, label string) (time.Time, error) {
 
 func remoteModifiedConflictMessage(entityType string, remoteID int64) string {
 	return fmt.Sprintf(
-		"Remote %s #%d was modified after your last sync. Pull or review the online version before pushing.",
+		"Remote %s #%d was modified after your last sync. Please review the online version before overwriting with the 'Push anyway' button.",
 		entityType,
 		remoteID,
 	)
+}
+
+// handle uploads
+func elabftwUploadEntityType(entityType string) (string, error) {
+	switch entityType {
+	case "experiment":
+		return "experiments", nil
+	case "resource":
+		return "items", nil
+	default:
+		return "", fmt.Errorf("Invalid eLabFTW entity type")
+	}
 }

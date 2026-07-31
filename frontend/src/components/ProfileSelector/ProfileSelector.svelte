@@ -17,7 +17,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     DeleteProfile
   } from '../../../wailsjs/go/main/App';
   import type { main } from '../../../wailsjs/go/models';
-  import { errorMessage } from '../../utils/helpers';
+  import { showAlert } from "../stores/alert.svelte";
 
   import ProfileSelectorList from './ProfileSelectorList.svelte';
   import ProfileSelectorCreateForm from './ProfileSelectorCreateForm.svelte';
@@ -31,43 +31,42 @@ SPDX-License-Identifier: GPL-3.0-or-later
   let activeProfile = $state<string | null>(null);
   let activeProfileName = $state<string | null>(null);
   let index = $state<main.ProfileIndex | null>(null);
-  let addError = $state('');
 
   let {onUnlocked}: Props = $props();
 
   async function refreshIndex(): Promise<void> {
-    addError = '';
+    showAlert(null);
 
     try {
       index = await GetProfileIndex();
       profiles = index?.profiles ?? [];
     } catch (e: unknown) {
       profiles = [];
-      addError = errorMessage(e);
+      showAlert({type: 'error', message: String(e)});
     }
   }
 
   function openAddProfile(): void {
-    addError = '';
+    showAlert(null);
     showAddProfile = true;
     activeProfile = null;
   }
 
   function closeAddProfile(): void {
     showAddProfile = false;
-    addError = '';
+    showAlert(null);
   }
 
   async function confirmAddProfile(name: string, passphrase: string): Promise<void> {
     name = name.trim();
 
     if (!name) {
-      addError = 'Please enter a profile name.';
+      showAlert({type: 'error', message: String('Please enter a profile name.')});
       return;
     }
 
     if (!passphrase.trim()) {
-      addError = 'Please enter a passphrase.';
+      showAlert({type: 'error', message: String('Please enter a passphrase.')});
       return;
     }
 
@@ -76,25 +75,25 @@ SPDX-License-Identifier: GPL-3.0-or-later
       await refreshIndex();
       closeAddProfile();
     } catch (e: unknown) {
-      addError = errorMessage(e);
+      showAlert({type: 'error', message: String(e)});
     }
   }
 
   function selectProfile(uuid: string, name: string): void {
     showAddProfile = false;
-    addError = '';
+    showAlert(null);
     activeProfile = uuid;
     activeProfileName = name;
   }
 
   async function deleteSelectedProfile(passphrase: string): Promise<void> {
     if (!activeProfile) {
-      addError = 'Please select a profile to delete.';
+      showAlert({type: 'error', message: String('Please select a profile to delete.')});
       return;
     }
 
     if (!passphrase.trim()) {
-      addError = 'Please enter the profile passphrase before deleting.';
+      showAlert({type: 'error', message: String('Please enter the profile passphrase before deleting.')});
       return;
     }
 
@@ -107,23 +106,23 @@ SPDX-License-Identifier: GPL-3.0-or-later
       clearProfileSelection();
     } catch (e: unknown) {
       console.error('Delete failed:', e);
-      addError = errorMessage(e);
+      showAlert({type: 'error', message: String(e)});
     }
   }
 
   function clearProfileSelection(): void {
     activeProfile = null;
-    addError = '';
+    showAlert(null);
   }
 
   async function unlock(passphrase: string): Promise<void> {
     if (!activeProfile) {
-      addError = 'Please select a profile.';
+      showAlert({type: 'error', message: 'Please select a profile.'});
       return;
     }
 
     if (!passphrase.trim()) {
-      addError = 'Please enter your passphrase.';
+      showAlert({type: 'error', message: 'Please enter your passphrase.'});
       return;
     }
 
@@ -131,7 +130,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
       await UnlockProfile(activeProfile, passphrase);
       onUnlocked?.(activeProfile, activeProfileName);
     } catch (e: unknown) {
-      addError = errorMessage(e);
+      showAlert({type: 'error', message: String(e)});
     }
   }
 
@@ -145,7 +144,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
     <ProfileSelectorList
       {profiles}
       {activeProfile}
-      {addError}
       {openAddProfile}
       {selectProfile}
       {clearProfileSelection}
@@ -156,7 +154,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
   {#if showAddProfile}
     <ProfileSelectorCreateForm
-      {addError}
       {closeAddProfile}
       {confirmAddProfile}
     />

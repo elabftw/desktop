@@ -6,6 +6,9 @@
  * @copyright 2026 Nicolas CARPi
  * @see https://www.elabftw.net Official website
  * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * if new migration versions need to be done, follow schema: if v == 1 { ... set user_version = 2 }
+ * TODO next PR (too much here) see ELN community handling of schemas
  */
 
 package main
@@ -29,6 +32,11 @@ func OpenProfileDB(profileDir string) (*sql.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open sqlite: %w", err)
 	}
+	// SQLite allows only one writer at a time.
+	// Keep a single DB connection per handle to avoid concurrent PRAGMA/migration/write
+	// operations locking the profile database. Happened when tried to add uploads to different entries really fast
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
 
 	// Good defaults for desktop apps
 	if _, err := db.Exec(`PRAGMA foreign_keys = ON;`); err != nil {
@@ -74,8 +82,7 @@ PRAGMA user_version = 1;
 		v = 1
 	}
 
-	// Future migrations would go here:
-	// if v == 1 { ... set user_version = 2 }
+	// new migrations to add configurable elabftw instances:
 	if v == 1 {
 		_, err := db.Exec(`
 CREATE TABLE IF NOT EXISTS elabftw_instances (
@@ -115,5 +122,82 @@ PRAGMA user_version = 2;
 		v = 2
 	}
 
+	// new migration to add uploads
+	if v == 2 {
+		_, err := db.Exec(`
+    CREATE TABLE IF NOT EXISTS uploads (
+    	id INTEGER PRIMARY KEY AUTOINCREMENT,
+    	entry_id INTEGER NOT NULL,
+    	real_name TEXT NOT NULL,
+    	hash TEXT NOT NULL,
+    	hash_algorithm TEXT NOT NULL DEFAULT 'sha256',
+    	filesize INTEGER NOT NULL,
+    	state TEXT NOT NULL DEFAULT 'local',
+    	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+    	modified_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+
+    	FOREIGN KEY (entry_id) REFERENCES entries(id) ON DELETE CASCADE
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_uploads_entry
+    ON uploads(entry_id);
+
+    CREATE INDEX IF NOT EXISTS idx_uploads_hash
+    ON uploads(hash, hash_algorithm);
+
+    CREATE INDEX IF NOT EXISTS idx_uploads_state
+    ON uploads(state);
+
+    PRAGMA user_version = 3;
+    `)
+		if err != nil {
+			return fmt.Errorf("Create schema v3: %w", err)
+		}
+		v = 3
+	}
+	// todo next version have a correct schema versioning
+	if v == 3 {
+		_, err := db.Exec(`
+    CREATE TABLE IF NOT EXISTS upload2remote (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        instance INTEGER NOT NULL,
+        local_upload_id INTEGER NOT NULL,
+        local_entry_id INTEGER NOT NULL,
+        remote_entity_id INTEGER NOT NULL,
+        remote_upload_id INTEGER NOT NULL,
+        type TEXT NOT NULL CHECK (type IN ('experiment', 'resource')),
+        created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+
+        FOREIGN KEY (instance)
+            REFERENCES elabftw_instances(id)
+            ON DELETE CASCADE,
+
+        FOREIGN KEY (local_upload_id)
+            REFERENCES uploads(id)
+            ON DELETE CASCADE,
+
+        FOREIGN KEY (local_entry_id)
+            REFERENCES entries(id)
+            ON DELETE CASCADE,
+
+        UNIQUE (
+            instance,
+            local_upload_id,
+            remote_entity_id,
+            type
+        )
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_upload2remote_entry
+    ON upload2remote(instance, local_entry_id, type);
+
+    PRAGMA user_version = 4;
+    `)
+		if err != nil {
+			return fmt.Errorf("Create schema v4: %w", err)
+		}
+
+		v = 4
+	}
 	return nil
 }

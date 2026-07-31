@@ -1,0 +1,45 @@
+.uploads-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.upload-card {
+  align-items: center;
+  background: var(--surface-dark-soft);
+  border: 2px solid var(--border-soft);
+  border-radius: 10px;
+  color: var(--soft-white);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  height: 180px;
+  justify-content: center;
+  transition:
+          border-color .2s ease,
+          background-color .2s ease;
+  width: 220px;
+}
+
+.upload-card-add:hover {
+  background: var(--dark-blue-2);
+  border-color: var(--orange-light);
+}
+
+.upload-icon {
+  font-size: 4rem;
+  line-height: 1;
+}
+
+.upload-name {
+  font-weight: 700;
+  overflow-wrap: break-word;
+  padding: 0 .75rem;
+  text-align: center;
+}
+
+.upload-meta {
+  font-size: .9rem;
+  text-align: center;
+}

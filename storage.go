@@ -38,12 +38,26 @@ type ProfileEntry struct {
 	EncryptedVerifier string `json:"encrypted_verifier,omitempty"`
 }
 
+// either XDG_DATA_HOME or default to .local/share
 func appRootDir() (string, error) {
-	base, err := os.UserConfigDir()
-	if err != nil {
-		return "", fmt.Errorf("os.UserConfigDir: %w", err)
+	base := os.Getenv("XDG_DATA_HOME")
+	if base == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", fmt.Errorf("os.UserHomeDir: %w", err)
+		}
+		base = filepath.Join(home, ".local", "share")
 	}
+
 	return filepath.Join(base, AppName), nil
+}
+
+func profileUploadsDir(uuid string) (string, error) {
+	dir, err := profileDir(uuid)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, "files"), nil
 }
 
 func profilesDir() (string, error) {
@@ -176,4 +190,22 @@ func writeProfileMetaFile(uuid string, content []byte) (string, error) {
 		return "", fmt.Errorf("write meta.json: %w", err)
 	}
 	return path, nil
+}
+
+func encryptedProfileUploadPath(uuid string, hash string) (string, error) {
+	if len(hash) < 3 {
+		return "", fmt.Errorf("hash is too short")
+	}
+
+	filesDir, err := profileUploadsDir(uuid)
+	if err != nil {
+		return "", err
+	}
+
+	dir := filepath.Join(filesDir, hash[:3])
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return "", fmt.Errorf("mkdir upload hash dir: %w", err)
+	}
+
+	return filepath.Join(dir, hash), nil
 }

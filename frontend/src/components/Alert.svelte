@@ -9,15 +9,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
 -->
 
 <script lang='ts'>
-  export type AlertState = {
-    type: 'success' | 'error' | 'warning' | 'info';
-    message: string;
-  };
+  import { alert, showAlert } from "./stores/alert.svelte";
 
-  type AlertProps = Partial<AlertState>;
-
-  let { type = 'success', message = '' }: AlertProps = $props();
-  let visible = $state(true);
   let closing = $state(false);
 
   /* allow having the Alert at the top left of every component (not depend of its parent) */
@@ -28,12 +21,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
     };
   }
 
-  // Re-show the alert when the parent provides a new message.
   $effect(() => {
-    if (message) {
-      visible = true;
-      closing = false;
-    }
+    if (alert.current) closing = false;
   });
 
   function close() {
@@ -42,19 +31,19 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
   function onAnimationEnd() {
     if (closing) {
-      visible = false;
       closing = false;
+      showAlert(null);
     }
   }
 </script>
 
-{#if message && visible}
+{#if alert.current}
   <div
     use:portal
-    class={`alert alert-${type} alert-floating ${closing ? 'alert-closing' : ''}`}
+    class={`alert alert-${alert.current.type} alert-floating ${closing ? 'alert-closing' : ''}`}
     onanimationend={onAnimationEnd}
   >
-    <strong>{message}</strong>
+    <strong>{alert.current.message}</strong>
     <button class='alert-close' type='button' aria-label='Close alert' onclick={close}>&#x2717;</button>
   </div>
 {/if}

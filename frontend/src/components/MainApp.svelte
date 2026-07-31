@@ -20,14 +20,15 @@ SPDX-License-Identifier: GPL-3.0-or-later
     LockProfile,
     PushEntryToElabftw,
     PushAllEntriesToElabftw,
+    ListEntryRemoteLinks,
   } from '../../wailsjs/go/main/App';
   import type { main } from '../../wailsjs/go/models';
-  import { autofocus, errorMessage, preventDefaultSubmit } from '../utils/helpers';
-  import Alert from './Alert.svelte';
-  import type { AlertState } from './Alert.svelte';
+  import { autofocus, errorMessage, openExternalURL, preventDefaultSubmit } from '../utils/helpers';
   import InstancesView from './Instances/InstancesView.svelte';
   import InstancesPushModal from './Instances/InstancesPushModal.svelte';
   import MarkdownEditor from "./MarkdownEditor.svelte";
+  import { showAlert } from "./stores/alert.svelte";
+  import UploadsPanel from './Uploads/UploadsPanel.svelte';
 
   type Props = {
     profileUuid: string;
@@ -44,7 +45,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
   let entries = $state<main.EntrySummary[]>([]);
   let view = $state<View>('index');
   let loading = $state(false);
-  let alert = $state<AlertState | null>(null);
   let currentEntryId = $state<number | null>(null); // if not null, Update entry. else Save
   let pushModalOpen = $state(false);
   let pushMode = $state<'single' | 'all'>('single'); // from View of an entry, push a single entry. From list of entries, push all.
@@ -53,21 +53,24 @@ SPDX-License-Identifier: GPL-3.0-or-later
     instanceId: number;
     entityType: 'experiment' | 'resource';
   } | null>(null);
+  let remoteLinks = $state<main.EntryRemoteLink[]>([]);
 
   function toRelativeTime(iso: string, locale = 'en'): string {
     return DateTime.fromISO(iso).setLocale(locale).toRelative() ?? 'now';
   }
 
   async function openEntry(id: number): Promise<void> {
-    alert = null;
+    showAlert(null);
     currentEntryId = id;
     try {
       const e: main.Entry = await GetEntry(profileUuid, id);
       entryTitle = e.title;
       entryMainText = e.body;
+      /* if entry already in eLabFTW, create a link to see it directly */
+      remoteLinks = await ListEntryRemoteLinks(profileUuid, id);
       view = 'editor';
     } catch (e: unknown) {
-      alert = {type: 'error', message: errorMessage(e)};
+      showAlert({type: 'error', message: errorMessage(e)});
     }
   }
 
@@ -77,7 +80,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
       entries = await ListEntries(profileUuid);
     } catch (e: unknown) {
       console.error(e);
-      alert = {type: 'error', message: errorMessage(e)};
+      showAlert({type: 'error', message: errorMessage(e)});
     } finally {
       loading = false;
     }
@@ -85,7 +88,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
   async function openIndex(): Promise<void> {
     await refreshEntries();
-    alert = null;
+    showAlert(null);
     view = 'index';
   }
 
@@ -94,7 +97,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
       await LockProfile();
       onLogout?.();
     } catch (e: unknown) {
-      alert = {type: 'error', message: errorMessage(e)};
+      showAlert({type: 'error', message: errorMessage(e)});
     }
   }
 
@@ -102,31 +105,39 @@ SPDX-License-Identifier: GPL-3.0-or-later
     view = 'editor';
     entryTitle = '';
     entryMainText = '';
-    alert = null;
+    showAlert(null);
     currentEntryId = null;
+    remoteLinks = [];
   }
 
   // Save an entry // Update an existing entry
   async function saveOrUpdateEntry(): Promise<void> {
-    alert = {type: 'info', message: currentEntryId ? 'Updating...' : 'Saving...'};
+    showAlert({type: 'info', message: currentEntryId ? 'Updating...' : 'Saving...'});
     try {
       if (currentEntryId) {
         await UpdateEntry(profileUuid, currentEntryId, entryTitle, entryMainText);
-        alert = {type: 'success', message: 'Entry updated ✔'};
+        remoteLinks = await ListEntryRemoteLinks(profileUuid, currentEntryId);
+        showAlert({type: 'success', message: 'Entry updated ✔'});
       } else {
         const id = await SaveEntry(profileUuid, entryTitle, entryMainText);
         currentEntryId = id;
-        alert = {type: 'success', message: `Saved with id ${id} ✔`};
+        showAlert({type: 'success', message: `Saved with id ${id} ✔`});
       }
 
       await refreshEntries();
     } catch (e: unknown) {
-      alert = {type: 'error', message: errorMessage(e)};
+      showAlert({type: 'error', message: errorMessage(e)});
     }
   }
 
+  // use for Uploads to check the entry Id. Pass it to UploadsPAnel so that we dont need to check and warn
+  async function ensureEntrySaved(): Promise<number | null> {
+    if (!currentEntryId) await saveOrUpdateEntry();
+    return currentEntryId;
+  }
+
   async function deleteEntry(id: number, title: string): Promise<void> {
-    alert = null;
+    showAlert(null);
     const confirmed = window.confirm(`Delete "${title}"? This cannot be undone.`);
     if (!confirmed) {
       return;
@@ -135,18 +146,19 @@ SPDX-License-Identifier: GPL-3.0-or-later
       await DeleteEntry(profileUuid, id);
       await refreshEntries();
     } catch (e: unknown) {
-      alert = {type: 'error', message: errorMessage(e)};
+      showAlert({type: 'error', message: errorMessage(e)});
     }
   }
 
   const handleSubmit = preventDefaultSubmit(saveOrUpdateEntry);
 
   onMount(() => {
+    showAlert(null);
     void refreshEntries();
   });
 
   function openInstances(): void {
-    alert = null;
+    showAlert(null);
     view = 'instances';
   }
 
@@ -154,12 +166,13 @@ SPDX-License-Identifier: GPL-3.0-or-later
   function openPushModal(mode: 'single' | 'all', entryId: number | null = null): void {
     pushMode = mode;
     pushEntryId = entryId;
-    alert = null;
+    showAlert(null);
     pushModalOpen = true;
   }
 
   function closePushModal(): void {
     pushModalOpen = false;
+    lastFailedPush = null;
   }
 
   async function confirmPush(
@@ -170,18 +183,21 @@ SPDX-License-Identifier: GPL-3.0-or-later
     try {
       if (pushMode === 'all') {
         const results = await PushAllEntriesToElabftw(profileUuid, instanceId, entityType, force);
-        alert = {type: 'success', message: `Pushed ${results.length} entries ✔`};
+        showAlert({type: 'success', message: `Pushed ${results.length} entries ✔`});
       } else {
         if (!pushEntryId) {
-          alert = {type: 'error', message: 'No entry selected.'};
+          showAlert({type: 'error', message: 'No entry selected.'});
           return;
         }
 
         const result = await PushEntryToElabftw(profileUuid, pushEntryId, instanceId, entityType, force);
-        alert = {
-          type: 'success',
-          message: `Entry ${result.action} as ${result.type} #${result.remoteId} ✔`,
-        };
+        remoteLinks = await ListEntryRemoteLinks(profileUuid, currentEntryId);
+        const warning = result.uploadWarnings?.length ? ` Upload warning: ${result.uploadWarnings.join(' ')}` : '';
+
+        showAlert({
+          type: result.uploadWarnings?.length ? 'warning' : 'success',
+          message: `Entry ${result.action} as ${result.type} #${result.remoteId} ✔${warning}`,
+        });
       }
 
       lastFailedPush = null;
@@ -191,10 +207,10 @@ SPDX-License-Identifier: GPL-3.0-or-later
       // warning if remote data is more recent than desktop
       if (message.includes('was modified after your last sync')) {
         lastFailedPush = { instanceId, entityType };
-        alert = { type: 'warning', message };
+        showAlert({ type: 'warning', message });
       } else {
         lastFailedPush = null;
-        alert = { type: 'error', message };
+        showAlert({ type: 'error', message });
       }
     }
   }
@@ -216,7 +232,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     </div>
 
     <div class='flex gap-1 items-center'>
-      <div class='profile-pill flex items-center gap-1' title={profileName}>
+      <div class='profile-pill flex items-center' title={profileName}>
         <span class='profile-avatar'>{profileName.slice(0, 2).toUpperCase()}</span>
         <span class='text-strong'>{profileName}</span>
       </div>
@@ -295,7 +311,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
     <InstancesView
       {profileUuid}
       onBack={openIndex}
-      onAlert={(nextAlert) => alert = nextAlert}
     />
     <!-- VIEW EDITOR MODE -->
   {:else if view === 'editor'}
@@ -304,6 +319,11 @@ SPDX-License-Identifier: GPL-3.0-or-later
         <div class='flex justify-between border-bottom mb-2'>
           <button class='btn btn-secondary' type='button' onclick={openIndex}>← Back</button>
           <div class='flex gap-1'>
+              {#each remoteLinks as link (`${link.instanceId}-${link.type}-${link.remoteId}`)}
+                <button type='button' class='link-button' onclick={() => openExternalURL(link.url)}>
+                  See {link.type} #{link.remoteId} at {link.siteUrl}
+                </button>
+              {/each}
             <button class='btn btn-secondary' type='button' disabled={!currentEntryId}
                     onclick={() => openPushModal('single', currentEntryId)}>
               Push to eLabFTW Instance
@@ -327,9 +347,13 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
         <label for='entryMainText' class='mt-2'>Entry main text</label>
         <MarkdownEditor
-          label='entryMainText'
           value={entryMainText}
           onChange={(next) => entryMainText = next}
+        />
+        <UploadsPanel
+          {profileUuid}
+          entryId={currentEntryId}
+          {ensureEntrySaved}
         />
       </form>
     </section>
@@ -337,23 +361,9 @@ SPDX-License-Identifier: GPL-3.0-or-later
   {#if pushModalOpen}
     <InstancesPushModal
       {profileUuid}
+      force={lastFailedPush !== null}
       onClose={closePushModal}
-      onAlert={(nextAlert) => alert = nextAlert}
       onPush={confirmPush}
     />
-  {/if}
-  {#if alert}
-    <div class='flex flex-row-center items-center'>
-      <Alert type={alert.type} message={alert.message}></Alert>
-      <!-- when updating a remote entry that was modified more recently, allow "force pushing" -->
-      {#if lastFailedPush}
-        <div class='flex justify-end mt-1'>
-          <button class='btn btn-danger' type='button'
-                  onclick={() => confirmPush(lastFailedPush.instanceId, lastFailedPush.entityType, true)}>
-            Push anyway
-          </button>
-        </div>
-      {/if}
-    </div>
   {/if}
 </div>

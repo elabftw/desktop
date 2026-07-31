@@ -12,15 +12,25 @@ export function DeleteEntry(arg1:string,arg2:number):Promise<void>;
 
 export function DeleteProfile(arg1:string,arg2:string):Promise<main.ProfileIndex>;
 
+export function DeleteUpload(arg1:string,arg2:number,arg3:number):Promise<void>;
+
+export function DownloadUpload(arg1:string,arg2:number,arg3:number):Promise<string>;
+
 export function FetchElabftwInfo(arg1:string,arg2:number):Promise<main.ElabftwInfo>;
 
 export function GetEntry(arg1:string,arg2:number):Promise<main.Entry>;
 
 export function GetProfileIndex():Promise<main.ProfileIndex>;
 
+export function ImportUpload(arg1:string,arg2:number,arg3:string):Promise<main.StoredUpload>;
+
 export function ListElabftwInstances(arg1:string):Promise<Array<main.ElabftwInstance>>;
 
 export function ListEntries(arg1:string):Promise<Array<main.EntrySummary>>;
+
+export function ListEntryRemoteLinks(arg1:string,arg2:number):Promise<Array<main.EntryRemoteLink>>;
+
+export function ListEntryUploads(arg1:string,arg2:number):Promise<Array<main.StoredUpload>>;
 
 export function LockProfile():Promise<void>;
 
@@ -29,6 +39,8 @@ export function PushAllEntriesToElabftw(arg1:string,arg2:number,arg3:string,arg4
 export function PushEntryToElabftw(arg1:string,arg2:number,arg3:number,arg4:string,arg5:boolean):Promise<main.PushEntryResult>;
 
 export function SaveEntry(arg1:string,arg2:string,arg3:string):Promise<number>;
+
+export function SelectFile():Promise<string>;
 
 export function UnlockProfile(arg1:string,arg2:string):Promise<void>;
 

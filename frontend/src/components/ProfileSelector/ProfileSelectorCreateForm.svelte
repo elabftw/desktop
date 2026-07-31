@@ -10,15 +10,14 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 <script lang='ts'>
   import { autofocus, preventDefaultSubmit } from '../../utils/helpers';
-  import Alert from '../Alert.svelte';
+  import PasswordInput from "../PasswordInput.svelte";
 
   type Props = {
-    addError: string;
     closeAddProfile: () => void;
     confirmAddProfile: (name: string, passphrase: string) => void | Promise<void>;
   };
 
-  let {addError, closeAddProfile, confirmAddProfile}: Props = $props();
+  let {closeAddProfile, confirmAddProfile}: Props = $props();
 
   let name = $state('');
   let passphrase = $state('');
@@ -45,17 +44,13 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
     <div>
       <label for='profilePassphrase' class='mt-2'>Passphrase</label>
-      <input
-        required
+      <PasswordInput
         id='profilePassphrase'
-        class='input'
-        placeholder='Passphrase'
-        type='password'
         bind:value={passphrase}
+        required
+        placeholder='Passphrase'
       />
     </div>
-
-    <Alert type='error' message={addError}/>
 
     <div class='flex gap-1 mt-2 justify-end'>
       <button type='button' class='btn btn-secondary' onclick={closeAddProfile}>

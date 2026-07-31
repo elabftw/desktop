@@ -21,18 +21,17 @@ log new instances, edit existing and delete. You can test the API as well
     DeleteElabftwInstance,
     FetchElabftwInfo,
   } from '../../../wailsjs/go/main/App';
+  import PasswordInput from '../PasswordInput.svelte';
 
   import type { main } from '../../../wailsjs/go/models';
   import { errorMessage, preventDefaultSubmit, openExternalURL } from '../../utils/helpers';
-  import type { AlertState } from '../Alert.svelte';
-
+  import { showAlert } from "../stores/alert.svelte";
   type Props = {
     profileUuid: string;
     onBack: () => void;
-    onAlert: (alert: AlertState | null) => void;
   };
 
-  let {profileUuid, onBack, onAlert}: Props = $props();
+  let {profileUuid, onBack}: Props = $props();
 
   let loading = $state(false);
   let instances = $state<main.ElabftwInstance[]>([]);
@@ -40,14 +39,13 @@ log new instances, edit existing and delete. You can test the API as well
   let instanceApiKey = $state('');
   let instanceVerifyTls = $state(true);
   let editingInstanceId = $state<number | null>(null);
-  let elabftwInfoOutput = $state('');
 
   async function refreshInstances(): Promise<void> {
     loading = true;
     try {
       instances = await ListElabftwInstances(profileUuid);
     } catch (e: unknown) {
-      onAlert({type: 'error', message: errorMessage(e)});
+      showAlert({type: 'error', message: errorMessage(e)});
     } finally {
       loading = false;
     }
@@ -55,7 +53,7 @@ log new instances, edit existing and delete. You can test the API as well
 
   // save or update an instance
   async function saveInstance(): Promise<void> {
-    onAlert({
+    showAlert({
       type: 'info',
       message: editingInstanceId ? 'Updating instance...' : 'Adding instance...',
     });
@@ -63,16 +61,16 @@ log new instances, edit existing and delete. You can test the API as well
     try {
       if (editingInstanceId) {
         await UpdateElabftwInstance(profileUuid, editingInstanceId, instanceSiteUrl, instanceApiKey, instanceVerifyTls);
-        onAlert({type: 'success', message: 'eLabFTW instance updated ✔'});
+        showAlert({type: 'success', message: 'eLabFTW instance updated ✔'});
       } else {
         await AddElabftwInstance(profileUuid, instanceSiteUrl, instanceApiKey, instanceVerifyTls);
-        onAlert({type: 'success', message: 'eLabFTW instance added ✔'});
+        showAlert({type: 'success', message: 'eLabFTW instance added ✔'});
       }
 
       resetForm();
       await refreshInstances();
     } catch (e: unknown) {
-      onAlert({type: 'error', message: errorMessage(e)});
+      showAlert({type: 'error', message: errorMessage(e)});
     }
   }
 
@@ -83,20 +81,24 @@ log new instances, edit existing and delete. You can test the API as well
       await DeleteElabftwInstance(profileUuid, id);
       await refreshInstances();
     } catch (e: unknown) {
-      onAlert({type: 'error', message: errorMessage(e)});
+      showAlert({type: 'error', message: errorMessage(e)});
     }
   }
 
   /* send a GET request to info endpoint and ensure the connection is ok */
   async function testInstance(id: number): Promise<void> {
-    onAlert({type: 'info', message: 'Fetching eLabFTW /info...'});
-    elabftwInfoOutput = '';
+    showAlert({type: 'info', message: 'Testing connection...'});
     try {
       const info = await FetchElabftwInfo(profileUuid, id);
-      elabftwInfoOutput = JSON.stringify(info.raw, null, 2);
-      onAlert({type: 'success', message: 'Connected to eLabFTW ✔'});
+      const version = info.raw?.elabftw_version;
+      showAlert({
+        type: 'success',
+        message: version
+          ? `Connected to eLabFTW ${version} ✔`
+          : 'Connected to eLabFTW ✔',
+      });
     } catch (e: unknown) {
-      onAlert({type: 'error', message: errorMessage(e)});
+      showAlert({type: 'error', message: errorMessage(e)});
     }
   }
 
@@ -106,12 +108,12 @@ log new instances, edit existing and delete. You can test the API as well
     instanceSiteUrl = instance.siteUrl;
     instanceApiKey = '';
     instanceVerifyTls = instance.verifyTls;
-    onAlert({type: 'info', message: 'Editing instance. Leave API key empty to keep the current key.'});
+    showAlert({type: 'info', message: 'Editing instance. Leave API key empty to keep the current key.'});
   }
 
   function cancelEditInstance(): void {
     resetForm();
-    onAlert(null);
+    showAlert(null);
   }
 
   function resetForm(): void {
@@ -127,16 +129,14 @@ log new instances, edit existing and delete. You can test the API as well
 </script>
 
 <section class='panel'>
-  <div class='flex justify-between border-bottom mb-2 items-center'>
-    <span>
-      Add the site URL and your API key to allow communication between the desktop app and your eLabFTW instance.
-      <br/>
-      See the
+  <div class='border-bottom mb-2 flex flex-column items-center'>
+    <button class='btn btn-secondary mb-2' type='button' onclick={onBack}>← Back</button>
+    <span>To allow communication between the desktop app and your eLabFTW instance, add the site URL and your API key.</span>
+    <span>See the
       <button type='button' class='link-button'
               onclick={() => openExternalURL('https://doc.elabftw.net/docs/usage/api')}>Documentation</button>
       to learn how to create a new API key.
     </span>
-    <button class='btn btn-secondary' type='button' onclick={onBack}>← Back</button>
   </div>
 
   <form onsubmit={handleInstanceSubmit} class='grid gap-1'>
@@ -154,13 +154,14 @@ log new instances, edit existing and delete. You can test the API as well
 
     <div>
       <label for='instanceApiKey'>API key</label>
-      <input
-        required
+
+      <PasswordInput
         id='instanceApiKey'
-        type='password'
-        class='input'
         bind:value={instanceApiKey}
-        placeholder={editingInstanceId ? 'Leave empty to keep current API key' : 'Your eLabFTW API key'}
+        required={!editingInstanceId}
+        placeholder={editingInstanceId
+      ? 'Leave empty to keep current API key'
+      : 'Your eLabFTW API key'}
       />
     </div>
 
@@ -210,13 +211,6 @@ log new instances, edit existing and delete. You can test the API as well
           </div>
         </div>
       {/each}
-      <!-- output of the Info GET response -->
-      {#if elabftwInfoOutput}
-        <div class='mt-2'>
-          <h3>eLabFTW /info response</h3>
-          <pre class='panel'>{elabftwInfoOutput}</pre>
-        </div>
-      {/if}
     </div>
   {/if}
 </section>

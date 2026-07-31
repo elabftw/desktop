@@ -22,16 +22,12 @@ export default [
   },
 
   {
-    files: ['**/*.svelte'],
+    files: ['**/*.svelte', '**/*.svelte.ts'],
     languageOptions: {
       parser: svelteParser,
       parserOptions: {
         parser: ts.parser,
       },
-      // rules: {
-      //   ...svelte.configs.recommended.rules,
-      //   'no-unused-vars': 'warn',
-      // },
     },
   },
 ];

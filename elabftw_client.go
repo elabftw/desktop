@@ -14,6 +14,7 @@ import (
 	"crypto/tls"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -30,6 +31,12 @@ type elabftwClientConfig struct {
 
 type ElabftwInfo struct {
 	Raw map[string]any `json:"raw"`
+}
+
+type elabftwErrorResponse struct {
+	Code        int    `json:"code"`
+	Message     string `json:"message"`
+	Description string `json:"description"`
 }
 
 func (a *App) loadElabftwClientConfig(profileUUID string, instanceID int64) (*elabftwClientConfig, error) {
@@ -91,7 +98,7 @@ func (a *App) loadElabftwClientConfig(profileUUID string, instanceID int64) (*el
 	return &cfg, nil
 }
 
-func elabftwHTTPClient(verifyTLS bool) *http.Client {
+func elabftwHTTPClient(verifyTLS bool, longTimeout bool) *http.Client {
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{
 			// Only false when the user explicitly disables TLS verification.
@@ -99,10 +106,16 @@ func elabftwHTTPClient(verifyTLS bool) *http.Client {
 		},
 	}
 
-	// timeout prevents the desktop app from hanging forever if the server is unreachable
-	// Transport carries our TLS configuration, including whether to verify certificates
+	// regular API requests should fail quickly if the server is unreachable
+	// but Uploads get a much longer timeout because the deadline covers the entire
+	// request, including sending the file, which may take several minutes on
+	// slower connections
+	timeout := 30 * time.Second // 30 sec
+	if longTimeout {
+		timeout = 10 * time.Minute // 10 mins
+	}
 	return &http.Client{
-		Timeout:   30 * time.Second,
+		Timeout:   timeout,
 		Transport: transport,
 	}
 }
@@ -111,18 +124,17 @@ func (a *App) elabftwRequest(
 	profileUUID string,
 	instanceID int64,
 	method string,
-	apiPath string,
+	path string,
 	body io.Reader,
+	isUpload bool,
+	headers ...map[string]string,
 ) (*http.Response, error) {
 	cfg, err := a.loadElabftwClientConfig(profileUUID, instanceID)
 	if err != nil {
 		return nil, err
 	}
 
-	apiPath = "/" + strings.TrimLeft(apiPath, "/")
-	url := elabftwAPIBaseURL(cfg.SiteURL) + apiPath
-
-	req, err := http.NewRequest(method, url, body)
+	req, err := http.NewRequest(method, elabftwAPIBaseURL(cfg.SiteURL)+path, body)
 	if err != nil {
 		return nil, fmt.Errorf("create elabftw request: %w", err)
 	}
@@ -134,9 +146,17 @@ func (a *App) elabftwRequest(
 		req.Header.Set("Content-Type", "application/json")
 	}
 
-	resp, err := elabftwHTTPClient(cfg.VerifyTLS).Do(req)
+	for _, h := range headers {
+		for k, v := range h {
+			req.Header.Set(k, v)
+		}
+	}
+
+	client := elabftwHTTPClient(cfg.VerifyTLS, isUpload)
+
+	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("call elabftw %s %s: %w", method, apiPath, err)
+		return nil, fmt.Errorf("call elabftw %s %s: %w", method, path, err)
 	}
 
 	return resp, nil
@@ -156,11 +176,26 @@ func decodeElabftwJSONResponse(resp *http.Response, target any) error {
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
-		msg := strings.TrimSpace(string(body))
-		if msg == "" {
-			return fmt.Errorf("elabftw returned HTTP %d", resp.StatusCode)
+
+		var apiErr elabftwErrorResponse
+		if err := json.Unmarshal(body, &apiErr); err == nil {
+			// Prefer a detailed description if available.
+			if apiErr.Description != "" {
+				return errors.New(apiErr.Description)
+			}
+
+			if apiErr.Message != "" {
+				return errors.New(apiErr.Message)
+			}
 		}
-		return fmt.Errorf("elabftw returned HTTP %d: %s", resp.StatusCode, msg)
+
+		// Fallback if the response isn't JSON.
+		msg := strings.TrimSpace(string(body))
+		if msg != "" {
+			return errors.New(msg)
+		}
+
+		return fmt.Errorf("eLabFTW returned HTTP %d", resp.StatusCode)
 	}
 
 	if target == nil {
@@ -184,7 +219,7 @@ func jsonBody(v any) (*bytes.Reader, error) {
 
 /* ---------- INFO ENDPOINT ---------- */
 func (a *App) FetchElabftwInfo(profileUUID string, instanceID int64) (*ElabftwInfo, error) {
-	resp, err := a.elabftwRequest(profileUUID, instanceID, http.MethodGet, "/info", nil)
+	resp, err := a.elabftwRequest(profileUUID, instanceID, http.MethodGet, "/info", nil, false)
 	if err != nil {
 		return nil, err
 	}
