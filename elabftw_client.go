@@ -98,7 +98,7 @@ func (a *App) loadElabftwClientConfig(profileUUID string, instanceID int64) (*el
 	return &cfg, nil
 }
 
-func elabftwHTTPClient(verifyTLS bool, upload bool) *http.Client {
+func elabftwHTTPClient(verifyTLS bool, longTimeout bool) *http.Client {
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{
 			// Only false when the user explicitly disables TLS verification.
@@ -111,7 +111,7 @@ func elabftwHTTPClient(verifyTLS bool, upload bool) *http.Client {
 	// request, including sending the file, which may take several minutes on
 	// slower connections
 	timeout := 30 * time.Second // 30 sec
-	if upload {
+	if longTimeout {
 		timeout = 10 * time.Minute // 10 mins
 	}
 	return &http.Client{
@@ -126,7 +126,7 @@ func (a *App) elabftwRequest(
 	method string,
 	path string,
 	body io.Reader,
-	upload bool,
+	isUpload bool,
 	headers ...map[string]string,
 ) (*http.Response, error) {
 	cfg, err := a.loadElabftwClientConfig(profileUUID, instanceID)
@@ -152,7 +152,7 @@ func (a *App) elabftwRequest(
 		}
 	}
 
-	client := elabftwHTTPClient(cfg.VerifyTLS, upload)
+	client := elabftwHTTPClient(cfg.VerifyTLS, isUpload)
 
 	resp, err := client.Do(req)
 	if err != nil {
