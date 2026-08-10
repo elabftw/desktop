@@ -5,7 +5,7 @@ on:
     types: [published]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -83,9 +83,33 @@ jobs:
             wails build -clean -platform "${{ matrix.platform }}"
           fi
 
+      - name: Prepare release asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release
+          case '${{ runner.os }}' in
+            Linux)
+              cp build/bin/elabftw-desktop 'release/elabftw-desktop-${{ matrix.name }}'
+              ;;
+            Windows)
+              cp build/bin/elabftw-desktop.exe 'release/elabftw-desktop-${{ matrix.name }}.exe'
+              ;;
+            macOS)
+              ditto -c -k --sequesterRsrc --keepParent build/bin/elabftw-desktop.app 'release/elabftw-desktop-${{ matrix.name }}.zip'
+              ;;
+          esac
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ matrix.name }}
           path: build/bin/**
           if-no-files-found: error
+
+      - name: Upload release asset
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload '${{ github.event.release.tag_name }}' release/* --clobber --repo '${{ github.repository }}'
