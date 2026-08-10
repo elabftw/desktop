@@ -111,5 +111,7 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          REPOSITORY: ${{ github.repository }}
         run: |
-          gh release upload '${{ github.event.release.tag_name }}' release/* --clobber --repo '${{ github.repository }}'
+          gh release upload "$RELEASE_TAG" release/* --clobber --repo "$REPOSITORY"
