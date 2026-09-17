@@ -6,7 +6,7 @@ import ts from 'typescript-eslint';
 
 export default [
   {
-    ignores: ['dist/', 'node_modules/', 'wailsjs/', 'build/'],
+    ignores: ['dist/', 'node_modules/', 'wailsjs/', 'bindings/', 'build/'],
   },
   js.configs.recommended,
   ...ts.configs.recommended,

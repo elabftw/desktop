@@ -14,12 +14,7 @@ import (
 	"embed"
 	"runtime"
 
-	"github.com/wailsapp/wails/v2"
-	"github.com/wailsapp/wails/v2/pkg/menu"
-	"github.com/wailsapp/wails/v2/pkg/menu/keys"
-	"github.com/wailsapp/wails/v2/pkg/options"
-	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
-	rt "github.com/wailsapp/wails/v2/pkg/runtime"
+	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
 //go:embed all:frontend/dist
@@ -28,78 +23,61 @@ var assets embed.FS
 var AppVersion = "dev"
 
 func main() {
-	// Create an instance of the app structure
-	app := NewApp()
-	appMenu := menu.NewMenu()
-	about := func() {
-		_, _ = rt.MessageDialog(app.ctx, rt.MessageDialogOptions{
-			Type:    rt.InfoDialog,
-			Title:   "About eLabFTW Desktop",
-			Message: "Version: " + AppVersion + "\n\nLocal-first eLabFTW desktop client." + "\nDevelopment sponsored by CNRS.",
-			Buttons: []string{"OK"},
-		})
-	}
+	backend := NewApp()
+	app := application.New(application.Options{
+		Name:        "elabftw-desktop",
+		Description: "Local-first eLabFTW desktop client.",
+		Services: []application.Service{
+			application.NewService(backend),
+		},
+		Assets: application.AssetOptions{
+			Handler: application.AssetFileServerFS(assets),
+		},
+		Mac: application.MacOptions{
+			ApplicationShouldTerminateAfterLastWindowClosed: true,
+		},
+	})
 
-	// full screen
-	toggleFullscreen := func() {
-		if rt.WindowIsFullscreen(app.ctx) {
-			rt.WindowUnfullscreen(app.ctx)
-			return
-		}
-		rt.WindowFullscreen(app.ctx)
+	appMenu := app.NewMenu()
+	about := func(_ *application.Context) {
+		app.Dialog.Info().
+			SetTitle("About eLabFTW Desktop").
+			SetMessage("Version: " + AppVersion + "\n\nLocal-first eLabFTW desktop client.\nDevelopment sponsored by CNRS.").
+			Show()
 	}
 
 	if runtime.GOOS == "darwin" {
 		appSubmenu := appMenu.AddSubmenu("eLabFTW Desktop")
-		appSubmenu.AddText("About...", nil, func(_ *menu.CallbackData) {
-			about()
-		})
+		appSubmenu.Add("About...").OnClick(about)
 		appSubmenu.AddSeparator()
-		appSubmenu.AddText("Quit", keys.CmdOrCtrl("q"), func(_ *menu.CallbackData) {
-			rt.Quit(app.ctx)
-		})
+		appSubmenu.AddRole(application.Quit)
 
-		appMenu.Append(menu.EditMenu())
+		appMenu.AddRole(application.EditMenu)
 
-		// toggle full screen
 		viewMenu := appMenu.AddSubmenu("View")
-		viewMenu.AddText("Toggle Full Screen", keys.Combo("f", keys.CmdOrCtrlKey, keys.ControlKey), func(_ *menu.CallbackData) {
-			toggleFullscreen()
-		})
+		viewMenu.AddRole(application.ToggleFullscreen)
 	} else {
 		fileMenu := appMenu.AddSubmenu("File")
-		fileMenu.AddText("Quit", keys.CmdOrCtrl("q"), func(_ *menu.CallbackData) {
-			rt.Quit(app.ctx)
-		})
+		fileMenu.AddRole(application.Quit)
 
 		viewMenu := appMenu.AddSubmenu("View")
-		viewMenu.AddText("Toggle Full Screen", keys.Key("F11"), func(_ *menu.CallbackData) {
-			toggleFullscreen()
-		})
+		viewMenu.AddRole(application.ToggleFullscreen)
 
 		helpMenu := appMenu.AddSubmenu("Help")
-		helpMenu.AddText("About...", nil, func(_ *menu.CallbackData) {
-			about()
-		})
+		helpMenu.Add("About...").OnClick(about)
 	}
+	app.Menu.Set(appMenu)
 
-	// Create application with options
-	err := wails.Run(&options.App{
-		Title:  "elabftw-desktop",
-		Width:  1200,
-		Height: 900,
-		AssetServer: &assetserver.Options{
-			Assets: assets,
-		},
-		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
-		OnStartup:        app.startup,
-		Menu:             appMenu,
-		Bind: []interface{}{
-			app,
-		},
+	app.Window.NewWithOptions(application.WebviewWindowOptions{
+		Title:              "elabftw-desktop",
+		Width:              1200,
+		Height:             900,
+		BackgroundColour:   application.NewRGB(27, 38, 54),
+		URL:                "/",
+		UseApplicationMenu: true,
 	})
 
-	if err != nil {
+	if err := app.Run(); err != nil {
 		println("Error:", err.Error())
 	}
 }

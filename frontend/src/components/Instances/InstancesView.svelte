@@ -20,10 +20,10 @@ log new instances, edit existing and delete. You can test the API as well
     UpdateElabftwInstance,
     DeleteElabftwInstance,
     FetchElabftwInfo,
-  } from '../../../wailsjs/go/main/App';
+  } from '../../../bindings/elabftw-desktop/app';
   import PasswordInput from '../PasswordInput.svelte';
 
-  import type { main } from '../../../wailsjs/go/models';
+  import type * as main from '../../../bindings/elabftw-desktop/models';
   import { errorMessage, preventDefaultSubmit, openExternalURL } from '../../utils/helpers';
   import { showAlert } from "../stores/alert.svelte";
   type Props = {

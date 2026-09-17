@@ -13,7 +13,7 @@ It is used in the Instances View page and in the Modal called from the
 "Push to eLabFTW" buttons
 -->
 <script lang='ts'>
-  import { AddElabftwInstance } from '../../../wailsjs/go/main/App';
+  import { AddElabftwInstance } from '../../../bindings/elabftw-desktop/app';
   import { errorMessage, preventDefaultSubmit } from '../../utils/helpers';
   import PasswordInput from '../PasswordInput.svelte';
   import { showAlert } from "../stores/alert.svelte";
