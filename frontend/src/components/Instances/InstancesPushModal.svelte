@@ -14,8 +14,8 @@ is adapted to be scalable, so later on we'll just replace eLabFTW
 with "Instance Name" for cross platform data share.
 -->
 <script lang='ts'>
-  import { ListElabftwInstances } from '../../../wailsjs/go/main/App';
-  import type { main } from '../../../wailsjs/go/models';
+  import { ListElabftwInstances } from '../../../bindings/elabftw-desktop/app';
+  import type * as main from '../../../bindings/elabftw-desktop/models';
   import { errorMessage } from '../../utils/helpers';
   import Modal from '../Modal.svelte';
   import { showAlert } from "../stores/alert.svelte";

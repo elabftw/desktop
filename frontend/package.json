@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build:dev": "vite build --minify false --mode development",
+    "build": "vite build --mode production",
     "preview": "vite preview",
     "lint": "npm run lint:js && npm run lint:css",
     "lint:js": "eslint .",
@@ -34,6 +35,7 @@
     "vite": "^8.1.4"
   },
   "dependencies": {
+    "@wailsio/runtime": "3.0.0-beta.23",
     "easymde": "^2.21.0",
     "luxon": "^3.7.2"
   }

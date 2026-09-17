@@ -5,8 +5,8 @@
     ImportUpload,
     ListEntryUploads,
     SelectFile
-  } from '../../../wailsjs/go/main/App';
-  import type { main } from '../../../wailsjs/go/models';
+  } from '../../../bindings/elabftw-desktop/app';
+  import type * as main from '../../../bindings/elabftw-desktop/models';
   import { errorMessage } from '../../utils/helpers';
   import { showAlert } from "../stores/alert.svelte";
   type Props = {

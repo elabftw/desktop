@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name=eLabFTW Desktop
+Comment=Local-first eLabFTW desktop client.
+# The Exec line includes %u to pass the URL to the application
+Exec=/usr/local/bin/elabftw-desktop %u
+Terminal=false
+Type=Application
+Icon=elabftw-desktop
+Categories=Utility;
+StartupWMClass=elabftw-desktop
+
+ 
