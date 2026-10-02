@@ -34,6 +34,8 @@ export function ListEntryUploads(arg1:string,arg2:number):Promise<Array<main.Sto
 
 export function LockProfile():Promise<void>;
 
+export function PullEntryFromElabftw(arg1:string,arg2:number,arg3:number,arg4:string):Promise<main.PullEntryResult>;
+
 export function PushAllEntriesToElabftw(arg1:string,arg2:number,arg3:string,arg4:boolean):Promise<Array<main.PushEntryResult>>;
 
 export function PushEntryToElabftw(arg1:string,arg2:number,arg3:number,arg4:string,arg5:boolean):Promise<main.PushEntryResult>;

@@ -66,6 +66,10 @@ export function LockProfile() {
   return window['go']['main']['App']['LockProfile']();
 }
 
+export function PullEntryFromElabftw(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['PullEntryFromElabftw'](arg1, arg2, arg3, arg4);
+}
+
 export function PushAllEntriesToElabftw(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['PushAllEntriesToElabftw'](arg1, arg2, arg3, arg4);
 }

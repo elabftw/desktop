@@ -7,6 +7,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/wailsapp/wails/v2 v2.15.0
 	golang.org/x/crypto v0.53.0
+	golang.org/x/net v0.56.0
 	modernc.org/sqlite v1.44.3
 )
 
@@ -38,7 +39,6 @@ require (
 	github.com/wailsapp/go-webview2 v1.0.22 // indirect
 	github.com/wailsapp/mimetype v1.4.1 // indirect
 	golang.org/x/exp v0.0.0-20251023183803-a4bb9ffd2546 // indirect
-	golang.org/x/net v0.56.0 // indirect
 	golang.org/x/sys v0.46.0 // indirect
 	golang.org/x/text v0.39.0 // indirect
 	modernc.org/libc v1.67.6 // indirect

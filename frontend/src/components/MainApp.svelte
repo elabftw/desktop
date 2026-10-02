@@ -18,6 +18,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     UpdateEntry,
     DeleteEntry,
     LockProfile,
+    PullEntryFromElabftw,
     PushEntryToElabftw,
     PushAllEntriesToElabftw,
     ListEntryRemoteLinks,
@@ -26,6 +27,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
   import { autofocus, errorMessage, openExternalURL, preventDefaultSubmit } from '../utils/helpers';
   import InstancesView from './Instances/InstancesView.svelte';
   import InstancesPushModal from './Instances/InstancesPushModal.svelte';
+  import EntryPullModal from './Instances/EntryPullModal.svelte';
   import MarkdownEditor from "./MarkdownEditor.svelte";
   import { showAlert } from "./stores/alert.svelte";
   import UploadsPanel from './Uploads/UploadsPanel.svelte';
@@ -54,6 +56,9 @@ SPDX-License-Identifier: GPL-3.0-or-later
     entityType: 'experiment' | 'resource';
   } | null>(null);
   let remoteLinks = $state<main.EntryRemoteLink[]>([]);
+  let pullLink = $state<main.EntryRemoteLink | null>(null);
+  // reactive to trigger an uploads refresh after a pull
+  let uploadsRefreshKey = $state(0);
 
   function toRelativeTime(iso: string, locale = 'en'): string {
     return DateTime.fromISO(iso).setLocale(locale).toRelative() ?? 'now';
@@ -173,6 +178,47 @@ SPDX-License-Identifier: GPL-3.0-or-later
   function closePushModal(): void {
     pushModalOpen = false;
     lastFailedPush = null;
+  }
+
+  function openPullModal(link: main.EntryRemoteLink): void {
+    showAlert(null);
+    pullLink = link;
+  }
+
+  function closePullModal(): void {
+    pullLink = null;
+  }
+
+  async function confirmPull(): Promise<void> {
+    if (!currentEntryId || !pullLink) {
+      showAlert({type: 'error', message: 'No remote entry selected.'});
+      return;
+    }
+
+    try {
+      const result = await PullEntryFromElabftw(
+        profileUuid,
+        currentEntryId,
+        pullLink.instanceId,
+        pullLink.type,
+      );
+
+      const entry = await GetEntry(profileUuid, currentEntryId);
+      entryTitle = entry.title;
+      entryMainText = entry.body;
+      remoteLinks = await ListEntryRemoteLinks(profileUuid, currentEntryId);
+      uploadsRefreshKey += 1;
+      await refreshEntries();
+
+      const warning = result.warnings?.length ? ` Warning: ${result.warnings.join(' ')}` : '';
+      showAlert({
+        type: result.warnings?.length ? 'warning' : 'success',
+        message: `Pulled ${result.type} #${result.remoteId} and replaced the local entry ✔${warning}`,
+      });
+      pullLink = null;
+    } catch (e: unknown) {
+      showAlert({type: 'error', message: errorMessage(e)});
+    }
   }
 
   async function confirmPush(
@@ -320,9 +366,14 @@ SPDX-License-Identifier: GPL-3.0-or-later
           <button class='btn btn-secondary' type='button' onclick={openIndex}>← Back</button>
           <div class='flex gap-1'>
               {#each remoteLinks as link (`${link.instanceId}-${link.type}-${link.remoteId}`)}
-                <button type='button' class='link-button' onclick={() => openExternalURL(link.url)}>
-                  See {link.type} #{link.remoteId} at {link.siteUrl}
-                </button>
+                <div class='flex gap-03'>
+                  <button type='button' class='link-button' onclick={() => openExternalURL(link.url)}>
+                    See {link.type} #{link.remoteId} at {link.siteUrl}
+                  </button>
+                  <button type='button' class='btn btn-secondary' onclick={() => openPullModal(link)}>
+                    Pull
+                  </button>
+                </div>
               {/each}
             <button class='btn btn-secondary' type='button' disabled={!currentEntryId}
                     onclick={() => openPushModal('single', currentEntryId)}>
@@ -350,11 +401,13 @@ SPDX-License-Identifier: GPL-3.0-or-later
           value={entryMainText}
           onChange={(next) => entryMainText = next}
         />
-        <UploadsPanel
-          {profileUuid}
-          entryId={currentEntryId}
-          {ensureEntrySaved}
-        />
+        {#key uploadsRefreshKey}
+          <UploadsPanel
+            {profileUuid}
+            entryId={currentEntryId}
+            {ensureEntrySaved}
+          />
+        {/key}
       </form>
     </section>
   {/if}
@@ -364,6 +417,13 @@ SPDX-License-Identifier: GPL-3.0-or-later
       force={lastFailedPush !== null}
       onClose={closePushModal}
       onPush={confirmPush}
+    />
+  {/if}
+  {#if pullLink}
+    <EntryPullModal
+      link={pullLink}
+      onClose={closePullModal}
+      onPull={confirmPull}
     />
   {/if}
 </div>
