@@ -3,15 +3,17 @@ module elabftw-desktop
 go 1.25.0
 
 require (
+	github.com/JohannesKaufmann/html-to-markdown/v2 v2.5.2
 	github.com/gomarkdown/markdown v0.0.0-20260417124207-7d523f7318df
 	github.com/google/uuid v1.6.0
-	github.com/wailsapp/wails/v2 v2.15.0
+	github.com/wailsapp/wails/v2 v2.12.0
 	golang.org/x/crypto v0.53.0
 	modernc.org/sqlite v1.44.3
 )
 
 require (
 	git.sr.ht/~jackmordaunt/go-toast/v2 v2.0.3 // indirect
+	github.com/JohannesKaufmann/dom v0.3.1 // indirect
 	github.com/bep/debounce v1.2.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
@@ -25,7 +27,7 @@ require (
 	github.com/leaanthony/slicer v1.6.0 // indirect
 	github.com/leaanthony/u v1.1.1 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/mattn/go-isatty v0.0.22 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/pkg/errors v0.9.1 // indirect
