@@ -41,6 +41,23 @@ func elabftwEntityPath(entityType string) (string, error) {
 	}
 }
 
+func buildPushEntryPayload(title string, markdown string, contentType int) (map[string]any, error) {
+	body := markdown
+	switch contentType {
+	case 1:
+		body = renderMarkdownToHTML(markdown)
+	case 2:
+	default:
+		return nil, fmt.Errorf("unsupported content_type %d", contentType)
+	}
+
+	return map[string]any{
+		"title":        title,
+		"body":         body,
+		"content_type": contentType,
+	}, nil
+}
+
 func (a *App) PushEntryToElabftw(profileUUID string, entryID int64, instanceID int64, entityType string, force bool) (*PushEntryResult, error) {
 	profileUUID, err := a.requireUnlockedProfile(profileUUID)
 	if err != nil {
@@ -89,12 +106,6 @@ func (a *App) PushEntryToElabftw(profileUUID string, entryID int64, instanceID i
 		return nil, fmt.Errorf("decrypt body: %w", err)
 	}
 
-	payload := map[string]any{
-		"title":        title,
-		"body":         renderMarkdownToHTML(bodyText),
-		"content_type": 1,
-	}
-
 	var remoteID int64
 	var lastSyncModifiedAt string
 
@@ -119,9 +130,15 @@ func (a *App) PushEntryToElabftw(profileUUID string, entryID int64, instanceID i
 			basePath,
 			remoteID,
 			lastSyncModifiedAt,
-			payload,
+			title,
+			bodyText,
 			force,
 		)
+	}
+
+	payload, err := buildPushEntryPayload(title, bodyText, 1)
+	if err != nil {
+		return nil, err
 	}
 
 	return a.postNewRemoteEntry(
@@ -144,7 +161,8 @@ func (a *App) patchExistingRemoteEntry(
 	basePath string,
 	remoteID int64,
 	lastSyncModifiedAt string,
-	payload map[string]any,
+	title string,
+	bodyText string,
 	force bool,
 ) (*PushEntryResult, error) {
 	// First GET remote to check if someone edited it after our last successful sync.
@@ -160,12 +178,15 @@ func (a *App) patchExistingRemoteEntry(
 		return nil, err
 	}
 
-	var remote map[string]any
+	var remote struct {
+		ModifiedAt  string `json:"modified_at"`
+		ContentType int    `json:"content_type"`
+	}
 	if err := decodeElabftwJSONResponse(resp, &remote); err != nil {
 		return nil, err
 	}
 
-	remoteModifiedAt, err := parseElabftwModifiedAt(remote["modified_at"])
+	remoteModifiedAt, err := parseElabftwModifiedAt(remote.ModifiedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -177,6 +198,11 @@ func (a *App) patchExistingRemoteEntry(
 
 	if !force && remoteModifiedAt.After(lastSyncAt) {
 		return nil, errors.New(remoteModifiedConflictMessage(entityType, remoteID))
+	}
+
+	payload, err := buildPushEntryPayload(title, bodyText, remote.ContentType)
+	if err != nil {
+		return nil, err
 	}
 
 	reqBody, err := jsonBody(payload)

@@ -76,18 +76,13 @@ func TestPullEntryFromElabftwReplacesLocalDataAndKeepsPushBaseline(t *testing.T)
 				"id":           42,
 				"page":         "experiments",
 				"title":        "Remote title",
-				"body":         "# Remote body\n\nPulled from eLabFTW.",
-				"content_type": 2,
+				"body":         "<h1>Remote body</h1><p>Pulled from <strong>eLabFTW</strong>.</p>",
+				"content_type": 1,
 				"modified_at":  modifiedAt,
 				"uploads": []map[string]any{
 					{
 						"id":        7,
 						"real_name": "remote.txt",
-						// Pull deliberately ignores remote hash/size metadata and
-						// stores exactly the bytes returned by format=binary.
-						"hash":           strings.Repeat("0", 64),
-						"hash_algorithm": "sha256",
-						"filesize":       len(remoteContent) + 123,
 					},
 				},
 			})
@@ -157,7 +152,7 @@ func TestPullEntryFromElabftwReplacesLocalDataAndKeepsPushBaseline(t *testing.T)
 	if entry.Title != "Remote title" {
 		t.Fatalf("title = %q, want remote title", entry.Title)
 	}
-	if entry.Body != "# Remote body\n\nPulled from eLabFTW." {
+	if !strings.Contains(entry.Body, "# Remote body") || !strings.Contains(entry.Body, "Pulled from **eLabFTW**.") {
 		t.Fatalf("body = %q", entry.Body)
 	}
 
@@ -220,7 +215,7 @@ func TestPullEntryFromElabftwReplacesLocalDataAndKeepsPushBaseline(t *testing.T)
 		t.Fatalf("remote upload mapping = %d, want 7", mappedRemoteUploadID)
 	}
 
-	if err := app.UpdateEntry(profileUUID, entryID, "Edited locally", "Changed after pull"); err != nil {
+	if err := app.UpdateEntry(profileUUID, entryID, "Edited locally", "Changed **after** pull"); err != nil {
 		t.Fatalf("UpdateEntry after pull: %v", err)
 	}
 	if _, err := app.PushEntryToElabftw(profileUUID, entryID, instanceID, "experiment", false); err != nil {
@@ -231,6 +226,12 @@ func TestPullEntryFromElabftwReplacesLocalDataAndKeepsPushBaseline(t *testing.T)
 	}
 	if got := fmt.Sprint(patchPayload["title"]); got != "Edited locally" {
 		t.Fatalf("pushed title = %q", got)
+	}
+	if got := fmt.Sprint(patchPayload["content_type"]); got != "1" {
+		t.Fatalf("pushed content_type = %q, want 1", got)
+	}
+	if got := fmt.Sprint(patchPayload["body"]); !strings.Contains(got, "<strong>after</strong>") {
+		t.Fatalf("pushed HTML body = %q", got)
 	}
 }
 
@@ -246,6 +247,39 @@ func TestRemoteEntryBodyToMarkdown(t *testing.T) {
 		if !strings.Contains(got, want) {
 			t.Fatalf("markdown %q does not contain %q", got, want)
 		}
+	}
+
+	markdown := "# Already Markdown\n\nKeep **this** as-is."
+	got, err = remoteEntryBodyToMarkdown(markdown, 2)
+	if err != nil {
+		t.Fatalf("remoteEntryBodyToMarkdown markdown: %v", err)
+	}
+	if got != markdown {
+		t.Fatalf("markdown body = %q, want %q", got, markdown)
+	}
+}
+
+func TestBuildPushEntryPayload(t *testing.T) {
+	markdown := "# Heading\n\nChanged **after** pull"
+
+	htmlPayload, err := buildPushEntryPayload("Title", markdown, 1)
+	if err != nil {
+		t.Fatalf("build HTML payload: %v", err)
+	}
+	if htmlPayload["content_type"] != 1 || !strings.Contains(fmt.Sprint(htmlPayload["body"]), "<strong>after</strong>") {
+		t.Fatalf("unexpected HTML payload: %+v", htmlPayload)
+	}
+
+	markdownPayload, err := buildPushEntryPayload("Title", markdown, 2)
+	if err != nil {
+		t.Fatalf("build Markdown payload: %v", err)
+	}
+	if markdownPayload["content_type"] != 2 || markdownPayload["body"] != markdown {
+		t.Fatalf("unexpected Markdown payload: %+v", markdownPayload)
+	}
+
+	if _, err := buildPushEntryPayload("Title", markdown, 99); err == nil {
+		t.Fatal("expected invalid content type error")
 	}
 }
 
