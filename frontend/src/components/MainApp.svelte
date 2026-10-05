@@ -45,7 +45,9 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
   let entryTitle = $state('');
   let entryMainText = $state('');
-  let entryContentType = $state<1 | 2>(2);
+  let entryContentType = $state<1 | 2>(1);
+  let tinyMceMounted = $state(true);
+  let markdownMounted = $state(false);
   let entries = $state<main.EntrySummary[]>([]);
   let view = $state<View>('index');
   let loading = $state(false);
@@ -74,6 +76,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
       entryTitle = e.title;
       entryMainText = e.body;
       entryContentType = e.contentType === 1 ? 1 : 2;
+      tinyMceMounted = entryContentType === 1;
+      markdownMounted = entryContentType === 2;
       /* if entry already in eLabFTW, create a link to see it directly */
       remoteLinks = await ListEntryRemoteLinks(profileUuid, id);
       view = 'editor';
@@ -113,7 +117,9 @@ SPDX-License-Identifier: GPL-3.0-or-later
     view = 'editor';
     entryTitle = '';
     entryMainText = '';
-    entryContentType = 2;
+    entryContentType = 1;
+    tinyMceMounted = true;
+    markdownMounted = false;
     showAlert(null);
     currentEntryId = null;
     remoteLinks = [];
@@ -141,9 +147,14 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
   function switchEditor(contentType: 1 | 2): void {
     if (contentType === entryContentType) return;
-    if (entryMainText.trim() !== '' && !window.confirm('Switch editor? Existing content will not be converted between HTML and Markdown.')) {
+    if (entryMainText.trim() !== '' && !window.confirm(
+      'Switch editor? The same body will be loaded in the other editor without automatic HTML/Markdown conversion.',
+    )) {
       return;
     }
+
+    if (contentType === 1) tinyMceMounted = true;
+    if (contentType === 2) markdownMounted = true;
     entryContentType = contentType;
   }
 
@@ -219,6 +230,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
       entryTitle = entry.title;
       entryMainText = entry.body;
       entryContentType = entry.contentType === 1 ? 1 : 2;
+      if (entryContentType === 1) tinyMceMounted = true;
+      if (entryContentType === 2) markdownMounted = true;
       remoteLinks = await ListEntryRemoteLinks(profileUuid, currentEntryId);
       uploadsRefreshKey += 1;
       await refreshEntries();
@@ -430,18 +443,23 @@ SPDX-License-Identifier: GPL-3.0-or-later
             </button>
           </div>
         </div>
-        {#if entryContentType === 1}
-          <TinyMceEditor
-            value={entryMainText}
-            onChange={(next) => entryMainText = next}
-            label='entryMainTextLabel'
-          />
-        {:else}
-          <MarkdownEditor
-            value={entryMainText}
-            onChange={(next) => entryMainText = next}
-            label='entryMainTextLabel'
-          />
+        {#if tinyMceMounted}
+          <div hidden={entryContentType !== 1}>
+            <TinyMceEditor
+              value={entryMainText}
+              onChange={(next) => entryMainText = next}
+              label='entryMainTextLabel'
+            />
+          </div>
+        {/if}
+        {#if markdownMounted}
+          <div hidden={entryContentType !== 2}>
+            <MarkdownEditor
+              value={entryMainText}
+              onChange={(next) => entryMainText = next}
+              label='entryMainTextLabel'
+            />
+          </div>
         {/if}
         {#key uploadsRefreshKey}
           <UploadsPanel

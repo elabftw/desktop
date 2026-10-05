@@ -39,22 +39,34 @@
       content_css: false,
       content_style: 'body { background: #1b2636; color: #fff; font-family: Nunito, sans-serif; } a { color: #9ed9f4; }',
       setup: (instance) => {
-        editor = instance;
-
         instance.on('init', () => {
+          if (destroyed) return;
+
+          syncingFromProps = true;
           instance.setContent(value);
+          syncingFromProps = false;
           ready = true;
         });
 
         instance.on('input change undo redo', () => {
-          if (!syncingFromProps) {
+          if (!destroyed && !syncingFromProps) {
             onChange?.(instance.getContent());
           }
         });
       },
     }).then((editors) => {
+      const instance = editors[0];
+      if (!instance) return;
+
       if (destroyed) {
-        editors.forEach((instance) => instance.remove());
+        instance.remove();
+        return;
+      }
+
+      editor = instance;
+    }).catch((error: unknown) => {
+      if (!destroyed) {
+        console.error('TinyMCE initialization failed:', error);
       }
     });
 
