@@ -29,6 +29,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
   import InstancesPushModal from './Instances/InstancesPushModal.svelte';
   import EntryPullModal from './Instances/EntryPullModal.svelte';
   import MarkdownEditor from "./MarkdownEditor.svelte";
+  import TinyMceEditor from "./TinyMceEditor.svelte";
   import { showAlert } from "./stores/alert.svelte";
   import UploadsPanel from './Uploads/UploadsPanel.svelte';
 
@@ -44,6 +45,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
   let entryTitle = $state('');
   let entryMainText = $state('');
+  let entryContentType = $state<1 | 2>(2);
   let entries = $state<main.EntrySummary[]>([]);
   let view = $state<View>('index');
   let loading = $state(false);
@@ -71,6 +73,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
       const e: main.Entry = await GetEntry(profileUuid, id);
       entryTitle = e.title;
       entryMainText = e.body;
+      entryContentType = e.contentType === 1 ? 1 : 2;
       /* if entry already in eLabFTW, create a link to see it directly */
       remoteLinks = await ListEntryRemoteLinks(profileUuid, id);
       view = 'editor';
@@ -110,6 +113,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     view = 'editor';
     entryTitle = '';
     entryMainText = '';
+    entryContentType = 2;
     showAlert(null);
     currentEntryId = null;
     remoteLinks = [];
@@ -120,11 +124,11 @@ SPDX-License-Identifier: GPL-3.0-or-later
     showAlert({type: 'info', message: currentEntryId ? 'Updating...' : 'Saving...'});
     try {
       if (currentEntryId) {
-        await UpdateEntry(profileUuid, currentEntryId, entryTitle, entryMainText);
+        await UpdateEntry(profileUuid, currentEntryId, entryTitle, entryMainText, entryContentType);
         remoteLinks = await ListEntryRemoteLinks(profileUuid, currentEntryId);
         showAlert({type: 'success', message: 'Entry updated ✔'});
       } else {
-        const id = await SaveEntry(profileUuid, entryTitle, entryMainText);
+        const id = await SaveEntry(profileUuid, entryTitle, entryMainText, entryContentType);
         currentEntryId = id;
         showAlert({type: 'success', message: `Saved with id ${id} ✔`});
       }
@@ -133,6 +137,14 @@ SPDX-License-Identifier: GPL-3.0-or-later
     } catch (e: unknown) {
       showAlert({type: 'error', message: errorMessage(e)});
     }
+  }
+
+  function switchEditor(contentType: 1 | 2): void {
+    if (contentType === entryContentType) return;
+    if (entryMainText.trim() !== '' && !window.confirm('Switch editor? Existing content will not be converted between HTML and Markdown.')) {
+      return;
+    }
+    entryContentType = contentType;
   }
 
   // use for Uploads to check the entry Id. Pass it to UploadsPAnel so that we dont need to check and warn
@@ -206,6 +218,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
       const entry = await GetEntry(profileUuid, currentEntryId);
       entryTitle = entry.title;
       entryMainText = entry.body;
+      entryContentType = entry.contentType === 1 ? 1 : 2;
       remoteLinks = await ListEntryRemoteLinks(profileUuid, currentEntryId);
       uploadsRefreshKey += 1;
       await refreshEntries();
@@ -396,11 +409,40 @@ SPDX-License-Identifier: GPL-3.0-or-later
           />
         </div>
 
-        <label for='entryMainText' class='mt-2'>Entry main text</label>
-        <MarkdownEditor
-          value={entryMainText}
-          onChange={(next) => entryMainText = next}
-        />
+        <div class='flex justify-between items-center mt-2 mb-1'>
+          <label id='entryMainTextLabel'>Entry main text</label>
+          <div class='flex gap-03' role='group' aria-label='Editor type'>
+            <button
+              type='button'
+              class={entryContentType === 1 ? 'btn btn-primary' : 'btn btn-secondary'}
+              aria-pressed={entryContentType === 1}
+              onclick={() => switchEditor(1)}
+            >
+              TinyMCE
+            </button>
+            <button
+              type='button'
+              class={entryContentType === 2 ? 'btn btn-primary' : 'btn btn-secondary'}
+              aria-pressed={entryContentType === 2}
+              onclick={() => switchEditor(2)}
+            >
+              Markdown
+            </button>
+          </div>
+        </div>
+        {#if entryContentType === 1}
+          <TinyMceEditor
+            value={entryMainText}
+            onChange={(next) => entryMainText = next}
+            label='entryMainTextLabel'
+          />
+        {:else}
+          <MarkdownEditor
+            value={entryMainText}
+            onChange={(next) => entryMainText = next}
+            label='entryMainTextLabel'
+          />
+        {/if}
         {#key uploadsRefreshKey}
           <UploadsPanel
             {profileUuid}

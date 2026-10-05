@@ -34,6 +34,7 @@ export namespace main {
 	    id: number;
 	    title: string;
 	    body: string;
+	    contentType: number;
 	    createdAt: string;
 	    modifiedAt: string;
 	
@@ -46,6 +47,7 @@ export namespace main {
 	        this.id = source["id"];
 	        this.title = source["title"];
 	        this.body = source["body"];
+	        this.contentType = source["contentType"];
 	        this.createdAt = source["createdAt"];
 	        this.modifiedAt = source["modifiedAt"];
 	    }

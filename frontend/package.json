@@ -35,6 +35,7 @@
   },
   "dependencies": {
     "easymde": "^2.21.0",
-    "luxon": "^3.7.2"
+    "luxon": "^3.7.2",
+    "tinymce": "^6.8.6"
   }
 }

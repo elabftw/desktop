@@ -21,12 +21,6 @@ import (
 	"os"
 	"strings"
 	"time"
-
-	"github.com/JohannesKaufmann/html-to-markdown/v2/converter"
-	"github.com/JohannesKaufmann/html-to-markdown/v2/plugin/base"
-	"github.com/JohannesKaufmann/html-to-markdown/v2/plugin/commonmark"
-	"github.com/JohannesKaufmann/html-to-markdown/v2/plugin/strikethrough"
-	"github.com/JohannesKaufmann/html-to-markdown/v2/plugin/table"
 )
 
 type PullEntryResult struct {
@@ -133,16 +127,15 @@ func (a *App) PullEntryFromElabftw(
 		return nil, fmt.Errorf("remote entry title is empty")
 	}
 
-	body, err := remoteEntryBodyToMarkdown(remote.Body, remote.ContentType)
-	if err != nil {
-		return nil, err
+	if remote.ContentType != 1 && remote.ContentType != 2 {
+		return nil, fmt.Errorf("unsupported remote content_type %d", remote.ContentType)
 	}
 
 	encryptedTitle, err := encryptString(a.activeKey, remote.Title)
 	if err != nil {
 		return nil, fmt.Errorf("encrypt remote title: %w", err)
 	}
-	encryptedBody, err := encryptString(a.activeKey, body)
+	encryptedBody, err := encryptString(a.activeKey, remote.Body)
 	if err != nil {
 		return nil, fmt.Errorf("encrypt remote body: %w", err)
 	}
@@ -167,6 +160,7 @@ func (a *App) PullEntryFromElabftw(
 		remoteID,
 		encryptedTitle,
 		encryptedBody,
+		remote.ContentType,
 		remoteModifiedAt.Format(time.RFC3339Nano),
 		preparedUploads,
 	)
@@ -200,29 +194,6 @@ func validatePulledRemoteIdentity(remote remoteEntry, remoteID int64, entityType
 	}
 
 	return nil
-}
-
-func remoteEntryBodyToMarkdown(body string, contentType int) (string, error) {
-	switch contentType {
-	case 1:
-		conv := converter.NewConverter(
-			converter.WithPlugins(
-				base.NewBasePlugin(),
-				commonmark.NewCommonmarkPlugin(),
-				strikethrough.NewStrikethroughPlugin(),
-				table.NewTablePlugin(),
-			),
-		)
-		markdown, err := conv.ConvertString(body)
-		if err != nil {
-			return "", fmt.Errorf("convert remote HTML body to Markdown: %w", err)
-		}
-		return strings.TrimSpace(markdown), nil
-	case 2:
-		return strings.TrimSpace(body), nil
-	default:
-		return "", fmt.Errorf("unsupported remote content_type %d", contentType)
-	}
 }
 
 func (a *App) prepareRemoteUploads(
@@ -354,6 +325,7 @@ func replaceLocalEntryFromRemote(
 	remoteID int64,
 	encryptedTitle string,
 	encryptedBody string,
+	contentType int,
 	modifiedAt string,
 	uploads []preparedPulledUpload,
 ) ([]string, error) {
@@ -385,9 +357,9 @@ func replaceLocalEntryFromRemote(
 
 	result, err := tx.Exec(`
 		UPDATE entries
-		SET title = ?, body = ?, modified_at = ?
+		SET title = ?, body = ?, content_type = ?, modified_at = ?
 		WHERE id = ?
-	`, encryptedTitle, encryptedBody, modifiedAt, entryID)
+	`, encryptedTitle, encryptedBody, contentType, modifiedAt, entryID)
 	if err != nil {
 		return nil, fmt.Errorf("replace local entry: %w", err)
 	}

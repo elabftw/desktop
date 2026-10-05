@@ -246,7 +246,7 @@ func (a *App) AddProfile(displayName string, passphrase string) (*ProfileIndex, 
 	return a.index, nil
 }
 
-func (a *App) SaveEntry(profileUUID string, title string, body string) (int64, error) {
+func (a *App) SaveEntry(profileUUID string, title string, body string, contentType int) (int64, error) {
 	profileUUID, err := a.requireUnlockedProfile(profileUUID)
 	if err != nil {
 		return 0, err
@@ -264,9 +264,11 @@ func (a *App) SaveEntry(profileUUID string, title string, body string) (int64, e
 	defer func() { _ = db.Close() }()
 
 	title = strings.TrimSpace(title)
-	body = strings.TrimSpace(body)
 	if title == "" {
 		return 0, fmt.Errorf("Title is empty")
+	}
+	if contentType != 1 && contentType != 2 {
+		return 0, fmt.Errorf("Invalid content type")
 	}
 
 	// Encrypt sensitive entry content before writing to SQLite.
@@ -282,9 +284,10 @@ func (a *App) SaveEntry(profileUUID string, title string, body string) (int64, e
 	}
 
 	res, err := db.Exec(
-		`INSERT INTO entries (title, body) VALUES (?, ?)`,
+		`INSERT INTO entries (title, body, content_type) VALUES (?, ?, ?)`,
 		encryptedTitle,
 		encryptedBody,
+		contentType,
 	)
 	if err != nil {
 		return 0, fmt.Errorf("Insert entry: %w", err)
@@ -298,7 +301,7 @@ func (a *App) SaveEntry(profileUUID string, title string, body string) (int64, e
 	return id, nil
 }
 
-func (a *App) UpdateEntry(profileUUID string, id int64, title string, body string) error {
+func (a *App) UpdateEntry(profileUUID string, id int64, title string, body string, contentType int) error {
 	profileUUID, err := a.requireUnlockedProfile(profileUUID)
 	if err != nil {
 		return err
@@ -319,9 +322,11 @@ func (a *App) UpdateEntry(profileUUID string, id int64, title string, body strin
 	defer func() { _ = db.Close() }()
 
 	title = strings.TrimSpace(title)
-	body = strings.TrimSpace(body)
 	if title == "" {
 		return fmt.Errorf("Title is empty")
+	}
+	if contentType != 1 && contentType != 2 {
+		return fmt.Errorf("Invalid content type")
 	}
 
 	encryptedTitle, err := encryptString(a.activeKey, title)
@@ -338,9 +343,10 @@ func (a *App) UpdateEntry(profileUUID string, id int64, title string, body strin
 		UPDATE entries
 		SET title = ?,
 			body = ?,
+			content_type = ?,
 			modified_at = (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
 		WHERE id = ?
-	`, encryptedTitle, encryptedBody, id)
+	`, encryptedTitle, encryptedBody, contentType, id)
 	if err != nil {
 		return fmt.Errorf("Update entry: %w", err)
 	}
@@ -453,11 +459,12 @@ func (a *App) ListEntries(profileUUID string) ([]EntrySummary, error) {
 }
 
 type Entry struct {
-	ID         int64  `json:"id"`
-	Title      string `json:"title"`
-	Body       string `json:"body"`
-	CreatedAt  string `json:"createdAt"`
-	ModifiedAt string `json:"modifiedAt"`
+	ID          int64  `json:"id"`
+	Title       string `json:"title"`
+	Body        string `json:"body"`
+	ContentType int    `json:"contentType"`
+	CreatedAt   string `json:"createdAt"`
+	ModifiedAt  string `json:"modifiedAt"`
 }
 
 func (a *App) GetEntry(profileUUID string, id int64) (*Entry, error) {
@@ -482,10 +489,10 @@ func (a *App) GetEntry(profileUUID string, id int64) (*Entry, error) {
 
 	var e Entry
 	err = db.QueryRow(`
-		SELECT id, title, body, created_at, modified_at
+		SELECT id, title, body, content_type, created_at, modified_at
 		FROM entries
 		WHERE id = ?
-	`, id).Scan(&e.ID, &e.Title, &e.Body, &e.CreatedAt, &e.ModifiedAt)
+	`, id).Scan(&e.ID, &e.Title, &e.Body, &e.ContentType, &e.CreatedAt, &e.ModifiedAt)
 
 	if err == sql.ErrNoRows {
 		return nil, fmt.Errorf("Entry not found")

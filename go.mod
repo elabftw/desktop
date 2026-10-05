@@ -3,8 +3,6 @@ module elabftw-desktop
 go 1.25.0
 
 require (
-	github.com/JohannesKaufmann/html-to-markdown/v2 v2.5.2
-	github.com/gomarkdown/markdown v0.0.0-20260417124207-7d523f7318df
 	github.com/google/uuid v1.6.0
 	github.com/wailsapp/wails/v2 v2.12.0
 	golang.org/x/crypto v0.53.0
@@ -13,7 +11,6 @@ require (
 
 require (
 	git.sr.ht/~jackmordaunt/go-toast/v2 v2.0.3 // indirect
-	github.com/JohannesKaufmann/dom v0.3.1 // indirect
 	github.com/bep/debounce v1.2.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect

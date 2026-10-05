@@ -199,5 +199,17 @@ PRAGMA user_version = 2;
 
 		v = 4
 	}
+
+	// Existing Desktop entries were created with the Markdown editor.
+	if v == 4 {
+		_, err := db.Exec(`
+ALTER TABLE entries ADD COLUMN content_type INTEGER NOT NULL DEFAULT 2 CHECK (content_type IN (1, 2));
+PRAGMA user_version = 5;
+`)
+		if err != nil {
+			return fmt.Errorf("Create schema v5: %w", err)
+		}
+		v = 5
+	}
 	return nil
 }
