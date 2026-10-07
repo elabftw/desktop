@@ -43,11 +43,18 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
   let {profileUuid, profileName, onLogout}: Props = $props();
 
+  const editorContentTypeStorageKey = `elabftw-editor-content-type:${profileUuid}`;
+
+  function getPreferredEditorContentType(): 1 | 2 {
+    return localStorage.getItem(editorContentTypeStorageKey) === '2' ? 2 : 1;
+  }
+
+  const initialEditorContentType = getPreferredEditorContentType();
   let entryTitle = $state('');
   let entryMainText = $state('');
-  let entryContentType = $state<1 | 2>(1);
-  let tinyMceMounted = $state(true);
-  let markdownMounted = $state(false);
+  let entryContentType = $state<1 | 2>(initialEditorContentType);
+  let tinyMceMounted = $state(initialEditorContentType === 1);
+  let markdownMounted = $state(initialEditorContentType === 2);
   let entries = $state<main.EntrySummary[]>([]);
   let view = $state<View>('index');
   let loading = $state(false);
@@ -75,7 +82,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
       const e: main.Entry = await GetEntry(profileUuid, id);
       entryTitle = e.title;
       entryMainText = e.body;
-      entryContentType = e.contentType === 1 ? 1 : 2;
+      entryContentType = getPreferredEditorContentType();
       tinyMceMounted = entryContentType === 1;
       markdownMounted = entryContentType === 2;
       /* if entry already in eLabFTW, create a link to see it directly */
@@ -117,9 +124,9 @@ SPDX-License-Identifier: GPL-3.0-or-later
     view = 'editor';
     entryTitle = '';
     entryMainText = '';
-    entryContentType = 1;
-    tinyMceMounted = true;
-    markdownMounted = false;
+    entryContentType = getPreferredEditorContentType();
+    tinyMceMounted = entryContentType === 1;
+    markdownMounted = entryContentType === 2;
     showAlert(null);
     currentEntryId = null;
     remoteLinks = [];
@@ -156,6 +163,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     if (contentType === 1) tinyMceMounted = true;
     if (contentType === 2) markdownMounted = true;
     entryContentType = contentType;
+    localStorage.setItem(editorContentTypeStorageKey, String(contentType));
   }
 
   // use for Uploads to check the entry Id. Pass it to UploadsPAnel so that we dont need to check and warn
@@ -229,9 +237,9 @@ SPDX-License-Identifier: GPL-3.0-or-later
       const entry = await GetEntry(profileUuid, currentEntryId);
       entryTitle = entry.title;
       entryMainText = entry.body;
-      entryContentType = entry.contentType === 1 ? 1 : 2;
-      if (entryContentType === 1) tinyMceMounted = true;
-      if (entryContentType === 2) markdownMounted = true;
+      entryContentType = getPreferredEditorContentType();
+      tinyMceMounted = entryContentType === 1;
+      markdownMounted = entryContentType === 2;
       remoteLinks = await ListEntryRemoteLinks(profileUuid, currentEntryId);
       uploadsRefreshKey += 1;
       await refreshEntries();
