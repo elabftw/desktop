@@ -18,6 +18,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     UpdateEntry,
     DeleteEntry,
     LockProfile,
+    PullEntryFromElabftw,
     PushEntryToElabftw,
     PushAllEntriesToElabftw,
     ListEntryRemoteLinks,
@@ -26,7 +27,9 @@ SPDX-License-Identifier: GPL-3.0-or-later
   import { autofocus, errorMessage, openExternalURL, preventDefaultSubmit } from '../utils/helpers';
   import InstancesView from './Instances/InstancesView.svelte';
   import InstancesPushModal from './Instances/InstancesPushModal.svelte';
+  import EntryPullModal from './Instances/EntryPullModal.svelte';
   import MarkdownEditor from "./MarkdownEditor.svelte";
+  import TinyMceEditor from "./TinyMceEditor.svelte";
   import { showAlert } from "./stores/alert.svelte";
   import UploadsPanel from './Uploads/UploadsPanel.svelte';
 
@@ -40,8 +43,18 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
   let {profileUuid, profileName, onLogout}: Props = $props();
 
+  const editorContentTypeStorageKey = `elabftw-editor-content-type:${profileUuid}`;
+
+  function getPreferredEditorContentType(): 1 | 2 {
+    return localStorage.getItem(editorContentTypeStorageKey) === '2' ? 2 : 1;
+  }
+
+  const initialEditorContentType = getPreferredEditorContentType();
   let entryTitle = $state('');
   let entryMainText = $state('');
+  let entryContentType = $state<1 | 2>(initialEditorContentType);
+  let tinyMceMounted = $state(initialEditorContentType === 1);
+  let markdownMounted = $state(initialEditorContentType === 2);
   let entries = $state<main.EntrySummary[]>([]);
   let view = $state<View>('index');
   let loading = $state(false);
@@ -54,6 +67,9 @@ SPDX-License-Identifier: GPL-3.0-or-later
     entityType: 'experiment' | 'resource';
   } | null>(null);
   let remoteLinks = $state<main.EntryRemoteLink[]>([]);
+  let pullLink = $state<main.EntryRemoteLink | null>(null);
+  // reactive to trigger an uploads refresh after a pull
+  let uploadsRefreshKey = $state(0);
 
   function toRelativeTime(iso: string, locale = 'en'): string {
     return DateTime.fromISO(iso).setLocale(locale).toRelative() ?? 'now';
@@ -66,6 +82,9 @@ SPDX-License-Identifier: GPL-3.0-or-later
       const e: main.Entry = await GetEntry(profileUuid, id);
       entryTitle = e.title;
       entryMainText = e.body;
+      entryContentType = getPreferredEditorContentType();
+      tinyMceMounted = entryContentType === 1;
+      markdownMounted = entryContentType === 2;
       /* if entry already in eLabFTW, create a link to see it directly */
       remoteLinks = await ListEntryRemoteLinks(profileUuid, id);
       view = 'editor';
@@ -105,6 +124,9 @@ SPDX-License-Identifier: GPL-3.0-or-later
     view = 'editor';
     entryTitle = '';
     entryMainText = '';
+    entryContentType = getPreferredEditorContentType();
+    tinyMceMounted = entryContentType === 1;
+    markdownMounted = entryContentType === 2;
     showAlert(null);
     currentEntryId = null;
     remoteLinks = [];
@@ -115,11 +137,11 @@ SPDX-License-Identifier: GPL-3.0-or-later
     showAlert({type: 'info', message: currentEntryId ? 'Updating...' : 'Saving...'});
     try {
       if (currentEntryId) {
-        await UpdateEntry(profileUuid, currentEntryId, entryTitle, entryMainText);
+        await UpdateEntry(profileUuid, currentEntryId, entryTitle, entryMainText, entryContentType);
         remoteLinks = await ListEntryRemoteLinks(profileUuid, currentEntryId);
         showAlert({type: 'success', message: 'Entry updated ✔'});
       } else {
-        const id = await SaveEntry(profileUuid, entryTitle, entryMainText);
+        const id = await SaveEntry(profileUuid, entryTitle, entryMainText, entryContentType);
         currentEntryId = id;
         showAlert({type: 'success', message: `Saved with id ${id} ✔`});
       }
@@ -128,6 +150,20 @@ SPDX-License-Identifier: GPL-3.0-or-later
     } catch (e: unknown) {
       showAlert({type: 'error', message: errorMessage(e)});
     }
+  }
+
+  function switchEditor(contentType: 1 | 2): void {
+    if (contentType === entryContentType) return;
+    if (entryMainText.trim() !== '' && !window.confirm(
+      'Switch editor? The same body will be loaded in the other editor without automatic HTML/Markdown conversion.',
+    )) {
+      return;
+    }
+
+    if (contentType === 1) tinyMceMounted = true;
+    if (contentType === 2) markdownMounted = true;
+    entryContentType = contentType;
+    localStorage.setItem(editorContentTypeStorageKey, String(contentType));
   }
 
   // use for Uploads to check the entry Id. Pass it to UploadsPAnel so that we dont need to check and warn
@@ -173,6 +209,50 @@ SPDX-License-Identifier: GPL-3.0-or-later
   function closePushModal(): void {
     pushModalOpen = false;
     lastFailedPush = null;
+  }
+
+  function openPullModal(link: main.EntryRemoteLink): void {
+    showAlert(null);
+    pullLink = link;
+  }
+
+  function closePullModal(): void {
+    pullLink = null;
+  }
+
+  async function confirmPull(): Promise<void> {
+    if (!currentEntryId || !pullLink) {
+      showAlert({type: 'error', message: 'No remote entry selected.'});
+      return;
+    }
+
+    try {
+      const result = await PullEntryFromElabftw(
+        profileUuid,
+        currentEntryId,
+        pullLink.instanceId,
+        pullLink.type,
+      );
+
+      const entry = await GetEntry(profileUuid, currentEntryId);
+      entryTitle = entry.title;
+      entryMainText = entry.body;
+      entryContentType = getPreferredEditorContentType();
+      tinyMceMounted = entryContentType === 1;
+      markdownMounted = entryContentType === 2;
+      remoteLinks = await ListEntryRemoteLinks(profileUuid, currentEntryId);
+      uploadsRefreshKey += 1;
+      await refreshEntries();
+
+      const warning = result.warnings?.length ? ` Warning: ${result.warnings.join(' ')}` : '';
+      showAlert({
+        type: result.warnings?.length ? 'warning' : 'success',
+        message: `Pulled ${result.type} #${result.remoteId} and replaced the local entry ✔${warning}`,
+      });
+      pullLink = null;
+    } catch (e: unknown) {
+      showAlert({type: 'error', message: errorMessage(e)});
+    }
   }
 
   async function confirmPush(
@@ -320,13 +400,41 @@ SPDX-License-Identifier: GPL-3.0-or-later
           <button class='btn btn-secondary' type='button' onclick={openIndex}>← Back</button>
           <div class='flex gap-1'>
               {#each remoteLinks as link (`${link.instanceId}-${link.type}-${link.remoteId}`)}
-                <button type='button' class='link-button' onclick={() => openExternalURL(link.url)}>
-                  See {link.type} #{link.remoteId} at {link.siteUrl}
-                </button>
+                <div class='flex gap-03'>
+                  <button
+                    type='button'
+                    class='link-button flex items-center gap-03'
+                    title={`Open ${link.type} #${link.remoteId} in eLabFTW`}
+                    onclick={() => openExternalURL(link.url)}
+                  >
+                    {#if link.type === 'resource'}
+                      <svg aria-hidden='true' width='1em' height='1em' viewBox='0 0 512 512'>
+                        <path fill='currentColor' d='M192 32c0-17.7 14.3-32 32-32h64c17.7 0 32 14.3 32 32v64c0 17.7-14.3 32-32 32h-64c-17.7 0-32-14.3-32-32V32zm32 352h64c17.7 0 32 14.3 32 32v64c0 17.7-14.3 32-32 32h-64c-17.7 0-32-14.3-32-32v-64c0-17.7 14.3-32 32-32zm192 0h64c17.7 0 32 14.3 32 32v64c0 17.7-14.3 32-32 32h-64c-17.7 0-32-14.3-32-32v-64c0-17.7 14.3-32 32-32zM320 192h64c17.7 0 32 14.3 32 32v64c0 17.7-14.3 32-32 32h-64c-17.7 0-32-14.3-32-32v-64c0-17.7 14.3-32 32-32zm-182.6-3.9c12.5-12.5 32.8-12.5 45.3 0l45.3 45.3c12.5 12.5 12.5 32.8 0 45.3l-45.3 45.3c-12.5 12.5-32.8 12.5-45.3 0l-45.3-45.4c-12.5-12.5-12.5-32.8 0-45.3l45.3-45.3zM32 384h64c17.7 0 32 14.3 32 32v64c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32v-64c0-17.7 14.3-32 32-32z'/>
+                      </svg>
+                    {:else}
+                      <svg aria-hidden='true' width='1em' height='1em' viewBox='0 0 448 512'>
+                        <path fill='currentColor' d='M288 0H128c-17.7 0-32 14.3-32 32s14.3 32 32 32v151.5L7.5 426.3C2.6 435 0 444.7 0 454.7 0 486.4 25.6 512 57.3 512h333.4c31.6 0 57.3-25.6 57.3-57.3 0-10-2.6-19.8-7.5-28.4L320 215.5V64c17.7 0 32-14.3 32-32S337.7 0 320 0h-32zM192 215.5V64h64v151.5c0 11.1 2.9 22.1 8.4 31.8L306 320H142l41.6-72.7c5.5-9.7 8.4-20.6 8.4-31.8z'/>
+                      </svg>
+                    {/if}
+                    Open in eLabFTW
+                    <svg aria-hidden='true' width='0.85em' height='0.85em' viewBox='0 0 512 512'>
+                      <path fill='currentColor' d='M320 0c-17.7 0-32 14.3-32 32s14.3 32 32 32h82.7L201.3 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L448 109.3V192c0 17.7 14.3 32 32 32s32-14.3 32-32V32c0-17.7-14.3-32-32-32H320zM80 96c-44.2 0-80 35.8-80 80v256c0 44.2 35.8 80 80 80h256c44.2 0 80-35.8 80-80v-80c0-17.7-14.3-32-32-32s-32 14.3-32 32v80c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V176c0-8.8 7.2-16 16-16h80c17.7 0 32-14.3 32-32s-14.3-32-32-32H80z'/>
+                    </svg>
+                  </button>
+                  <button type='button' class='btn btn-secondary' onclick={() => openPullModal(link)}>
+                    <svg aria-hidden='true' width='1em' height='1em' viewBox='0 0 384 512'>
+                      <path fill='currentColor' d='M169.4 502.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 402.7V32c0-17.7-14.3-32-32-32s-32 14.3-32 32v370.7L54.6 297.3c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/>
+                    </svg>
+                    Pull
+                  </button>
+                </div>
               {/each}
             <button class='btn btn-secondary' type='button' disabled={!currentEntryId}
                     onclick={() => openPushModal('single', currentEntryId)}>
-              Push to eLabFTW Instance
+              <svg aria-hidden='true' width='1em' height='1em' viewBox='0 0 384 512'>
+                <path fill='currentColor' d='M214.6 9.4c-12.5-12.5-32.8-12.5-45.3 0l-160 160c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 109.3V480c0 17.7 14.3 32 32 32s32-14.3 32-32V109.3l105.4 105.4c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3l-160-160z'/>
+              </svg>
+              Push
             </button>
             <button class='btn btn-primary' type='submit'>Save</button>
           </div>
@@ -345,16 +453,52 @@ SPDX-License-Identifier: GPL-3.0-or-later
           />
         </div>
 
-        <label for='entryMainText' class='mt-2'>Entry main text</label>
-        <MarkdownEditor
-          value={entryMainText}
-          onChange={(next) => entryMainText = next}
-        />
-        <UploadsPanel
-          {profileUuid}
-          entryId={currentEntryId}
-          {ensureEntrySaved}
-        />
+        <div class='flex justify-between items-center mt-2 mb-1'>
+          <label id='entryMainTextLabel'>Entry main text</label>
+          <div class='flex gap-03' role='group' aria-label='Editor type'>
+            <button
+              type='button'
+              class={entryContentType === 1 ? 'btn btn-primary' : 'btn btn-secondary'}
+              aria-pressed={entryContentType === 1}
+              onclick={() => switchEditor(1)}
+            >
+              TinyMCE
+            </button>
+            <button
+              type='button'
+              class={entryContentType === 2 ? 'btn btn-primary' : 'btn btn-secondary'}
+              aria-pressed={entryContentType === 2}
+              onclick={() => switchEditor(2)}
+            >
+              Markdown
+            </button>
+          </div>
+        </div>
+        {#if tinyMceMounted}
+          <div hidden={entryContentType !== 1}>
+            <TinyMceEditor
+              value={entryMainText}
+              onChange={(next) => entryMainText = next}
+              label='entryMainTextLabel'
+            />
+          </div>
+        {/if}
+        {#if markdownMounted}
+          <div hidden={entryContentType !== 2}>
+            <MarkdownEditor
+              value={entryMainText}
+              onChange={(next) => entryMainText = next}
+              label='entryMainTextLabel'
+            />
+          </div>
+        {/if}
+        {#key uploadsRefreshKey}
+          <UploadsPanel
+            {profileUuid}
+            entryId={currentEntryId}
+            {ensureEntrySaved}
+          />
+        {/key}
       </form>
     </section>
   {/if}
@@ -364,6 +508,13 @@ SPDX-License-Identifier: GPL-3.0-or-later
       force={lastFailedPush !== null}
       onClose={closePushModal}
       onPush={confirmPush}
+    />
+  {/if}
+  {#if pullLink}
+    <EntryPullModal
+      link={pullLink}
+      onClose={closePullModal}
+      onPull={confirmPull}
     />
   {/if}
 </div>

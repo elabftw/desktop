@@ -34,6 +34,7 @@ export namespace main {
 	    id: number;
 	    title: string;
 	    body: string;
+	    contentType: number;
 	    createdAt: string;
 	    modifiedAt: string;
 	
@@ -46,6 +47,7 @@ export namespace main {
 	        this.id = source["id"];
 	        this.title = source["title"];
 	        this.body = source["body"];
+	        this.contentType = source["contentType"];
 	        this.createdAt = source["createdAt"];
 	        this.modifiedAt = source["modifiedAt"];
 	    }
@@ -141,6 +143,26 @@ export namespace main {
 		    }
 		    return a;
 		}
+	}
+	export class PullEntryResult {
+	    localId: number;
+	    remoteId: number;
+	    type: string;
+	    uploads: number;
+	    warnings?: string[];
+	
+	    static createFrom(source: any = {}) {
+	        return new PullEntryResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.localId = source["localId"];
+	        this.remoteId = source["remoteId"];
+	        this.type = source["type"];
+	        this.uploads = source["uploads"];
+	        this.warnings = source["warnings"];
+	    }
 	}
 	export class PushEntryResult {
 	    localId: number;

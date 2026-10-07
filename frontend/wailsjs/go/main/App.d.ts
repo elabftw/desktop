@@ -34,11 +34,13 @@ export function ListEntryUploads(arg1:string,arg2:number):Promise<Array<main.Sto
 
 export function LockProfile():Promise<void>;
 
+export function PullEntryFromElabftw(arg1:string,arg2:number,arg3:number,arg4:string):Promise<main.PullEntryResult>;
+
 export function PushAllEntriesToElabftw(arg1:string,arg2:number,arg3:string,arg4:boolean):Promise<Array<main.PushEntryResult>>;
 
 export function PushEntryToElabftw(arg1:string,arg2:number,arg3:number,arg4:string,arg5:boolean):Promise<main.PushEntryResult>;
 
-export function SaveEntry(arg1:string,arg2:string,arg3:string):Promise<number>;
+export function SaveEntry(arg1:string,arg2:string,arg3:string,arg4:number):Promise<number>;
 
 export function SelectFile():Promise<string>;
 
@@ -46,4 +48,4 @@ export function UnlockProfile(arg1:string,arg2:string):Promise<void>;
 
 export function UpdateElabftwInstance(arg1:string,arg2:number,arg3:string,arg4:string,arg5:boolean):Promise<void>;
 
-export function UpdateEntry(arg1:string,arg2:number,arg3:string,arg4:string):Promise<void>;
+export function UpdateEntry(arg1:string,arg2:number,arg3:string,arg4:string,arg5:number):Promise<void>;

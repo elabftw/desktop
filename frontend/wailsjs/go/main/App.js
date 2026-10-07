@@ -66,6 +66,10 @@ export function LockProfile() {
   return window['go']['main']['App']['LockProfile']();
 }
 
+export function PullEntryFromElabftw(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['PullEntryFromElabftw'](arg1, arg2, arg3, arg4);
+}
+
 export function PushAllEntriesToElabftw(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['PushAllEntriesToElabftw'](arg1, arg2, arg3, arg4);
 }
@@ -74,8 +78,8 @@ export function PushEntryToElabftw(arg1, arg2, arg3, arg4, arg5) {
   return window['go']['main']['App']['PushEntryToElabftw'](arg1, arg2, arg3, arg4, arg5);
 }
 
-export function SaveEntry(arg1, arg2, arg3) {
-  return window['go']['main']['App']['SaveEntry'](arg1, arg2, arg3);
+export function SaveEntry(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['SaveEntry'](arg1, arg2, arg3, arg4);
 }
 
 export function SelectFile() {
@@ -90,6 +94,6 @@ export function UpdateElabftwInstance(arg1, arg2, arg3, arg4, arg5) {
   return window['go']['main']['App']['UpdateElabftwInstance'](arg1, arg2, arg3, arg4, arg5);
 }
 
-export function UpdateEntry(arg1, arg2, arg3, arg4) {
-  return window['go']['main']['App']['UpdateEntry'](arg1, arg2, arg3, arg4);
+export function UpdateEntry(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['main']['App']['UpdateEntry'](arg1, arg2, arg3, arg4, arg5);
 }
