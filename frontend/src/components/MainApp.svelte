@@ -82,7 +82,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
       const e: main.Entry = await GetEntry(profileUuid, id);
       entryTitle = e.title;
       entryMainText = e.body;
-      entryContentType = getPreferredEditorContentType();
+      entryContentType = e.contentType === 2 ? 2 : 1;
       tinyMceMounted = entryContentType === 1;
       markdownMounted = entryContentType === 2;
       /* if entry already in eLabFTW, create a link to see it directly */
@@ -237,7 +237,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
       const entry = await GetEntry(profileUuid, currentEntryId);
       entryTitle = entry.title;
       entryMainText = entry.body;
-      entryContentType = getPreferredEditorContentType();
+      entryContentType = e.contentType === 2 ? 2 : 1;
       tinyMceMounted = entryContentType === 1;
       markdownMounted = entryContentType === 2;
       remoteLinks = await ListEntryRemoteLinks(profileUuid, currentEntryId);
