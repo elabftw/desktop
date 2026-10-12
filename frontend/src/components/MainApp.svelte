@@ -237,7 +237,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
       const entry = await GetEntry(profileUuid, currentEntryId);
       entryTitle = entry.title;
       entryMainText = entry.body;
-      entryContentType = e.contentType === 2 ? 2 : 1;
+      entryContentType = entry.contentType === 2 ? 2 : 1;
       tinyMceMounted = entryContentType === 1;
       markdownMounted = entryContentType === 2;
       remoteLinks = await ListEntryRemoteLinks(profileUuid, currentEntryId);
@@ -478,7 +478,9 @@ SPDX-License-Identifier: GPL-3.0-or-later
           <div hidden={entryContentType !== 1}>
             <TinyMceEditor
               value={entryMainText}
-              onChange={(next) => entryMainText = next}
+              onChange={(next) => {
+                if (entryContentType === 1) entryMainText = next;
+              }}
               label='entryMainTextLabel'
             />
           </div>
@@ -487,7 +489,9 @@ SPDX-License-Identifier: GPL-3.0-or-later
           <div hidden={entryContentType !== 2}>
             <MarkdownEditor
               value={entryMainText}
-              onChange={(next) => entryMainText = next}
+              onChange={(next) => {
+                if (entryContentType === 2) entryMainText = next;
+              }}
               label='entryMainTextLabel'
             />
           </div>
