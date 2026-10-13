@@ -1,7 +1,7 @@
 <!--
 This file is part of eLabFTW Desktop.
-@author Nicolas CARPi <Deltablot>
-@author Moustapha Camara <Deltablot>
+@author Nicolas CARPi / Deltablot
+@author Moustapha Camara / Deltablot
 @copyright 2026 Deltablot
 @see https://www.elabftw.net Official website
 SPDX-License-Identifier: GPL-3.0-or-later

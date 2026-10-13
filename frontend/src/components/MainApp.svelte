@@ -1,19 +1,19 @@
 <!--
 This file is part of eLabFTW Desktop.
 
-@author Nicolas CARPi <Deltablot>
-@author Moustapha Camara <Deltablot>
+@author Nicolas CARPi / Deltablot
+@author Moustapha Camara / Deltablot
 @copyright 2026 Deltablot
 @see https://www.elabftw.net Official website
 SPDX-License-Identifier: GPL-3.0-or-later
 -->
 
 <script lang='ts'>
-  import { onMount, tick } from 'svelte';
-  import { DateTime } from 'luxon';
+  import { onMount } from 'svelte';
   import {
     ListEntries,
     GetEntry,
+    GetPreferredEditor,
     SaveEntry,
     UpdateEntry,
     DeleteEntry,
@@ -24,8 +24,9 @@ SPDX-License-Identifier: GPL-3.0-or-later
     ListEntryRemoteLinks,
   } from '../../wailsjs/go/main/App';
   import type { main } from '../../wailsjs/go/models';
-  import { autofocus, errorMessage, openExternalURL, preventDefaultSubmit } from '../utils/helpers';
+  import { autofocus, errorMessage, openExternalURL, preventDefaultSubmit, toRelativeTime } from '../utils/helpers';
   import InstancesView from './Instances/InstancesView.svelte';
+  import ProfileSettings from './ProfileSelector/ProfileSettings.svelte';
   import InstancesPushModal from './Instances/InstancesPushModal.svelte';
   import EntryPullModal from './Instances/EntryPullModal.svelte';
   import MarkdownEditor from "./MarkdownEditor.svelte";
@@ -39,26 +40,22 @@ SPDX-License-Identifier: GPL-3.0-or-later
     onLogout?: () => void;
   };
 
-  type View = 'index' | 'editor' | 'instances';
+  type View = 'index' | 'editor' | 'instances' | 'profile';
+  type PreferredEditor = 'tinymce' | 'markdown';
 
   let {profileUuid, profileName, onLogout}: Props = $props();
 
-  const editorContentTypeStorageKey = `elabftw-editor-content-type:${profileUuid}`;
-
-  function getPreferredEditorContentType(): 1 | 2 {
-    return localStorage.getItem(editorContentTypeStorageKey) === '2' ? 2 : 1;
-  }
-
+  let preferredEditor = $state<PreferredEditor>('tinymce');
+  let preferencesReady = $state(false);
   let entryTitle = $state('');
   let entryMainText = $state('');
-  let entryContentType = $state<1 | 2>(getPreferredEditorContentType());
-  // Keep each editor mounted after first use to avoid costly reinitialization on switches.
-  let tinyMceMounted = $state(entryContentType === 1);
-  let markdownMounted = $state(entryContentType === 2);
+  let entryContentType = $state<1 | 2>(1);
   let entries = $state<main.EntrySummary[]>([]);
   let view = $state<View>('index');
   let loading = $state(false);
   let currentEntryId = $state<number | null>(null); // if not null, Update entry. else Save
+  // An existing body must not be interpreted as another format without conversion.
+  let editorFormatMismatch = $derived(entryContentType !== (preferredEditor === 'markdown' ? 2 : 1));
   let pushModalOpen = $state(false);
   let pushMode = $state<'single' | 'all'>('single'); // from View of an entry, push a single entry. From list of entries, push all.
   let pushEntryId = $state<number | null>(null); // # currentEntryId. This is for the modal to push to eLab.
@@ -71,8 +68,15 @@ SPDX-License-Identifier: GPL-3.0-or-later
   // reactive to trigger an uploads refresh after a pull
   let uploadsRefreshKey = $state(0);
 
-  function toRelativeTime(iso: string, locale = 'en'): string {
-    return DateTime.fromISO(iso).setLocale(locale).toRelative() ?? 'now';
+  async function loadPreferences(): Promise<void> {
+    try {
+      const editor = await GetPreferredEditor(profileUuid);
+      preferredEditor = editor === 'markdown' ? 'markdown' : 'tinymce';
+    } catch (e: unknown) {
+      showAlert({type: 'error', message: errorMessage(e)});
+    } finally {
+      preferencesReady = true;
+    }
   }
 
   async function loadEntry(id: number): Promise<void> {
@@ -81,8 +85,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
     entryTitle = entry.title;
     entryMainText = entry.body;
     entryContentType = entry.contentType === 2 ? 2 : 1;
-    tinyMceMounted = entryContentType === 1;
-    markdownMounted = entryContentType === 2;
     remoteLinks = links;
   }
 
@@ -91,7 +93,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
     currentEntryId = id;
     try {
       await loadEntry(id);
-      await tick();
       view = 'editor';
     } catch (e: unknown) {
       showAlert({type: 'error', message: errorMessage(e)});
@@ -129,9 +130,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     view = 'editor';
     entryTitle = '';
     entryMainText = '';
-    entryContentType = getPreferredEditorContentType();
-    tinyMceMounted = entryContentType === 1;
-    markdownMounted = entryContentType === 2;
+    entryContentType = preferredEditor === 'markdown' ? 2 : 1;
     showAlert(null);
     currentEntryId = null;
     remoteLinks = [];
@@ -139,6 +138,10 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
   // Save an entry // Update an existing entry
   async function saveOrUpdateEntry(): Promise<void> {
+    if (editorFormatMismatch) {
+      showAlert({type: 'warning', message: 'Change your preferred editor in Profile settings to edit this entry.'});
+      return;
+    }
     showAlert({type: 'info', message: currentEntryId ? 'Updating...' : 'Saving...'});
     try {
       if (currentEntryId) {
@@ -157,18 +160,17 @@ SPDX-License-Identifier: GPL-3.0-or-later
     }
   }
 
-  function switchEditor(contentType: 1 | 2): void {
-    if (contentType === entryContentType) return;
-    if (entryMainText.trim() !== '' && !window.confirm(
-      'Switch editor? The same body will be loaded in the other editor without automatic HTML/Markdown conversion.',
-    )) {
-      return;
-    }
+  let profileSettingsReturnView = $state<'index' | 'editor' | 'instances'>('index');
 
-    if (contentType === 1) tinyMceMounted = true;
-    if (contentType === 2) markdownMounted = true;
-    entryContentType = contentType;
-    localStorage.setItem(editorContentTypeStorageKey, String(contentType));
+  function openProfileSettings(): void {
+    showAlert(null);
+    if (view !== 'profile') profileSettingsReturnView = view;
+    view = 'profile';
+  }
+
+  function closeProfileSettings(): void {
+    showAlert(null);
+    view = profileSettingsReturnView;
   }
 
   // use for Uploads to check the entry Id. Pass it to UploadsPAnel so that we dont need to check and warn
@@ -196,6 +198,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
   onMount(() => {
     showAlert(null);
     void refreshEntries();
+    void loadPreferences();
   });
 
   function openInstances(): void {
@@ -304,9 +307,12 @@ SPDX-License-Identifier: GPL-3.0-or-later
       {:else if view === 'editor'}
         <h1 class='text-ellipsis'>{entryTitle.trim() || 'Untitled entry'}</h1>
         <h2>Write, edit, and save your entry.</h2>
-      {:else} <!-- view === 'instances' -->
+      {:else if view === 'instances'}
         <h1 class='text-ellipsis'>eLabFTW instances</h1>
         <h2>Add the server you want to sync with</h2>
+      {:else} <!-- view === 'profile' -->
+        <h1>Profile settings</h1>
+        <h2>Manage preferences for {profileName}.</h2>
       {/if}
     </div>
 
@@ -316,6 +322,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
         <span class='text-strong'>{profileName}</span>
       </div>
 
+      <button class='btn btn-secondary' onclick={openProfileSettings} disabled={!preferencesReady || view === 'profile'}>Profile settings</button>
       <button class='btn btn-danger' onclick={logout}>Logout</button>
     </div>
   </header>
@@ -333,7 +340,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
             </span>
           </div>
         </div>
-        <button class='btn btn-primary' onclick={openEditor}><span aria-hidden='true'>+</span> Create entry</button>
+        <button class='btn btn-primary' onclick={openEditor} disabled={!preferencesReady}><span aria-hidden='true'>+</span> Create entry</button>
       </div>
 
       {#if loading}
@@ -350,7 +357,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
         <div class='grid gap-1'>
           {#each entries as e (e.id)}
             <div class='flex gap-1'>
-              <button type='button' class='entry-card' onclick={() => openEntry(e.id)}>
+              <button type='button' class='entry-card' onclick={() => openEntry(e.id)} disabled={!preferencesReady}>
                 <span class='icon-sm' aria-hidden='true'>▤</span>
                 <span class='grid gap-03'>
                 <span class='text-ellipsis text-white text-strong text-big'>
@@ -390,6 +397,19 @@ SPDX-License-Identifier: GPL-3.0-or-later
     <InstancesView
       {profileUuid}
       onBack={openIndex}
+    />
+    <!-- PROFILE SETTINGS -->
+  {:else if view === 'profile'}
+    <ProfileSettings
+      {profileUuid}
+      {preferredEditor}
+      onBack={closeProfileSettings}
+      onSaved={(editor) => {
+        if (currentEntryId === null && entryMainText.trim() === '') {
+          entryContentType = editor === 'markdown' ? 2 : 1;
+        }
+        preferredEditor = editor;
+      }}
     />
     <!-- VIEW EDITOR MODE -->
   {:else if view === 'editor'}
@@ -435,7 +455,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
               </svg>
               Push
             </button>
-            <button class='btn btn-primary' type='submit'>Save</button>
+            <button class='btn btn-primary' type='submit' disabled={editorFormatMismatch}>Save</button>
           </div>
         </div>
 
@@ -452,48 +472,32 @@ SPDX-License-Identifier: GPL-3.0-or-later
           />
         </div>
 
-        <div class='flex justify-between items-center mt-2 mb-1'>
+        <div class='mt-2 mb-1'>
           <label id='entryMainTextLabel'>Entry main text</label>
-          <div class='flex gap-03' role='group' aria-label='Editor type'>
-            <button
-              type='button'
-              class={entryContentType === 1 ? 'btn btn-primary' : 'btn btn-secondary'}
-              aria-pressed={entryContentType === 1}
-              onclick={() => switchEditor(1)}
-            >
-              TinyMCE
-            </button>
-            <button
-              type='button'
-              class={entryContentType === 2 ? 'btn btn-primary' : 'btn btn-secondary'}
-              aria-pressed={entryContentType === 2}
-              onclick={() => switchEditor(2)}
-            >
-              Markdown
-            </button>
-          </div>
         </div>
-        {#if tinyMceMounted}
-          <div hidden={entryContentType !== 1}>
-            <TinyMceEditor
-              value={entryMainText}
-              onChange={(next) => {
-                if (entryContentType === 1) entryMainText = next;
-              }}
-              label='entryMainTextLabel'
-            />
+        {#if editorFormatMismatch}
+          <div class='grid gap-1 mb-2'>
+            <p class='description'>
+              {currentEntryId === null ? 'This draft contains' : 'This entry was saved as'}
+              {entryContentType === 1 ? 'HTML (TinyMCE)' : 'Markdown'} content.
+              Select that editor in Profile settings to edit it without losing formatting.
+            </p>
+            <div>
+              <button type='button' class='btn btn-secondary' onclick={openProfileSettings}>Open profile settings</button>
+            </div>
           </div>
-        {/if}
-        {#if markdownMounted}
-          <div hidden={entryContentType !== 2}>
-            <MarkdownEditor
-              value={entryMainText}
-              onChange={(next) => {
-                if (entryContentType === 2) entryMainText = next;
-              }}
-              label='entryMainTextLabel'
-            />
-          </div>
+        {:else if preferredEditor === 'tinymce'}
+          <TinyMceEditor
+            value={entryMainText}
+            onChange={(next) => { entryMainText = next; }}
+            label='entryMainTextLabel'
+          />
+        {:else}
+          <MarkdownEditor
+            value={entryMainText}
+            onChange={(next) => { entryMainText = next; }}
+            label='entryMainTextLabel'
+          />
         {/if}
         {#key uploadsRefreshKey}
           <UploadsPanel

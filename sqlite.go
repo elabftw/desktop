@@ -1,8 +1,8 @@
 /*
  * This file is part of eLabFTW Desktop.
  *
- * @author Nicolas CARPi <Deltablot>
- * @author Moustapha Camara <Deltablot>
+ * @author Nicolas CARPi / Deltablot
+ * @author Moustapha Camara / Deltablot
  * @copyright 2026 Nicolas CARPi
  * @see https://www.elabftw.net Official website
  * SPDX-License-Identifier: GPL-3.0-or-later
@@ -210,6 +210,19 @@ PRAGMA user_version = 5;
 			return fmt.Errorf("Create schema v5: %w", err)
 		}
 		v = 5
+	}
+
+	if v == 5 {
+		_, err := db.Exec(`
+CREATE TABLE IF NOT EXISTS preferences (
+	key TEXT PRIMARY KEY,
+	value TEXT NOT NULL
+);
+PRAGMA user_version = 6;
+`)
+		if err != nil {
+			return fmt.Errorf("Create schema v6: %w", err)
+		}
 	}
 	return nil
 }

@@ -38,6 +38,10 @@ export function GetEntry(arg1, arg2) {
   return window['go']['main']['App']['GetEntry'](arg1, arg2);
 }
 
+export function GetPreferredEditor(arg1) {
+  return window['go']['main']['App']['GetPreferredEditor'](arg1);
+}
+
 export function GetProfileIndex() {
   return window['go']['main']['App']['GetProfileIndex']();
 }
@@ -84,6 +88,10 @@ export function SaveEntry(arg1, arg2, arg3, arg4) {
 
 export function SelectFile() {
   return window['go']['main']['App']['SelectFile']();
+}
+
+export function SetPreferredEditor(arg1, arg2) {
+  return window['go']['main']['App']['SetPreferredEditor'](arg1, arg2);
 }
 
 export function UnlockProfile(arg1, arg2) {
