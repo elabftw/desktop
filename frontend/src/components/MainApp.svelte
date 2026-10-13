@@ -52,6 +52,9 @@ SPDX-License-Identifier: GPL-3.0-or-later
   let entryTitle = $state('');
   let entryMainText = $state('');
   let entryContentType = $state<1 | 2>(getPreferredEditorContentType());
+  // Keep each editor mounted after first use to avoid costly reinitialization on switches.
+  let tinyMceMounted = $state(entryContentType === 1);
+  let markdownMounted = $state(entryContentType === 2);
   let entries = $state<main.EntrySummary[]>([]);
   let view = $state<View>('index');
   let loading = $state(false);
@@ -77,6 +80,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
     entryTitle = entry.title;
     entryMainText = entry.body;
     entryContentType = entry.contentType === 2 ? 2 : 1;
+    tinyMceMounted = entryContentType === 1;
+    markdownMounted = entryContentType === 2;
     remoteLinks = await ListEntryRemoteLinks(profileUuid, id);
   }
 
@@ -123,6 +128,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
     entryTitle = '';
     entryMainText = '';
     entryContentType = getPreferredEditorContentType();
+    tinyMceMounted = entryContentType === 1;
+    markdownMounted = entryContentType === 2;
     showAlert(null);
     currentEntryId = null;
     remoteLinks = [];
@@ -156,6 +163,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
       return;
     }
 
+    if (contentType === 1) tinyMceMounted = true;
+    if (contentType === 2) markdownMounted = true;
     entryContentType = contentType;
     localStorage.setItem(editorContentTypeStorageKey, String(contentType));
   }
@@ -462,18 +471,27 @@ SPDX-License-Identifier: GPL-3.0-or-later
             </button>
           </div>
         </div>
-        {#if entryContentType === 1}
-          <TinyMceEditor
-            value={entryMainText}
-            onChange={(next) => entryMainText = next}
-            label='entryMainTextLabel'
-          />
-        {:else}
-          <MarkdownEditor
-            value={entryMainText}
-            onChange={(next) => entryMainText = next}
-            label='entryMainTextLabel'
-          />
+        {#if tinyMceMounted}
+          <div hidden={entryContentType !== 1}>
+            <TinyMceEditor
+              value={entryMainText}
+              onChange={(next) => {
+                if (entryContentType === 1) entryMainText = next;
+              }}
+              label='entryMainTextLabel'
+            />
+          </div>
+        {/if}
+        {#if markdownMounted}
+          <div hidden={entryContentType !== 2}>
+            <MarkdownEditor
+              value={entryMainText}
+              onChange={(next) => {
+                if (entryContentType === 2) entryMainText = next;
+              }}
+              label='entryMainTextLabel'
+            />
+          </div>
         {/if}
         {#key uploadsRefreshKey}
           <UploadsPanel
