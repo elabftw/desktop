@@ -49,12 +49,9 @@ SPDX-License-Identifier: GPL-3.0-or-later
     return localStorage.getItem(editorContentTypeStorageKey) === '2' ? 2 : 1;
   }
 
-  const initialEditorContentType = getPreferredEditorContentType();
   let entryTitle = $state('');
   let entryMainText = $state('');
-  let entryContentType = $state<1 | 2>(initialEditorContentType);
-  let tinyMceMounted = $state(initialEditorContentType === 1);
-  let markdownMounted = $state(initialEditorContentType === 2);
+  let entryContentType = $state<1 | 2>(getPreferredEditorContentType());
   let entries = $state<main.EntrySummary[]>([]);
   let view = $state<View>('index');
   let loading = $state(false);
@@ -75,18 +72,19 @@ SPDX-License-Identifier: GPL-3.0-or-later
     return DateTime.fromISO(iso).setLocale(locale).toRelative() ?? 'now';
   }
 
+  async function loadEntry(id: number): Promise<void> {
+    const entry = await GetEntry(profileUuid, id);
+    entryTitle = entry.title;
+    entryMainText = entry.body;
+    entryContentType = entry.contentType === 2 ? 2 : 1;
+    remoteLinks = await ListEntryRemoteLinks(profileUuid, id);
+  }
+
   async function openEntry(id: number): Promise<void> {
     showAlert(null);
     currentEntryId = id;
     try {
-      const e: main.Entry = await GetEntry(profileUuid, id);
-      entryTitle = e.title;
-      entryMainText = e.body;
-      entryContentType = e.contentType === 2 ? 2 : 1;
-      tinyMceMounted = entryContentType === 1;
-      markdownMounted = entryContentType === 2;
-      /* if entry already in eLabFTW, create a link to see it directly */
-      remoteLinks = await ListEntryRemoteLinks(profileUuid, id);
+      await loadEntry(id);
       view = 'editor';
     } catch (e: unknown) {
       showAlert({type: 'error', message: errorMessage(e)});
@@ -125,8 +123,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
     entryTitle = '';
     entryMainText = '';
     entryContentType = getPreferredEditorContentType();
-    tinyMceMounted = entryContentType === 1;
-    markdownMounted = entryContentType === 2;
     showAlert(null);
     currentEntryId = null;
     remoteLinks = [];
@@ -160,8 +156,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
       return;
     }
 
-    if (contentType === 1) tinyMceMounted = true;
-    if (contentType === 2) markdownMounted = true;
     entryContentType = contentType;
     localStorage.setItem(editorContentTypeStorageKey, String(contentType));
   }
@@ -234,13 +228,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
         pullLink.type,
       );
 
-      const entry = await GetEntry(profileUuid, currentEntryId);
-      entryTitle = entry.title;
-      entryMainText = entry.body;
-      entryContentType = entry.contentType === 2 ? 2 : 1;
-      tinyMceMounted = entryContentType === 1;
-      markdownMounted = entryContentType === 2;
-      remoteLinks = await ListEntryRemoteLinks(profileUuid, currentEntryId);
+      await loadEntry(currentEntryId);
       uploadsRefreshKey += 1;
       await refreshEntries();
 
@@ -474,27 +462,18 @@ SPDX-License-Identifier: GPL-3.0-or-later
             </button>
           </div>
         </div>
-        {#if tinyMceMounted}
-          <div hidden={entryContentType !== 1}>
-            <TinyMceEditor
-              value={entryMainText}
-              onChange={(next) => {
-                if (entryContentType === 1) entryMainText = next;
-              }}
-              label='entryMainTextLabel'
-            />
-          </div>
-        {/if}
-        {#if markdownMounted}
-          <div hidden={entryContentType !== 2}>
-            <MarkdownEditor
-              value={entryMainText}
-              onChange={(next) => {
-                if (entryContentType === 2) entryMainText = next;
-              }}
-              label='entryMainTextLabel'
-            />
-          </div>
+        {#if entryContentType === 1}
+          <TinyMceEditor
+            value={entryMainText}
+            onChange={(next) => entryMainText = next}
+            label='entryMainTextLabel'
+          />
+        {:else}
+          <MarkdownEditor
+            value={entryMainText}
+            onChange={(next) => entryMainText = next}
+            label='entryMainTextLabel'
+          />
         {/if}
         {#key uploadsRefreshKey}
           <UploadsPanel

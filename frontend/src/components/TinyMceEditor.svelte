@@ -21,7 +21,6 @@
 
   let textarea: HTMLTextAreaElement;
   let editor = $state<Editor | null>(null);
-  let ready = $state(false);
   let syncingFromProps = false;
 
   onMount(() => {
@@ -45,7 +44,6 @@
           syncingFromProps = true;
           instance.setContent(value);
           syncingFromProps = false;
-          ready = true;
         });
 
         instance.on('input change undo redo', () => {
@@ -72,14 +70,13 @@
 
     return () => {
       destroyed = true;
-      ready = false;
       editor?.remove();
       editor = null;
     };
   });
 
   $effect(() => {
-    if (!editor || !ready || editor.getContent() === value) return;
+    if (!editor || editor.getContent() === value) return;
 
     syncingFromProps = true;
     editor.setContent(value);

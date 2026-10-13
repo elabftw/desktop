@@ -41,18 +41,6 @@ func elabftwEntityPath(entityType string) (string, error) {
 	}
 }
 
-func buildPushEntryPayload(title string, body string, contentType int) (map[string]any, error) {
-	if contentType != 1 && contentType != 2 {
-		return nil, fmt.Errorf("unsupported content_type %d", contentType)
-	}
-
-	return map[string]any{
-		"title":        title,
-		"body":         body,
-		"content_type": contentType,
-	}, nil
-}
-
 func (a *App) PushEntryToElabftw(profileUUID string, entryID int64, instanceID int64, entityType string, force bool) (*PushEntryResult, error) {
 	profileUUID, err := a.requireUnlockedProfile(profileUUID)
 	if err != nil {
@@ -102,9 +90,10 @@ func (a *App) PushEntryToElabftw(profileUUID string, entryID int64, instanceID i
 		return nil, fmt.Errorf("decrypt body: %w", err)
 	}
 
-	payload, err := buildPushEntryPayload(title, bodyText, contentType)
-	if err != nil {
-		return nil, err
+	payload := map[string]any{
+		"title":        title,
+		"body":         bodyText,
+		"content_type": contentType,
 	}
 
 	var remoteID int64

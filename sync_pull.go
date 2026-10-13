@@ -140,16 +140,18 @@ func (a *App) PullEntryFromElabftw(
 		return nil, fmt.Errorf("encrypt remote body: %w", err)
 	}
 
-	preparedUploads, createdPaths, err := a.prepareRemoteUploads(
-		profileUUID,
-		instanceID,
-		entityType,
-		remoteID,
-		remote.Uploads,
-	)
-	if err != nil {
-		removeFiles(createdPaths)
-		return nil, err
+	preparedUploads := make([]preparedPulledUpload, 0, len(remote.Uploads))
+	createdPaths := make([]string, 0, len(remote.Uploads))
+	for _, upload := range remote.Uploads {
+		pulled, createdPath, err := a.pullRemoteUpload(profileUUID, instanceID, entityType, remoteID, upload)
+		if err != nil {
+			removeFiles(createdPaths)
+			return nil, err
+		}
+		if createdPath != "" {
+			createdPaths = append(createdPaths, createdPath)
+		}
+		preparedUploads = append(preparedUploads, *pulled)
 	}
 
 	oldHashes, err := replaceLocalEntryFromRemote(
@@ -194,36 +196,6 @@ func validatePulledRemoteIdentity(remote remoteEntry, remoteID int64, entityType
 	}
 
 	return nil
-}
-
-func (a *App) prepareRemoteUploads(
-	profileUUID string,
-	instanceID int64,
-	entityType string,
-	remoteEntityID int64,
-	remoteUploads []remoteUpload,
-) ([]preparedPulledUpload, []string, error) {
-	prepared := make([]preparedPulledUpload, 0, len(remoteUploads))
-	createdPaths := make([]string, 0, len(remoteUploads))
-
-	for _, upload := range remoteUploads {
-		pulled, createdPath, err := a.pullRemoteUpload(
-			profileUUID,
-			instanceID,
-			entityType,
-			remoteEntityID,
-			upload,
-		)
-		if err != nil {
-			return nil, createdPaths, err
-		}
-		if createdPath != "" {
-			createdPaths = append(createdPaths, createdPath)
-		}
-		prepared = append(prepared, *pulled)
-	}
-
-	return prepared, createdPaths, nil
 }
 
 func (a *App) pullRemoteUpload(
@@ -284,6 +256,7 @@ func (a *App) pullRemoteUpload(
 		// Identical plaintext content already exists in local encrypted storage.
 	case errors.Is(statErr, os.ErrNotExist):
 		if err := os.WriteFile(destination, encryptedContent, 0o600); err != nil {
+			_ = os.Remove(destination) // WriteFile may leave a partial encrypted file.
 			return nil, "", fmt.Errorf("write pulled upload %q: %w", upload.RealName, err)
 		}
 		createdPath = destination
@@ -429,14 +402,8 @@ func replaceLocalEntryFromRemote(
 
 func cleanupUnreferencedUploadFiles(profileUUID string, db *sql.DB, hashes []string) []string {
 	warnings := make([]string, 0)
-	seen := make(map[string]struct{}, len(hashes))
 
 	for _, hash := range hashes {
-		if _, ok := seen[hash]; ok {
-			continue
-		}
-		seen[hash] = struct{}{}
-
 		var references int
 		if err := db.QueryRow(`SELECT COUNT(*) FROM uploads WHERE hash = ?`, hash).Scan(&references); err != nil {
 			warnings = append(warnings, fmt.Sprintf("cleanup upload %s: %s", hash, err))
