@@ -21,6 +21,7 @@
 
   let textarea: HTMLTextAreaElement;
   let editor = $state<Editor | null>(null);
+  let ready = $state(false);
   let syncingFromProps = false;
 
   onMount(() => {
@@ -36,7 +37,7 @@
       promotion: false,
       skin: false,
       content_css: false,
-      content_style: 'body { background: #1b2636; color: #fff; font-family: Nunito, sans-serif; } a { color: #9ed9f4; }',
+      content_style: 'html, body { background: #1b2636; color: #fff; font-family: Nunito, sans-serif; } a { color: #9ed9f4; }',
       setup: (instance) => {
         instance.on('init', () => {
           if (destroyed) return;
@@ -62,6 +63,7 @@
       }
 
       editor = instance;
+      ready = true;
     }).catch((error: unknown) => {
       if (!destroyed) {
         console.error('TinyMCE initialization failed:', error);
@@ -84,4 +86,21 @@
   });
 </script>
 
-<textarea aria-labelledby={label} bind:this={textarea}></textarea>
+<div class='tinymce-loading-container' aria-busy={!ready}>
+  {#if !ready}
+    <div class='tinymce-loading' role='status'>
+      <span class='spinner' aria-hidden='true'></span>
+      Loading editor…
+    </div>
+  {/if}
+  <div style:visibility={ready ? 'visible' : 'hidden'}>
+    <textarea aria-labelledby={label} bind:this={textarea}></textarea>
+  </div>
+</div>
+
+<style>
+  .tinymce-loading-container { position: relative; min-height: 360px; background: #1b2636; }
+  .tinymce-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: .5rem; color: #fff; }
+  .spinner { width: 1rem; height: 1rem; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin .75s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>

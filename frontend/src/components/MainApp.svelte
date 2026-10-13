@@ -9,7 +9,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 -->
 
 <script lang='ts'>
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { DateTime } from 'luxon';
   import {
     ListEntries,
@@ -77,12 +77,13 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
   async function loadEntry(id: number): Promise<void> {
     const entry = await GetEntry(profileUuid, id);
+    const links = await ListEntryRemoteLinks(profileUuid, id);
     entryTitle = entry.title;
     entryMainText = entry.body;
     entryContentType = entry.contentType === 2 ? 2 : 1;
     tinyMceMounted = entryContentType === 1;
     markdownMounted = entryContentType === 2;
-    remoteLinks = await ListEntryRemoteLinks(profileUuid, id);
+    remoteLinks = links;
   }
 
   async function openEntry(id: number): Promise<void> {
@@ -90,6 +91,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     currentEntryId = id;
     try {
       await loadEntry(id);
+      await tick();
       view = 'editor';
     } catch (e: unknown) {
       showAlert({type: 'error', message: errorMessage(e)});
