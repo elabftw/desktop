@@ -33,17 +33,17 @@ type PullEntryResult struct {
 }
 
 type remoteEntry struct {
-	ID          int64          `json:"id"`
-	Page        string         `json:"page"`
-	Title       string         `json:"title"`
-	Body        string         `json:"body"`
-	ContentType int            `json:"content_type"`
-	ModifiedAt  string         `json:"modified_at"`
-	Tags        string         `json:"tags"`
-	Metadata    json.RawMessage `json:"metadata"`
+	ID               int64           `json:"id"`
+	Page             string          `json:"page"`
+	Title            string          `json:"title"`
+	Body             string          `json:"body"`
+	ContentType      int             `json:"content_type"`
+	ModifiedAt       string          `json:"modified_at"`
+	Tags             string          `json:"tags"`
+	Metadata         json.RawMessage `json:"metadata"`
 	ItemsLinks       json.RawMessage `json:"items_links"`
 	ExperimentsLinks json.RawMessage `json:"experiments_links"`
-	Uploads     []remoteUpload `json:"uploads"`
+	Uploads          []remoteUpload  `json:"uploads"`
 }
 
 type remoteUpload struct {
@@ -147,9 +147,9 @@ func (a *App) PullEntryFromElabftw(
 
 	// Save read-only information from the existing remote entity response.
 	snapshotJSON, err := json.Marshal(remoteReadOnlySnapshot{
-		Tags: remote.Tags,
-		Metadata: remote.Metadata,
-		ItemsLinks: remote.ItemsLinks,
+		Tags:             remote.Tags,
+		Metadata:         remote.Metadata,
+		ItemsLinks:       remote.ItemsLinks,
 		ExperimentsLinks: remote.ExperimentsLinks,
 	})
 	if err != nil {

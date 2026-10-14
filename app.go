@@ -459,12 +459,12 @@ func (a *App) ListEntries(profileUUID string) ([]EntrySummary, error) {
 }
 
 type Entry struct {
-	ID          int64  `json:"id"`
-	Title       string `json:"title"`
-	Body        string `json:"body"`
-	ContentType int    `json:"contentType"`
-	CreatedAt   string `json:"createdAt"`
-	ModifiedAt  string `json:"modifiedAt"`
+	ID            int64  `json:"id"`
+	Title         string `json:"title"`
+	Body          string `json:"body"`
+	ContentType   int    `json:"contentType"`
+	CreatedAt     string `json:"createdAt"`
+	ModifiedAt    string `json:"modifiedAt"`
 	RemoteDetails string `json:"remoteDetails,omitempty"`
 	RemoteSource  string `json:"remoteSource,omitempty"`
 }
