@@ -326,10 +326,11 @@ SPDX-License-Identifier: GPL-3.0-or-later
           {#if linkedEntityType}
             <span class='editor-type-icon' aria-hidden='true'><EntityTypeIcon type={linkedEntityType} /></span>
           {/if}
-          <h1 class='text-ellipsis'>{entryTitle.trim() || 'Untitled entry'}</h1>
-          {#if linkedEntityType}<span class='editor-type-badge'>{linkedEntityType === 'experiment' ? 'Experiment' : 'Resource'}</span>{/if}
+          <div class='grid gap-03 editor-heading-content'>
+            <h1 class='text-ellipsis'>{entryTitle.trim() || 'Untitled entry'}</h1>
+            <EntityCategoryStatus snapshot={selectedEntry?.remoteDetails} />
+          </div>
         </div>
-        <h2>Write, edit, and save your entry.</h2>
       {:else if view === 'instances'}
         <h1 class='text-ellipsis'>eLabFTW instances</h1>
         <h2>Add the server you want to sync with</h2>

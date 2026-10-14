@@ -369,11 +369,13 @@ func replaceLocalEntryFromRemote(
 		return nil, fmt.Errorf("iterate old upload hashes: %w", err)
 	}
 
+	// A pull modifies this local copy now. Keep the remote time in local2remote for sync checks.
 	result, err := tx.Exec(`
 		UPDATE entries
-		SET title = ?, body = ?, content_type = ?, modified_at = ?
+		SET title = ?, body = ?, content_type = ?,
+			modified_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
 		WHERE id = ?
-	`, encryptedTitle, encryptedBody, contentType, modifiedAt, entryID)
+	`, encryptedTitle, encryptedBody, contentType, entryID)
 	if err != nil {
 		return nil, fmt.Errorf("replace local entry: %w", err)
 	}
