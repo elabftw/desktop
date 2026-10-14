@@ -39,6 +39,10 @@ type remoteEntry struct {
 	Body             string          `json:"body"`
 	ContentType      int             `json:"content_type"`
 	ModifiedAt       string          `json:"modified_at"`
+	CategoryTitle    string          `json:"category_title"`
+	CategoryColor    string          `json:"category_color"`
+	StatusTitle      string          `json:"status_title"`
+	StatusColor      string          `json:"status_color"`
 	Tags             string          `json:"tags"`
 	Metadata         json.RawMessage `json:"metadata"`
 	ItemsLinks       json.RawMessage `json:"items_links"`
@@ -147,6 +151,10 @@ func (a *App) PullEntryFromElabftw(
 
 	// Save read-only information from the existing remote entity response.
 	snapshotJSON, err := json.Marshal(remoteReadOnlySnapshot{
+		CategoryTitle:    remote.CategoryTitle,
+		CategoryColor:    remote.CategoryColor,
+		StatusTitle:      remote.StatusTitle,
+		StatusColor:      remote.StatusColor,
 		Tags:             remote.Tags,
 		Metadata:         remote.Metadata,
 		ItemsLinks:       remote.ItemsLinks,
@@ -220,6 +228,10 @@ func validatePulledRemoteIdentity(remote remoteEntry, remoteID int64, entityType
 }
 
 type remoteReadOnlySnapshot struct {
+	CategoryTitle    string          `json:"categoryTitle"`
+	CategoryColor    string          `json:"categoryColor"`
+	StatusTitle      string          `json:"statusTitle"`
+	StatusColor      string          `json:"statusColor"`
 	Tags             string          `json:"tags"`
 	Metadata         json.RawMessage `json:"metadata"`
 	ItemsLinks       json.RawMessage `json:"itemsLinks"`

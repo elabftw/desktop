@@ -402,10 +402,12 @@ func (a *App) DeleteEntry(profileUUID string, id int64) error {
 }
 
 type EntrySummary struct {
-	ID         int64  `json:"id"`
-	Title      string `json:"title"`
-	CreatedAt  string `json:"createdAt"`
-	ModifiedAt string `json:"modifiedAt"`
+	ID            int64  `json:"id"`
+	Title         string `json:"title"`
+	CreatedAt     string `json:"createdAt"`
+	ModifiedAt    string `json:"modifiedAt"`
+	RemoteType    string `json:"remoteType,omitempty"`
+	RemoteDetails string `json:"remoteDetails,omitempty"`
 }
 
 // Titles are stored encrypted, so decrypt them before returning the summaries to frontend.
@@ -427,9 +429,14 @@ func (a *App) ListEntries(profileUUID string) ([]EntrySummary, error) {
 	defer func() { _ = db.Close() }()
 
 	rows, err := db.Query(`
-		SELECT id, title, created_at, modified_at
-		FROM entries
-		ORDER BY modified_at DESC, id DESC
+		SELECT e.id, e.title, e.created_at, e.modified_at,
+			COALESCE((SELECT l.type FROM local2remote l WHERE l.local_id = e.id ORDER BY l.id LIMIT 1), ''),
+			COALESCE((SELECT d.encrypted_data
+			  FROM remote_details d JOIN local2remote l ON l.id = d.link_id
+			  WHERE l.local_id = e.id
+			  ORDER BY d.pulled_at DESC, d.link_id DESC LIMIT 1), '')
+		FROM entries e
+		ORDER BY e.modified_at DESC, e.id DESC
 	`)
 	if err != nil {
 		return nil, fmt.Errorf("query entries: %w", err)
@@ -439,7 +446,7 @@ func (a *App) ListEntries(profileUUID string) ([]EntrySummary, error) {
 	out := make([]EntrySummary, 0)
 	for rows.Next() {
 		var e EntrySummary
-		if err := rows.Scan(&e.ID, &e.Title, &e.CreatedAt, &e.ModifiedAt); err != nil {
+		if err := rows.Scan(&e.ID, &e.Title, &e.CreatedAt, &e.ModifiedAt, &e.RemoteType, &e.RemoteDetails); err != nil {
 			return nil, fmt.Errorf("scan entry: %w", err)
 		}
 		// The row stores encrypted title/body values.
@@ -449,6 +456,12 @@ func (a *App) ListEntries(profileUUID string) ([]EntrySummary, error) {
 			return nil, fmt.Errorf("Decrypt entry title: %w", err)
 		}
 		e.Title = title
+		if e.RemoteDetails != "" {
+			e.RemoteDetails, err = decryptString(a.activeKey, e.RemoteDetails)
+			if err != nil {
+				return nil, fmt.Errorf("Decrypt entry details: %w", err)
+			}
+		}
 		out = append(out, e)
 	}
 	if err := rows.Err(); err != nil {

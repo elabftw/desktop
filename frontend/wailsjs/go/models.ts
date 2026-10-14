@@ -83,6 +83,8 @@ export namespace main {
 	    title: string;
 	    createdAt: string;
 	    modifiedAt: string;
+	    remoteType?: string;
+	    remoteDetails?: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new EntrySummary(source);
@@ -94,6 +96,8 @@ export namespace main {
 	        this.title = source["title"];
 	        this.createdAt = source["createdAt"];
 	        this.modifiedAt = source["modifiedAt"];
+	        this.remoteType = source["remoteType"];
+	        this.remoteDetails = source["remoteDetails"];
 	    }
 	}
 	export class ProfileEntry {

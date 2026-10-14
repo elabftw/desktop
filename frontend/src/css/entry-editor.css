@@ -210,3 +210,28 @@
     justify-content: flex-end;
   }
 }
+
+/* Category and status are read-only colored labels, not buttons. */
+.entity-category-status {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .25rem .75rem;
+}
+
+.entity-category-status .entity-label {
+  align-items: center;
+  color: inherit;
+  display: inline-flex;
+  font-size: .85rem;
+  gap: .35rem;
+}
+
+.entity-label-dot {
+  background-color: var(--light-gray);
+  border-radius: 50%;
+  display: inline-block;
+  flex: none;
+  height: .65rem;
+  width: .65rem;
+}

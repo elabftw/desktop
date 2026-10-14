@@ -34,6 +34,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
   import { showAlert } from "./stores/alert.svelte";
   import UploadsPanel from './Uploads/UploadsPanel.svelte';
   import EntryReadonlyPanels from './EntryReadonlyPanels.svelte';
+  import EntityTypeIcon from './EntityTypeIcon.svelte';
+  import EntityCategoryStatus from './EntityCategoryStatus.svelte';
 
   type Props = {
     profileUuid: string;
@@ -322,7 +324,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
       {:else if view === 'editor'}
         <div class='flex items-center gap-1 editor-title'>
           {#if linkedEntityType}
-            <span class='editor-type-icon' aria-hidden='true'>{linkedEntityType === 'experiment' ? '⚗' : '▦'}</span>
+            <span class='editor-type-icon' aria-hidden='true'><EntityTypeIcon type={linkedEntityType} /></span>
           {/if}
           <h1 class='text-ellipsis'>{entryTitle.trim() || 'Untitled entry'}</h1>
           {#if linkedEntityType}<span class='editor-type-badge'>{linkedEntityType === 'experiment' ? 'Experiment' : 'Resource'}</span>{/if}
@@ -391,7 +393,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
           {#each entries as e (e.id)}
             <div class='flex gap-1'>
               <button type='button' class='entry-card' onclick={() => openEntry(e.id)} disabled={!preferencesReady}>
-                <span class='icon-sm' aria-hidden='true'>▤</span>
+                <span class='icon-sm' aria-hidden='true'><EntityTypeIcon type={e.remoteType} /></span>
                 <span class='grid gap-03'>
                 <span class='text-ellipsis text-white text-strong text-big'>
                   {e.title || 'Untitled entry'}
@@ -399,6 +401,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
                 <span class='description'>
                   Last edited {toRelativeTime(e.modifiedAt)}
                 </span>
+                <EntityCategoryStatus snapshot={e.remoteDetails} />
               </span>
 
                 <span class='text-orange text-strong' aria-hidden='true'>
@@ -532,7 +535,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
         <aside class='editor-sidebar'>
           <section class='panel'>
             <h3 class='border-bottom'>Entry information</h3>
-            <div class='entry-info-row'><span>Type</span><span>{linkedEntityType === 'resource' ? 'Resource' : linkedEntityType === 'experiment' ? 'Experiment' : 'Local entry'}</span></div>
+            <div class='entry-info-row'><span>Type</span><span class='flex items-center gap-03'><EntityTypeIcon type={linkedEntityType} /> {linkedEntityType === 'resource' ? 'Resource' : linkedEntityType === 'experiment' ? 'Experiment' : 'Local entry'}</span></div>
+            <div class='entry-info-row'><span>Category / Status</span><EntityCategoryStatus snapshot={selectedEntry?.remoteDetails} emptyLabel={remoteLinks.length > 0 ? 'Pull to load' : 'Not linked'} /></div>
             <div class='entry-info-row'><span>Created</span><span>{selectedEntry ? new Intl.DateTimeFormat(undefined, {dateStyle: 'medium', timeStyle: 'short'}).format(new Date(selectedEntry.createdAt)) : 'Not saved yet'}</span></div>
             <div class='entry-info-row'><span>Modified</span><span>{selectedEntry ? new Intl.DateTimeFormat(undefined, {dateStyle: 'medium', timeStyle: 'short'}).format(new Date(selectedEntry.modifiedAt)) : 'Not saved yet'}</span></div>
             <div class='entry-info-row'><span>Content type</span><span>{entryContentType === 1 ? 'HTML (TinyMCE)' : 'Markdown'}</span></div>
