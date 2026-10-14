@@ -33,7 +33,7 @@
       menubar: false,
       plugins: 'lists link table code accordion',
       toolbar: 'undo redo | blocks | bold italic | bullist numlist | link table accordion | code',
-      height: 360,
+      height: 480,
       branding: false,
       promotion: false,
       skin: false,

@@ -14,6 +14,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -38,6 +39,10 @@ type remoteEntry struct {
 	Body        string         `json:"body"`
 	ContentType int            `json:"content_type"`
 	ModifiedAt  string         `json:"modified_at"`
+	Tags        string         `json:"tags"`
+	Metadata    json.RawMessage `json:"metadata"`
+	ItemsLinks       json.RawMessage `json:"items_links"`
+	ExperimentsLinks json.RawMessage `json:"experiments_links"`
 	Uploads     []remoteUpload `json:"uploads"`
 }
 
@@ -140,6 +145,21 @@ func (a *App) PullEntryFromElabftw(
 		return nil, fmt.Errorf("encrypt remote body: %w", err)
 	}
 
+	// Save read-only information from the existing remote entity response.
+	snapshotJSON, err := json.Marshal(remoteReadOnlySnapshot{
+		Tags: remote.Tags,
+		Metadata: remote.Metadata,
+		ItemsLinks: remote.ItemsLinks,
+		ExperimentsLinks: remote.ExperimentsLinks,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("encode remote details: %w", err)
+	}
+	encryptedDetails, err := encryptString(a.activeKey, string(snapshotJSON))
+	if err != nil {
+		return nil, fmt.Errorf("encrypt remote details: %w", err)
+	}
+
 	preparedUploads := make([]preparedPulledUpload, 0, len(remote.Uploads))
 	createdPaths := make([]string, 0, len(remote.Uploads))
 	for _, upload := range remote.Uploads {
@@ -165,6 +185,7 @@ func (a *App) PullEntryFromElabftw(
 		remote.ContentType,
 		remoteModifiedAt.Format(time.RFC3339Nano),
 		preparedUploads,
+		encryptedDetails,
 	)
 	if err != nil {
 		removeFiles(createdPaths)
@@ -196,6 +217,13 @@ func validatePulledRemoteIdentity(remote remoteEntry, remoteID int64, entityType
 	}
 
 	return nil
+}
+
+type remoteReadOnlySnapshot struct {
+	Tags             string          `json:"tags"`
+	Metadata         json.RawMessage `json:"metadata"`
+	ItemsLinks       json.RawMessage `json:"itemsLinks"`
+	ExperimentsLinks json.RawMessage `json:"experimentsLinks"`
 }
 
 func (a *App) pullRemoteUpload(
@@ -301,6 +329,7 @@ func replaceLocalEntryFromRemote(
 	contentType int,
 	modifiedAt string,
 	uploads []preparedPulledUpload,
+	encryptedDetails string,
 ) ([]string, error) {
 	tx, err := db.Begin()
 	if err != nil {
@@ -392,6 +421,23 @@ func replaceLocalEntryFromRemote(
 	}
 	if affected == 0 {
 		return nil, fmt.Errorf("remote mapping changed during pull")
+	}
+
+	// Only update the read-only snapshot if the matching remote mapping still exists.
+	result, err = tx.Exec(`
+        INSERT INTO remote_details (link_id, encrypted_data, pulled_at)
+        SELECT id, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now')
+        FROM local2remote
+        WHERE instance = ? AND local_id = ? AND type = ? AND remote_id = ?
+        ON CONFLICT(link_id) DO UPDATE SET
+            encrypted_data = excluded.encrypted_data,
+            pulled_at = excluded.pulled_at
+    `, encryptedDetails, instanceID, entryID, entityType, remoteID)
+	if err != nil {
+		return nil, fmt.Errorf("save read-only remote details: %w", err)
+	}
+	if affected, err := result.RowsAffected(); err != nil || affected == 0 {
+		return nil, fmt.Errorf("remote mapping changed while saving details: %v", err)
 	}
 
 	if err := tx.Commit(); err != nil {

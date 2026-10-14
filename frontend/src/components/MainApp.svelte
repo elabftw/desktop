@@ -33,6 +33,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
   import TinyMceEditor from "./TinyMceEditor.svelte";
   import { showAlert } from "./stores/alert.svelte";
   import UploadsPanel from './Uploads/UploadsPanel.svelte';
+  import EntryReadonlyPanels from './EntryReadonlyPanels.svelte';
 
   type Props = {
     profileUuid: string;
@@ -49,6 +50,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
   let preferencesReady = $state(false);
   let entryTitle = $state('');
   let entryMainText = $state('');
+  let selectedEntry = $state<main.Entry | null>(null);
   let entryContentType = $state<1 | 2>(1);
   let entries = $state<main.EntrySummary[]>([]);
   let view = $state<View>('index');
@@ -89,6 +91,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     const links = await ListEntryRemoteLinks(profileUuid, id);
     entryTitle = entry.title;
     entryMainText = entry.body;
+    selectedEntry = entry;
     entryContentType = entry.contentType === 2 ? 2 : 1;
     remoteLinks = links;
   }
@@ -135,6 +138,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     view = 'editor';
     entryTitle = '';
     entryMainText = '';
+    selectedEntry = null;
     entryContentType = preferredEditor === 'markdown' ? 2 : 1;
     showAlert(null);
     currentEntryId = null;
@@ -160,6 +164,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
       }
 
       await refreshEntries();
+      if (currentEntryId) selectedEntry = await GetEntry(profileUuid, currentEntryId);
     } catch (e: unknown) {
       showAlert({type: 'error', message: errorMessage(e)});
     }
@@ -308,14 +313,20 @@ SPDX-License-Identifier: GPL-3.0-or-later
   }
 </script>
 
-<div class='container'>
-  <header class='flex justify-between items-center mb-2 border-bottom'>
+<div class='container' class:editor-container={view === 'editor'}>
+  <header class='flex justify-between items-center mb-2' class:border-bottom={view !== 'editor'}>
     <div class='w-100 text-ellipsis'>
       {#if view === 'index'}
         <h1>My Entries</h1>
         <h2>Manage your saved entries.</h2>
       {:else if view === 'editor'}
-        <h1 class='text-ellipsis'>{entryTitle.trim() || 'Untitled entry'}</h1>
+        <div class='flex items-center gap-1 editor-title'>
+          {#if linkedEntityType}
+            <span class='editor-type-icon' aria-hidden='true'>{linkedEntityType === 'experiment' ? '⚗' : '▦'}</span>
+          {/if}
+          <h1 class='text-ellipsis'>{entryTitle.trim() || 'Untitled entry'}</h1>
+          {#if linkedEntityType}<span class='editor-type-badge'>{linkedEntityType === 'experiment' ? 'Experiment' : 'Resource'}</span>{/if}
+        </div>
         <h2>Write, edit, and save your entry.</h2>
       {:else if view === 'instances'}
         <h1 class='text-ellipsis'>eLabFTW instances</h1>
@@ -435,35 +446,24 @@ SPDX-License-Identifier: GPL-3.0-or-later
     />
     <!-- VIEW EDITOR MODE -->
   {:else if view === 'editor'}
-    <section class='panel'>
-      <form onsubmit={handleSubmit}>
-        <div class='flex justify-between border-bottom mb-2'>
+    <div>
+      <div class='panel flex justify-between mb-2'>
           <button class='btn btn-secondary' type='button' onclick={openIndex}>← Back</button>
-          <div class='flex gap-1'>
+          <div class='editor-actions'>
               {#if remoteLinks.length > 0}
                 <div class='flex gap-03'>
                   <button
                     type='button'
-                    class='link-button flex items-center gap-03'
+                    class='btn btn-secondary btn-external-link'
                     title={remoteLinks.length === 1
                       ? `Open ${remoteLinks[0].type} #${remoteLinks[0].remoteId} on ${remoteLinks[0].siteUrl}`
                       : 'Choose an eLabFTW instance'}
                     onclick={() => openRemoteModal('open')}
                   >
-                    {#if linkedEntityType === 'resource'}
-                      <svg aria-hidden='true' width='1em' height='1em' viewBox='0 0 512 512'>
-                        <path fill='currentColor' d='M192 32c0-17.7 14.3-32 32-32h64c17.7 0 32 14.3 32 32v64c0 17.7-14.3 32-32 32h-64c-17.7 0-32-14.3-32-32V32zm32 352h64c17.7 0 32 14.3 32 32v64c0 17.7-14.3 32-32 32h-64c-17.7 0-32-14.3-32-32v-64c0-17.7 14.3-32 32-32zm192 0h64c17.7 0 32 14.3 32 32v64c0 17.7-14.3 32-32 32h-64c-17.7 0-32-14.3-32-32v-64c0-17.7 14.3-32 32-32zM320 192h64c17.7 0 32 14.3 32 32v64c0 17.7-14.3 32-32 32h-64c-17.7 0-32-14.3-32-32v-64c0-17.7 14.3-32 32-32zm-182.6-3.9c12.5-12.5 32.8-12.5 45.3 0l45.3 45.3c12.5 12.5 12.5 32.8 0 45.3l-45.3 45.3c-12.5 12.5-32.8 12.5-45.3 0l-45.3-45.4c-12.5-12.5-12.5-32.8 0-45.3l45.3-45.3zM32 384h64c17.7 0 32 14.3 32 32v64c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32v-64c0-17.7 14.3-32 32-32z'/>
-                      </svg>
-                    {:else}
-                      <svg aria-hidden='true' width='1em' height='1em' viewBox='0 0 448 512'>
-                        <path fill='currentColor' d='M288 0H128c-17.7 0-32 14.3-32 32s14.3 32 32 32v151.5L7.5 426.3C2.6 435 0 444.7 0 454.7 0 486.4 25.6 512 57.3 512h333.4c31.6 0 57.3-25.6 57.3-57.3 0-10-2.6-19.8-7.5-28.4L320 215.5V64c17.7 0 32-14.3 32-32S337.7 0 320 0h-32zM192 215.5V64h64v151.5c0 11.1 2.9 22.1 8.4 31.8L306 320H142l41.6-72.7c5.5-9.7 8.4-20.6 8.4-31.8z'/>
-                      </svg>
-                    {/if}
-                    Open {remoteLinks.every(link => link.type === linkedEntityType)
-                      ? `${linkedEntityType} in eLabFTW` : 'in eLabFTW'}
-                    <svg aria-hidden='true' width='0.85em' height='0.85em' viewBox='0 0 512 512'>
-                      <path fill='currentColor' d='M320 0c-17.7 0-32 14.3-32 32s14.3 32 32 32h82.7L201.3 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L448 109.3V192c0 17.7 14.3 32 32 32s32-14.3 32-32V32c0-17.7-14.3-32-32-32H320zM80 96c-44.2 0-80 35.8-80 80v256c0 44.2 35.8 80 80 80h256c44.2 0 80-35.8 80-80v-80c0-17.7-14.3-32-32-32s-32 14.3-32 32v80c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V176c0-8.8 7.2-16 16-16h80c17.7 0 32-14.3 32-32s-14.3-32-32-32H80z'/>
+                    <svg aria-hidden='true' width='1em' height='1em' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+                      <path d='M14 3h7v7M10 14 21 3M21 13v7a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h7'/>
                     </svg>
+                    Open in eLabFTW
                   </button>
                   <button type='button' class='btn btn-secondary' onclick={() => openRemoteModal('pull')}>
                     <svg aria-hidden='true' width='1em' height='1em' viewBox='0 0 384 512'>
@@ -480,12 +480,16 @@ SPDX-License-Identifier: GPL-3.0-or-later
               </svg>
               Push
             </button>
-            <button class='btn btn-primary' type='submit' disabled={editorFormatMismatch}>Save</button>
+            <button class='btn btn-primary' type='submit' form='entry-editor-form' disabled={editorFormatMismatch}>
+              <svg aria-hidden='true' width='1em' height='1em' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z'/><path d='M17 21v-8H7v8M7 3v5h8'/></svg>
+              Save
+            </button>
           </div>
-        </div>
-
+      </div>
+      <div class='editor-layout'>
+        <form id='entry-editor-form' class='panel' onsubmit={handleSubmit}>
         <div>
-          <label for='entryTitle'>Entry title</label>
+          <label for='entryTitle'>Title</label>
           <input
             {@attach autofocus}
             required
@@ -498,7 +502,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
         </div>
 
         <div class='mt-2 mb-1'>
-          <label id='entryMainTextLabel'>Entry main text</label>
+          <label id='entryMainTextLabel'>Content</label>
         </div>
         {#if editorFormatMismatch}
           <div class='grid gap-1 mb-2'>
@@ -524,15 +528,31 @@ SPDX-License-Identifier: GPL-3.0-or-later
             label='entryMainTextLabel'
           />
         {/if}
-        {#key uploadsRefreshKey}
-          <UploadsPanel
-            {profileUuid}
-            entryId={currentEntryId}
-            {ensureEntrySaved}
+        </form>
+        <aside class='editor-sidebar'>
+          <section class='panel'>
+            <h3 class='border-bottom'>Entry information</h3>
+            <div class='entry-info-row'><span>Type</span><span>{linkedEntityType === 'resource' ? 'Resource' : linkedEntityType === 'experiment' ? 'Experiment' : 'Local entry'}</span></div>
+            <div class='entry-info-row'><span>Created</span><span>{selectedEntry ? new Intl.DateTimeFormat(undefined, {dateStyle: 'medium', timeStyle: 'short'}).format(new Date(selectedEntry.createdAt)) : 'Not saved yet'}</span></div>
+            <div class='entry-info-row'><span>Modified</span><span>{selectedEntry ? new Intl.DateTimeFormat(undefined, {dateStyle: 'medium', timeStyle: 'short'}).format(new Date(selectedEntry.modifiedAt)) : 'Not saved yet'}</span></div>
+            <div class='entry-info-row'><span>Content type</span><span>{entryContentType === 1 ? 'HTML (TinyMCE)' : 'Markdown'}</span></div>
+          </section>
+          {#key uploadsRefreshKey}
+            <UploadsPanel
+              {profileUuid}
+              entryId={currentEntryId}
+              {ensureEntrySaved}
+              compact
+            />
+          {/key}
+          <EntryReadonlyPanels
+            snapshot={selectedEntry?.remoteDetails}
+            source={selectedEntry?.remoteSource}
+            linked={remoteLinks.length > 0}
           />
-        {/key}
-      </form>
-    </section>
+        </aside>
+      </div>
+    </div>
   {/if}
   {#if pushModalOpen}
     <InstancesPushModal

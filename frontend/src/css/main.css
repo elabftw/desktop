@@ -5,6 +5,7 @@
 @import url('main-app.css');
 @import url('easymde.css');
 @import url('uploads.css');
+@import url('entry-editor.css');
 
 /* TODO: add stylelint */
 :root {

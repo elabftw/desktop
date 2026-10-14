@@ -37,6 +37,8 @@ export namespace main {
 	    contentType: number;
 	    createdAt: string;
 	    modifiedAt: string;
+	    remoteDetails?: string;
+	    remoteSource?: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new Entry(source);
@@ -50,6 +52,8 @@ export namespace main {
 	        this.contentType = source["contentType"];
 	        this.createdAt = source["createdAt"];
 	        this.modifiedAt = source["modifiedAt"];
+	        this.remoteDetails = source["remoteDetails"];
+	        this.remoteSource = source["remoteSource"];
 	    }
 	}
 	export class EntryRemoteLink {

@@ -243,6 +243,21 @@ PRAGMA user_version = 6;
 		if err != nil {
 			return fmt.Errorf("Create schema v6: %w", err)
 		}
+		v = 6
+	}
+
+	if v == 6 {
+		_, err := db.Exec(`
+CREATE TABLE remote_details (
+    link_id INTEGER PRIMARY KEY REFERENCES local2remote(id) ON DELETE CASCADE,
+    encrypted_data TEXT NOT NULL,
+    pulled_at TEXT NOT NULL
+);
+PRAGMA user_version = 7;
+`)
+		if err != nil {
+			return fmt.Errorf("Create schema v7: %w", err)
+		}
 	}
 	return nil
 }

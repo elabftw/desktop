@@ -1,0 +1,212 @@
+/* Editor layout. Reuse global panel, button and input styles. */
+.container.editor-container {
+  width: min(1380px, calc(100vw - 3rem));
+}
+
+.editor-title {
+  min-width: 0;
+}
+
+.editor-title h1 {
+  font-size: clamp(1.9rem, 3vw, 2.5rem);
+}
+
+.editor-type-icon {
+  color: var(--info-text);
+  flex: none;
+  font-size: 2.2rem;
+}
+
+.editor-type-badge {
+  background: var(--info-bg);
+  border: 1px solid var(--info-border);
+  border-radius: 6px;
+  color: var(--info-text);
+  font-size: .85rem;
+  padding: .25rem .6rem;
+  white-space: nowrap;
+}
+
+.editor-toolbar {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding: 1rem 1.25rem;
+}
+
+.editor-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+}
+
+.btn-external-link {
+  color: var(--info-text);
+  text-decoration: none;
+}
+
+.editor-layout {
+  align-items: start;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 2.1fr) minmax(280px, 1fr);
+}
+
+.editor-layout > * {
+  min-width: 0;
+}
+
+.editor-sidebar {
+  display: grid;
+  gap: 1rem;
+}
+
+.editor-sidebar .panel {
+  border-radius: 14px;
+  padding: 1rem 1.2rem;
+}
+
+.editor-sidebar .panel h3 {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.editor-sidebar .entry-panel-heading {
+  align-items: center;
+  display: flex;
+  gap: .5rem;
+  justify-content: space-between;
+  padding: .2rem 0;
+}
+
+.editor-sidebar summary {
+  list-style: none;
+}
+
+.editor-sidebar summary::-webkit-details-marker {
+  display: none;
+}
+
+.editor-sidebar details .entry-chevron {
+  transition: transform .2s ease;
+}
+
+.editor-sidebar details[open] .entry-chevron {
+  transform: rotate(180deg);
+}
+
+.entry-info-row {
+  display: grid;
+  gap: .4rem;
+  grid-template-columns: minmax(85px, 1fr) minmax(0, 1.5fr);
+  margin-top: .75rem;
+  overflow-wrap: anywhere;
+}
+
+.entry-info-row > :first-child {
+  color: var(--light-gray);
+}
+
+.entry-info-row > :last-child {
+  color: var(--soft-white);
+}
+
+.editor-sidebar .uploads-grid {
+  flex-direction: column;
+  gap: .65rem;
+}
+
+.editor-sidebar .upload-card {
+  height: auto;
+  min-height: 72px;
+  padding: .65rem;
+  width: 100%;
+}
+
+.editor-sidebar .upload-card-add {
+  border-style: dashed;
+  min-height: 100px;
+}
+
+.editor-sidebar .upload-icon {
+  font-size: 2rem;
+}
+
+.editor-sidebar .upload-file {
+  align-items: center;
+  display: flex;
+  gap: .5rem;
+  justify-content: space-between;
+  text-align: left;
+}
+
+.editor-sidebar .upload-file-description {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.editor-sidebar .upload-name {
+  padding: 0;
+  text-align: left;
+}
+
+.editor-sidebar .upload-file .btn {
+  padding: .4rem;
+}
+
+.entry-detail-content {
+  border-top: 1px solid var(--border-soft);
+  margin-top: .8rem;
+  padding-top: .8rem;
+}
+
+.entry-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+}
+
+.entry-tag {
+  background: var(--dark-blue-2);
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  color: var(--soft-white);
+  font-size: .85rem;
+  padding: .3rem .55rem;
+}
+
+.entry-readonly-row {
+  border-bottom: 1px solid var(--border-soft);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  justify-content: space-between;
+  overflow-wrap: anywhere;
+  padding: .45rem 0;
+}
+
+.entry-readonly-row:last-child {
+  border-bottom: 0;
+}
+
+.entry-readonly-row > :last-child {
+  color: var(--light-gray);
+}
+
+@media (width <= 950px) {
+  .editor-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .editor-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .editor-actions {
+    flex: 1;
+    justify-content: flex-end;
+  }
+}

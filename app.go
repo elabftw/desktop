@@ -465,6 +465,8 @@ type Entry struct {
 	ContentType int    `json:"contentType"`
 	CreatedAt   string `json:"createdAt"`
 	ModifiedAt  string `json:"modifiedAt"`
+	RemoteDetails string `json:"remoteDetails,omitempty"`
+	RemoteSource  string `json:"remoteSource,omitempty"`
 }
 
 func (a *App) GetEntry(profileUUID string, id int64) (*Entry, error) {
@@ -513,6 +515,27 @@ func (a *App) GetEntry(profileUUID string, id int64) (*Entry, error) {
 
 	e.Title = title
 	e.Body = body
+
+	// Show the latest successfully pulled read-only eLabFTW metadata when offline.
+	var encryptedDetails string
+	err = db.QueryRow(`
+        SELECT d.encrypted_data, i.site_url
+        FROM remote_details d
+        JOIN local2remote l ON l.id = d.link_id
+        JOIN elabftw_instances i ON i.id = l.instance
+        WHERE l.local_id = ?
+        ORDER BY d.pulled_at DESC, d.link_id DESC
+        LIMIT 1
+    `, id).Scan(&encryptedDetails, &e.RemoteSource)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, fmt.Errorf("read remote details: %w", err)
+	}
+	if err == nil {
+		e.RemoteDetails, err = decryptString(a.activeKey, encryptedDetails)
+		if err != nil {
+			return nil, fmt.Errorf("decrypt remote details: %w", err)
+		}
+	}
 
 	return &e, nil
 }
