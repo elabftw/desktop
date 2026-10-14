@@ -28,7 +28,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
   import InstancesView from './Instances/InstancesView.svelte';
   import ProfileSettings from './ProfileSelector/ProfileSettings.svelte';
   import InstancesPushModal from './Instances/InstancesPushModal.svelte';
-  import EntryPullModal from './Instances/EntryPullModal.svelte';
+  import EntryRemoteModal from './Instances/EntryRemoteModal.svelte';
   import MarkdownEditor from "./MarkdownEditor.svelte";
   import TinyMceEditor from "./TinyMceEditor.svelte";
   import { showAlert } from "./stores/alert.svelte";
@@ -69,7 +69,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     remoteLinks[0]?.type === 'experiment' ? 'experiment'
       : remoteLinks[0]?.type === 'resource' ? 'resource' : null
   );
-  let pullLink = $state<main.EntryRemoteLink | null>(null);
+  let remoteModalMode = $state<'open' | 'pull' | null>(null);
   // reactive to trigger an uploads refresh after a pull
   let uploadsRefreshKey = $state(0);
 
@@ -224,18 +224,23 @@ SPDX-License-Identifier: GPL-3.0-or-later
     lastFailedPush = null;
   }
 
-  function openPullModal(link: main.EntryRemoteLink): void {
+  function openRemoteModal(mode: 'open' | 'pull'): void {
+    if (remoteLinks.length === 0) return;
     showAlert(null);
-    pullLink = link;
+    if (mode === 'open' && remoteLinks.length === 1) {
+      openExternalURL(remoteLinks[0].url);
+      return;
+    }
+    remoteModalMode = mode;
   }
 
-  function closePullModal(): void {
-    pullLink = null;
+  function closeRemoteModal(): void {
+    remoteModalMode = null;
   }
 
-  async function confirmPull(): Promise<void> {
-    if (!currentEntryId || !pullLink) {
-      showAlert({type: 'error', message: 'No remote entry selected.'});
+  async function confirmPull(link: main.EntryRemoteLink): Promise<void> {
+    if (!currentEntryId) {
+      showAlert({type: 'error', message: 'No entry selected.'});
       return;
     }
 
@@ -243,8 +248,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
       const result = await PullEntryFromElabftw(
         profileUuid,
         currentEntryId,
-        pullLink.instanceId,
-        pullLink.type,
+        link.instanceId,
+        link.type,
       );
 
       await loadEntry(currentEntryId);
@@ -256,7 +261,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
         type: result.warnings?.length ? 'warning' : 'success',
         message: `Pulled ${result.type} #${result.remoteId} and replaced the local entry ✔${warning}`,
       });
-      pullLink = null;
+      remoteModalMode = null;
     } catch (e: unknown) {
       showAlert({type: 'error', message: errorMessage(e)});
     }
@@ -435,15 +440,17 @@ SPDX-License-Identifier: GPL-3.0-or-later
         <div class='flex justify-between border-bottom mb-2'>
           <button class='btn btn-secondary' type='button' onclick={openIndex}>← Back</button>
           <div class='flex gap-1'>
-              {#each remoteLinks as link (`${link.instanceId}-${link.type}-${link.remoteId}`)}
+              {#if remoteLinks.length > 0}
                 <div class='flex gap-03'>
                   <button
                     type='button'
                     class='link-button flex items-center gap-03'
-                    title={`Open ${link.type} #${link.remoteId} on ${link.siteUrl}`}
-                    onclick={() => openExternalURL(link.url)}
+                    title={remoteLinks.length === 1
+                      ? `Open ${remoteLinks[0].type} #${remoteLinks[0].remoteId} on ${remoteLinks[0].siteUrl}`
+                      : 'Choose an eLabFTW instance'}
+                    onclick={() => openRemoteModal('open')}
                   >
-                    {#if link.type === 'resource'}
+                    {#if linkedEntityType === 'resource'}
                       <svg aria-hidden='true' width='1em' height='1em' viewBox='0 0 512 512'>
                         <path fill='currentColor' d='M192 32c0-17.7 14.3-32 32-32h64c17.7 0 32 14.3 32 32v64c0 17.7-14.3 32-32 32h-64c-17.7 0-32-14.3-32-32V32zm32 352h64c17.7 0 32 14.3 32 32v64c0 17.7-14.3 32-32 32h-64c-17.7 0-32-14.3-32-32v-64c0-17.7 14.3-32 32-32zm192 0h64c17.7 0 32 14.3 32 32v64c0 17.7-14.3 32-32 32h-64c-17.7 0-32-14.3-32-32v-64c0-17.7 14.3-32 32-32zM320 192h64c17.7 0 32 14.3 32 32v64c0 17.7-14.3 32-32 32h-64c-17.7 0-32-14.3-32-32v-64c0-17.7 14.3-32 32-32zm-182.6-3.9c12.5-12.5 32.8-12.5 45.3 0l45.3 45.3c12.5 12.5 12.5 32.8 0 45.3l-45.3 45.3c-12.5 12.5-32.8 12.5-45.3 0l-45.3-45.4c-12.5-12.5-12.5-32.8 0-45.3l45.3-45.3zM32 384h64c17.7 0 32 14.3 32 32v64c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32v-64c0-17.7 14.3-32 32-32z'/>
                       </svg>
@@ -452,19 +459,20 @@ SPDX-License-Identifier: GPL-3.0-or-later
                         <path fill='currentColor' d='M288 0H128c-17.7 0-32 14.3-32 32s14.3 32 32 32v151.5L7.5 426.3C2.6 435 0 444.7 0 454.7 0 486.4 25.6 512 57.3 512h333.4c31.6 0 57.3-25.6 57.3-57.3 0-10-2.6-19.8-7.5-28.4L320 215.5V64c17.7 0 32-14.3 32-32S337.7 0 320 0h-32zM192 215.5V64h64v151.5c0 11.1 2.9 22.1 8.4 31.8L306 320H142l41.6-72.7c5.5-9.7 8.4-20.6 8.4-31.8z'/>
                       </svg>
                     {/if}
-                    Open {link.type} in eLabFTW
+                    Open {remoteLinks.every(link => link.type === linkedEntityType)
+                      ? `${linkedEntityType} in eLabFTW` : 'in eLabFTW'}
                     <svg aria-hidden='true' width='0.85em' height='0.85em' viewBox='0 0 512 512'>
                       <path fill='currentColor' d='M320 0c-17.7 0-32 14.3-32 32s14.3 32 32 32h82.7L201.3 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L448 109.3V192c0 17.7 14.3 32 32 32s32-14.3 32-32V32c0-17.7-14.3-32-32-32H320zM80 96c-44.2 0-80 35.8-80 80v256c0 44.2 35.8 80 80 80h256c44.2 0 80-35.8 80-80v-80c0-17.7-14.3-32-32-32s-32 14.3-32 32v80c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V176c0-8.8 7.2-16 16-16h80c17.7 0 32-14.3 32-32s-14.3-32-32-32H80z'/>
                     </svg>
                   </button>
-                  <button type='button' class='btn btn-secondary' onclick={() => openPullModal(link)}>
+                  <button type='button' class='btn btn-secondary' onclick={() => openRemoteModal('pull')}>
                     <svg aria-hidden='true' width='1em' height='1em' viewBox='0 0 384 512'>
                       <path fill='currentColor' d='M169.4 502.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 402.7V32c0-17.7-14.3-32-32-32s-32 14.3-32 32v370.7L54.6 297.3c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/>
                     </svg>
                     Pull
                   </button>
                 </div>
-              {/each}
+              {/if}
             <button class='btn btn-secondary' type='button' disabled={!currentEntryId}
                     onclick={() => openPushModal('single', currentEntryId)}>
               <svg aria-hidden='true' width='1em' height='1em' viewBox='0 0 384 512'>
@@ -535,10 +543,15 @@ SPDX-License-Identifier: GPL-3.0-or-later
       onPush={confirmPush}
     />
   {/if}
-  {#if pullLink}
-    <EntryPullModal
-      link={pullLink}
-      onClose={closePullModal}
+  {#if remoteModalMode}
+    <EntryRemoteModal
+      links={remoteLinks}
+      mode={remoteModalMode}
+      onClose={closeRemoteModal}
+      onOpen={(link) => {
+        openExternalURL(link.url);
+        closeRemoteModal();
+      }}
       onPull={confirmPull}
     />
   {/if}
