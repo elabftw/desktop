@@ -5,6 +5,7 @@
   import 'tinymce/models/dom';
   import 'tinymce/icons/default';
   import 'tinymce/themes/silver';
+  import 'tinymce/plugins/accordion';
   import 'tinymce/plugins/code';
   import 'tinymce/plugins/link';
   import 'tinymce/plugins/lists';
@@ -30,8 +31,8 @@
     void tinymce.init({
       target: textarea,
       menubar: false,
-      plugins: 'lists link table code',
-      toolbar: 'undo redo | blocks | bold italic | bullist numlist | link table | code',
+      plugins: 'lists link table code accordion',
+      toolbar: 'undo redo | blocks | bold italic | bullist numlist | link table accordion | code',
       height: 360,
       branding: false,
       promotion: false,

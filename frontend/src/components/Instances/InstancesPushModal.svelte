@@ -26,6 +26,7 @@ with "Instance Name" for cross platform data share.
   type Props = {
     profileUuid: string;
     force?: boolean;
+    lockedEntityType?: EntityType | null;
     onClose: () => void;
     onPush: (
       instanceId: number,
@@ -37,6 +38,7 @@ with "Instance Name" for cross platform data share.
   let {
     profileUuid,
     force = false,
+    lockedEntityType = null,
     onClose,
     onPush,
   }: Props = $props();
@@ -82,7 +84,7 @@ with "Instance Name" for cross platform data share.
     pushing = true;
 
     try {
-      await onPush(selectedInstanceId, entityType, force);
+      await onPush(selectedInstanceId, lockedEntityType ?? entityType, force);
     } finally {
       pushing = false;
     }
@@ -141,11 +143,16 @@ with "Instance Name" for cross platform data share.
       {/if}
 
       <div>
-        <label for='push-entity-type'>Remote type</label>
-        <select id='push-entity-type' class='input' bind:value={entityType}>
-          <option value='experiment'>Experiment</option>
-          <option value='resource'>Resource</option>
-        </select>
+        {#if lockedEntityType}
+          <p class='description'>Remote type</p>
+          <p class='text-white'>{lockedEntityType === 'experiment' ? 'Experiment' : 'Resource'} (linked)</p>
+        {:else}
+          <label for='push-entity-type'>Remote type</label>
+          <select id='push-entity-type' class='input' bind:value={entityType}>
+            <option value='experiment'>Experiment</option>
+            <option value='resource'>Resource</option>
+          </select>
+        {/if}
       </div>
     </div>
   {/if}

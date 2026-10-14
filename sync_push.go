@@ -41,6 +41,25 @@ func elabftwEntityPath(entityType string) (string, error) {
 	}
 }
 
+// A local entry keeps the remote type selected on its first successful push.
+// This applies across instances, not only to the current target instance.
+func ensureLinkedEntityType(db *sql.DB, entryID int64, entityType string) error {
+	var linkedType string
+	err := db.QueryRow(`
+		SELECT type FROM local2remote WHERE local_id = ? ORDER BY id ASC LIMIT 1
+	`, entryID).Scan(&linkedType)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("query linked entity type: %w", err)
+	}
+	if linkedType != entityType {
+		return fmt.Errorf("entry %d is already linked as a %s, cannot push as a %s", entryID, linkedType, entityType)
+	}
+	return nil
+}
+
 func (a *App) PushEntryToElabftw(profileUUID string, entryID int64, instanceID int64, entityType string, force bool) (*PushEntryResult, error) {
 	profileUUID, err := a.requireUnlockedProfile(profileUUID)
 	if err != nil {
@@ -66,6 +85,10 @@ func (a *App) PushEntryToElabftw(profileUUID string, entryID int64, instanceID i
 		return nil, fmt.Errorf("open profile db: %w", err)
 	}
 	defer db.Close()
+
+	if err := ensureLinkedEntityType(db, entryID, entityType); err != nil {
+		return nil, err
+	}
 
 	var encryptedTitle string
 	var encryptedBody string
@@ -345,6 +368,22 @@ func (a *App) PushAllEntriesToElabftw(profileUUID string, instanceID int64, enti
 		return nil, fmt.Errorf("open profile db: %w", err)
 	}
 	defer db.Close()
+
+	// Reject a conflicting bulk push before pushing any entries.
+	var conflictID int64
+	var linkedType string
+	err = db.QueryRow(`
+		SELECT l.local_id, l.type FROM local2remote l
+		JOIN entries e ON e.id = l.local_id
+		WHERE l.id IN (SELECT MIN(id) FROM local2remote GROUP BY local_id)
+		AND l.type <> ? LIMIT 1
+	`, entityType).Scan(&conflictID, &linkedType)
+	if err == nil {
+		return nil, fmt.Errorf("entry %d is already linked as a %s, cannot push all as %s", conflictID, linkedType, entityType)
+	}
+	if !errors.Is(err, sql.ErrNoRows) {
+		return nil, fmt.Errorf("check linked entity types: %w", err)
+	}
 
 	rows, err := db.Query(`SELECT id FROM entries ORDER BY id ASC`)
 	if err != nil {

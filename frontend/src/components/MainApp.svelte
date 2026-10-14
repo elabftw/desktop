@@ -64,6 +64,11 @@ SPDX-License-Identifier: GPL-3.0-or-later
     entityType: 'experiment' | 'resource';
   } | null>(null);
   let remoteLinks = $state<main.EntryRemoteLink[]>([]);
+  // Links are ordered oldest first, so the first push defines the remote type.
+  let linkedEntityType = $derived(
+    remoteLinks[0]?.type === 'experiment' ? 'experiment'
+      : remoteLinks[0]?.type === 'resource' ? 'resource' : null
+  );
   let pullLink = $state<main.EntryRemoteLink | null>(null);
   // reactive to trigger an uploads refresh after a pull
   let uploadsRefreshKey = $state(0);
@@ -322,7 +327,19 @@ SPDX-License-Identifier: GPL-3.0-or-later
         <span class='text-strong'>{profileName}</span>
       </div>
 
-      <button class='btn btn-secondary' onclick={openProfileSettings} disabled={!preferencesReady || view === 'profile'}>Profile settings</button>
+      <button
+        class='btn btn-secondary'
+        type='button'
+        onclick={openProfileSettings}
+        disabled={!preferencesReady || view === 'profile'}
+        aria-label='Profile settings'
+        title='Profile settings'
+      >
+        <svg aria-hidden='true' width='1em' height='1em' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+          <path d='M10.5 2h3l.55 2.6c.63.18 1.24.43 1.8.75l2.23-1.5 2.13 2.13-1.5 2.23c.32.56.57 1.17.75 1.8L22 10.5v3l-2.6.55a8 8 0 0 1-.75 1.8l1.5 2.23-2.13 2.13-2.23-1.5a8 8 0 0 1-1.8.75L13.5 22h-3l-.55-2.6a8 8 0 0 1-1.8-.75l-2.23 1.5-2.13-2.13 1.5-2.23a8 8 0 0 1-.75-1.8L2 13.5v-3l2.6-.55c.18-.63.43-1.24.75-1.8l-1.5-2.23 2.13-2.13 2.23 1.5c.56-.32 1.17-.57 1.8-.75z'/>
+          <circle cx='12' cy='12' r='3'/>
+        </svg>
+      </button>
       <button class='btn btn-danger' onclick={logout}>Logout</button>
     </div>
   </header>
@@ -423,7 +440,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
                   <button
                     type='button'
                     class='link-button flex items-center gap-03'
-                    title={`Open ${link.type} #${link.remoteId} in eLabFTW`}
+                    title={`Open ${link.type} #${link.remoteId} on ${link.siteUrl}`}
                     onclick={() => openExternalURL(link.url)}
                   >
                     {#if link.type === 'resource'}
@@ -435,7 +452,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
                         <path fill='currentColor' d='M288 0H128c-17.7 0-32 14.3-32 32s14.3 32 32 32v151.5L7.5 426.3C2.6 435 0 444.7 0 454.7 0 486.4 25.6 512 57.3 512h333.4c31.6 0 57.3-25.6 57.3-57.3 0-10-2.6-19.8-7.5-28.4L320 215.5V64c17.7 0 32-14.3 32-32S337.7 0 320 0h-32zM192 215.5V64h64v151.5c0 11.1 2.9 22.1 8.4 31.8L306 320H142l41.6-72.7c5.5-9.7 8.4-20.6 8.4-31.8z'/>
                       </svg>
                     {/if}
-                    Open in eLabFTW
+                    Open {link.type} in eLabFTW
                     <svg aria-hidden='true' width='0.85em' height='0.85em' viewBox='0 0 512 512'>
                       <path fill='currentColor' d='M320 0c-17.7 0-32 14.3-32 32s14.3 32 32 32h82.7L201.3 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L448 109.3V192c0 17.7 14.3 32 32 32s32-14.3 32-32V32c0-17.7-14.3-32-32-32H320zM80 96c-44.2 0-80 35.8-80 80v256c0 44.2 35.8 80 80 80h256c44.2 0 80-35.8 80-80v-80c0-17.7-14.3-32-32-32s-32 14.3-32 32v80c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V176c0-8.8 7.2-16 16-16h80c17.7 0 32-14.3 32-32s-14.3-32-32-32H80z'/>
                     </svg>
@@ -513,6 +530,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     <InstancesPushModal
       {profileUuid}
       force={lastFailedPush !== null}
+      lockedEntityType={pushMode === 'single' ? linkedEntityType : null}
       onClose={closePushModal}
       onPush={confirmPush}
     />

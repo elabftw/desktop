@@ -58,7 +58,7 @@ func (a *App) ListEntryRemoteLinks(profileUUID string, entryID int64) ([]EntryRe
 		FROM local2remote l
 		JOIN elabftw_instances i ON i.id = l.instance
 		WHERE l.local_id = ?
-		ORDER BY i.site_url ASC, l.type ASC
+		ORDER BY l.id ASC
 	`, entryID)
 	if err != nil {
 		return nil, fmt.Errorf("query remote links: %w", err)

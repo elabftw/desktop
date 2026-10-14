@@ -18,9 +18,13 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 
 	_ "modernc.org/sqlite"
 )
+
+// Journal-mode setup and migrations must not race across profile DB handles.
+var profileDBInitMu sync.Mutex
 
 func OpenProfileDB(profileDir string) (*sql.DB, error) {
 	if err := os.MkdirAll(profileDir, 0o755); err != nil {
@@ -38,14 +42,30 @@ func OpenProfileDB(profileDir string) (*sql.DB, error) {
 	db.SetMaxOpenConns(1)
 	db.SetMaxIdleConns(1)
 
-	// Good defaults for desktop apps
+	// A new connection must wait briefly if another handle is writing.
+	if _, err := db.Exec(`PRAGMA busy_timeout = 5000;`); err != nil {
+		_ = db.Close()
+		return nil, fmt.Errorf("Pragma busy_timeout: %w", err)
+	}
 	if _, err := db.Exec(`PRAGMA foreign_keys = ON;`); err != nil {
 		_ = db.Close()
 		return nil, fmt.Errorf("Pragma foreign_keys: %w", err)
 	}
-	if _, err := db.Exec(`PRAGMA journal_mode = WAL;`); err != nil {
+
+	profileDBInitMu.Lock()
+	defer profileDBInitMu.Unlock()
+
+	// WAL mode persists in SQLite. Don't try to set it on every login/read.
+	var journalMode string
+	if err := db.QueryRow(`PRAGMA journal_mode;`).Scan(&journalMode); err != nil {
 		_ = db.Close()
-		return nil, fmt.Errorf("Pragma journal_mode: %w", err)
+		return nil, fmt.Errorf("Read journal_mode: %w", err)
+	}
+	if journalMode != "wal" {
+		if _, err := db.Exec(`PRAGMA journal_mode = WAL;`); err != nil {
+			_ = db.Close()
+			return nil, fmt.Errorf("Pragma journal_mode: %w", err)
+		}
 	}
 
 	if err := initSchema(db); err != nil {
