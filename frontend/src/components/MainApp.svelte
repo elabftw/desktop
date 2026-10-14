@@ -455,7 +455,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
           <button class='btn btn-secondary' type='button' onclick={openIndex}>← Back</button>
           <div class='editor-actions'>
               {#if remoteLinks.length > 0}
-                <div class='flex gap-03'>
+                <div class='flex gap-1'>
                   <button
                     type='button'
                     class='btn btn-secondary btn-external-link'
