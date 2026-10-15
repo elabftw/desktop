@@ -376,10 +376,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
         aria-label='Profile settings'
         title='Profile settings'
       >
-        <svg aria-hidden='true' width='1em' height='1em' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
-          <path d='M10.5 2h3l.55 2.6c.63.18 1.24.43 1.8.75l2.23-1.5 2.13 2.13-1.5 2.23c.32.56.57 1.17.75 1.8L22 10.5v3l-2.6.55a8 8 0 0 1-.75 1.8l1.5 2.23-2.13 2.13-2.23-1.5a8 8 0 0 1-1.8.75L13.5 22h-3l-.55-2.6a8 8 0 0 1-1.8-.75l-2.23 1.5-2.13-2.13 1.5-2.23a8 8 0 0 1-.75-1.8L2 13.5v-3l2.6-.55c.18-.63.43-1.24.75-1.8l-1.5-2.23 2.13-2.13 2.23 1.5c.56-.32 1.17-.57 1.8-.75z'/>
-          <circle cx='12' cy='12' r='3'/>
-        </svg>
+        <svg aria-hidden='true' width='1em' height='1em' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M10.5 2h3l.55 2.6c.63.18 1.24.43 1.8.75l2.23-1.5 2.13 2.13-1.5 2.23c.32.56.57 1.17.75 1.8L22 10.5v3l-2.6.55a8 8 0 0 1-.75 1.8l1.5 2.23-2.13 2.13-2.23-1.5a8 8 0 0 1-1.8.75L13.5 22h-3l-.55-2.6a8 8 0 0 1-1.8-.75l-2.23 1.5-2.13-2.13 1.5-2.23a8 8 0 0 1-.75-1.8L2 13.5v-3l2.6-.55c.18-.63.43-1.24.75-1.8l-1.5-2.23 2.13-2.13 2.23 1.5c.56-.32 1.17-.57 1.8-.75z'/><circle cx='12' cy='12' r='3'/></svg>
       </button>
       <button class='btn btn-danger' onclick={logout}>Logout</button>
     </div>
@@ -484,24 +481,18 @@ SPDX-License-Identifier: GPL-3.0-or-later
                       : 'Choose an eLabFTW instance'}
                     onclick={() => openRemoteModal('open')}
                   >
-                    <svg aria-hidden='true' width='1em' height='1em' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
-                      <path d='M14 3h7v7M10 14 21 3M21 13v7a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h7'/>
-                    </svg>
+                    <svg aria-hidden='true' width='1em' height='1em' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M14 3h7v7M10 14 21 3M21 13v7a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h7'/></svg>
                     Open in eLabFTW
                   </button>
                   <button type='button' class='btn btn-secondary' onclick={() => openRemoteModal('pull')}>
-                    <svg aria-hidden='true' width='1em' height='1em' viewBox='0 0 384 512'>
-                      <path fill='currentColor' d='M169.4 502.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 402.7V32c0-17.7-14.3-32-32-32s-32 14.3-32 32v370.7L54.6 297.3c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/>
-                    </svg>
+                    <svg aria-hidden='true' width='1em' height='1em' viewBox='0 0 384 512'><path fill='currentColor' d='M169.4 502.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 402.7V32c0-17.7-14.3-32-32-32s-32 14.3-32 32v370.7L54.6 297.3c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/></svg>
                     Pull
                   </button>
                 </div>
               {/if}
             <button class='btn btn-secondary' type='button' disabled={!currentEntryId}
                     onclick={() => openPushModal('single', currentEntryId)}>
-              <svg aria-hidden='true' width='1em' height='1em' viewBox='0 0 384 512'>
-                <path fill='currentColor' d='M214.6 9.4c-12.5-12.5-32.8-12.5-45.3 0l-160 160c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 109.3V480c0 17.7 14.3 32 32 32s32-14.3 32-32V109.3l105.4 105.4c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3l-160-160z'/>
-              </svg>
+              <svg aria-hidden='true' width='1em' height='1em' viewBox='0 0 384 512'><path fill='currentColor' d='M214.6 9.4c-12.5-12.5-32.8-12.5-45.3 0l-160 160c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 109.3V480c0 17.7 14.3 32 32 32s32-14.3 32-32V109.3l105.4 105.4c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3l-160-160z'/></svg>
               Push
             </button>
             <button class='btn btn-primary' type='submit' form='entry-editor-form' disabled={editorFormatMismatch}>
