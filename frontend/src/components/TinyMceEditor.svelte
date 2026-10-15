@@ -23,6 +23,7 @@
   let textarea: HTMLTextAreaElement;
   let editor = $state<Editor | null>(null);
   let ready = $state(false);
+  // Avoid sending changes back to Svelte while applying external editor content
   let syncingFromProps = false;
 
   onMount(() => {
@@ -71,6 +72,7 @@
       }
     });
 
+    // Remove the TinyMCE instance when the component is unmounted
     return () => {
       destroyed = true;
       editor?.remove();
@@ -78,6 +80,7 @@
     };
   });
 
+  // Apply incoming values only when they differ from the editor's current content
   $effect(() => {
     if (!editor || editor.getContent() === value) return;
 

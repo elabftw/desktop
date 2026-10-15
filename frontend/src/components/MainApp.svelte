@@ -57,8 +57,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
   let entries = $state<main.EntrySummary[]>([]);
   let view = $state<View>('index');
   let loading = $state(false);
-  let currentEntryId = $state<number | null>(null); // if not null, Update entry. else Save
-  // An existing body must not be interpreted as another format without conversion.
+  let currentEntryId = $state<number | null>(null); // null means a new entry, otherwise update the selected one
+  // Prevent editing an existing body with the wrong editor format
   let editorFormatMismatch = $derived(entryContentType !== (preferredEditor === 'markdown' ? 2 : 1));
   let pushModalOpen = $state(false);
   let pushMode = $state<'single' | 'all'>('single'); // from View of an entry, push a single entry. From list of entries, push all.
@@ -68,16 +68,17 @@ SPDX-License-Identifier: GPL-3.0-or-later
     entityType: 'experiment' | 'resource';
   } | null>(null);
   let remoteLinks = $state<main.EntryRemoteLink[]>([]);
-  // Links are ordered oldest first, so the first push defines the remote type.
+  // The oldest link determines whether this local entry is an experiment or resource
   let linkedEntityType = $derived(
     remoteLinks[0]?.type === 'experiment' ? 'experiment'
       : remoteLinks[0]?.type === 'resource' ? 'resource' : null
   );
   let remoteModalMode = $state<'open' | 'pull' | null>(null);
   let pullInProgress = $state(false);
-  // reactive to trigger an uploads refresh after a pull
+  // Recreate the uploads panel after a pull to load the replacement files
   let uploadsRefreshKey = $state(0);
 
+  // Load the preferred editor from this profile's SQLite settings
   async function loadPreferences(): Promise<void> {
     try {
       const editor = await GetPreferredEditor(profileUuid);
@@ -92,7 +93,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
   async function loadEntry(id: number, requireEditor = false): Promise<void> {
     const entry = await GetEntry(profileUuid, id);
     const links = await ListEntryRemoteLinks(profileUuid, id);
-    // An async read must never replace the state of a different entry.
+    // Ignore stale responses if the user has opened another entry
     if (currentEntryId !== id || (requireEditor && view !== 'editor')) return;
     entryTitle = entry.title;
     entryMainText = entry.body;
@@ -139,6 +140,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     }
   }
 
+  // Start a blank entry using the profile's preferred editor
   function openEditor(): void {
     view = 'editor';
     entryTitle = '';
@@ -150,7 +152,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     remoteLinks = [];
   }
 
-  // Save an entry // Update an existing entry
+  // Save a new entry or update the selected one
   async function saveOrUpdateEntry(): Promise<void> {
     if (editorFormatMismatch) {
       showAlert({type: 'warning', message: 'Change your preferred editor in Profile settings to edit this entry.'});
@@ -188,7 +190,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     view = profileSettingsReturnView;
   }
 
-  // use for Uploads to check the entry Id. Pass it to UploadsPAnel so that we dont need to check and warn
+  // Uploads need a saved entry ID before they can be attached
   async function ensureEntrySaved(): Promise<number | null> {
     if (!currentEntryId) await saveOrUpdateEntry();
     return currentEntryId;
@@ -266,7 +268,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
         link.type,
       );
 
-      // The pull may have completed after the user navigated to another entry.
+      // Ignore a pull result if another entry is now selected
       if (currentEntryId !== entryId || view !== 'editor') {
         remoteModalMode = null;
         return;
@@ -440,8 +442,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
         {#if entries.length !== 0}
           <button class='btn btn-secondary' onclick={() => openPushModal('all')}>Push all entries to eLabFTW</button>
         {/if}
-        <!-- TODO next version fetch entries: discuss how we handle it -->
-        <!--        <button class='btn btn-secondary' disabled>Fetch entries from eLabFTW (next version)</button>-->
         <button class='btn btn-secondary' onclick={openInstances}>
           Manage your eLabFTW Instances
         </button>

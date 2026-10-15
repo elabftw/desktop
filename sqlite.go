@@ -175,7 +175,6 @@ PRAGMA user_version = 2;
 		}
 		v = 3
 	}
-	// todo next version have a correct schema versioning
 	if v == 3 {
 		_, err := db.Exec(`
     CREATE TABLE IF NOT EXISTS upload2remote (
@@ -220,7 +219,8 @@ PRAGMA user_version = 2;
 		v = 4
 	}
 
-	// Existing Desktop entries were created with the Markdown editor.
+	// Existing entries contain Markdown, so they migrate with content_type 2
+	// Newly created entries save their explicit editor format
 	if v == 4 {
 		_, err := db.Exec(`
 ALTER TABLE entries ADD COLUMN content_type INTEGER NOT NULL DEFAULT 2 CHECK (content_type IN (1, 2));
@@ -232,6 +232,8 @@ PRAGMA user_version = 5;
 		v = 5
 	}
 
+	// Store preferences per profile instead of in browser-wide localStorage
+	// WITHOUT ROWID avoids a redundant row identifier for this key-value table
 	if v == 5 {
 		_, err := db.Exec(`
 CREATE TABLE IF NOT EXISTS preferences (
@@ -246,6 +248,7 @@ PRAGMA user_version = 6;
 		v = 6
 	}
 
+	// Remote-only details disappear automatically when their local2remote link is deleted
 	if v == 6 {
 		_, err := db.Exec(`
 CREATE TABLE remote_details (

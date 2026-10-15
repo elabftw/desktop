@@ -55,6 +55,7 @@ type remoteUpload struct {
 	RealName string `json:"real_name"`
 }
 
+// Metadata staged in memory until all uploads are ready for the database transaction
 type preparedPulledUpload struct {
 	RemoteID int64
 	RealName string
@@ -62,6 +63,9 @@ type preparedPulledUpload struct {
 	Filesize int64
 }
 
+// overwrite a linked local entry with the selected remote version
+// Prepare encrypted files first, then update the entry and its uploads together
+// with readonly for tags, links and custom fields
 func (a *App) PullEntryFromElabftw(
 	profileUUID string,
 	entryID int64,
@@ -92,6 +96,7 @@ func (a *App) PullEntryFromElabftw(
 	}
 	defer db.Close()
 
+	// One local entry can link to multiple instances, so use the selected mapping
 	var remoteID int64
 	err = db.QueryRow(`
 		SELECT remote_id
@@ -122,6 +127,7 @@ func (a *App) PullEntryFromElabftw(
 		return nil, err
 	}
 
+	// guard: reject an unexpected remote ID or type before overwriting anything locally
 	if err := validatePulledRemoteIdentity(remote, remoteID, entityType); err != nil {
 		return nil, err
 	}
@@ -140,6 +146,7 @@ func (a *App) PullEntryFromElabftw(
 		return nil, fmt.Errorf("unsupported remote content_type %d", remote.ContentType)
 	}
 
+	// The API returns plaintext but local titles and bodies stay encrypted in SQLite
 	encryptedTitle, err := encryptString(a.activeKey, remote.Title)
 	if err != nil {
 		return nil, fmt.Errorf("encrypt remote title: %w", err)
@@ -168,11 +175,13 @@ func (a *App) PullEntryFromElabftw(
 		return nil, fmt.Errorf("encrypt remote details: %w", err)
 	}
 
-	// The hash files are shared across entries. Keep publication, DB updates
-	// and cleanup in the same critical section for concurrent Wails calls.
+	// Entries can share an encrypted file when their content hashes match
+	// Keep file writes, database changes and cleanup locked across concurrent calls
 	uploadFilesMu.Lock()
 	defer uploadFilesMu.Unlock()
 
+	// Download and encrypt every upload before modifying any database rows
+	// On failure, remove only the files created by this attempt
 	preparedUploads := make([]preparedPulledUpload, 0, len(remote.Uploads))
 	createdPaths := make([]string, 0, len(remote.Uploads))
 	for _, upload := range remote.Uploads {
@@ -187,6 +196,7 @@ func (a *App) PullEntryFromElabftw(
 		preparedUploads = append(preparedUploads, *pulled)
 	}
 
+	// replace the entry and upload mappings in one SQLite transaction
 	oldHashes, err := replaceLocalEntryFromRemote(
 		db,
 		instanceID,
@@ -205,6 +215,7 @@ func (a *App) PullEntryFromElabftw(
 		return nil, err
 	}
 
+	// Delete old files only when no remaining upload row references their hash
 	warnings := cleanupUnreferencedUploadFiles(profileUUID, db, oldHashes)
 
 	return &PullEntryResult{
@@ -278,9 +289,8 @@ func (a *App) pullRemoteUpload(
 	}
 	defer zeroBytes(content)
 
-	// Pull is an overwrite operation. The remote upload metadata is informational:
-	// store exactly the bytes returned by eLabFTW and compute the local hash from
-	// those bytes for Desktop's content-addressed encrypted storage.
+	// Hash downloaded bytes, not the remote upload ID or filename
+	// Identical content can reuse a single encrypted file inside this profile
 	hash := fileSHA256(content)
 
 	encryptedContent, err := encryptRawBytes(a.activeKey, content)
@@ -301,7 +311,7 @@ func (a *App) pullRemoteUpload(
 		// Identical plaintext content already exists in local encrypted storage.
 	case errors.Is(statErr, os.ErrNotExist):
 		if err := os.WriteFile(destination, encryptedContent, 0o600); err != nil {
-			_ = os.Remove(destination) // WriteFile may leave a partial encrypted file.
+			_ = os.Remove(destination) // WriteFile can leave a partial encrypted file
 			return nil, "", fmt.Errorf("write pulled upload %q: %w", upload.RealName, err)
 		}
 		createdPath = destination
@@ -352,9 +362,10 @@ func replaceLocalEntryFromRemote(
 	if err != nil {
 		return nil, fmt.Errorf("begin pull transaction: %w", err)
 	}
+	// Roll back an incomplete replacement; after Commit this becomes a no-op
 	defer tx.Rollback()
 
-	oldHashes := make([]string, 0)
+	var oldHashes []string
 	rows, err := tx.Query(`SELECT DISTINCT hash FROM uploads WHERE entry_id = ?`, entryID)
 	if err != nil {
 		return nil, fmt.Errorf("query old upload hashes: %w", err)
@@ -374,7 +385,7 @@ func replaceLocalEntryFromRemote(
 		return nil, fmt.Errorf("iterate old upload hashes: %w", err)
 	}
 
-	// A pull modifies this local copy now. Keep the remote time in local2remote for sync checks.
+	// The entry gets a fresh local timestamp while the link records the remote sync time
 	result, err := tx.Exec(`
 		UPDATE entries
 		SET title = ?, body = ?, content_type = ?,
@@ -392,6 +403,7 @@ func replaceLocalEntryFromRemote(
 		return nil, fmt.Errorf("Entry not found")
 	}
 
+	// Foreign keys also remove upload2remote mappings for these deleted uploads
 	if _, err := tx.Exec(`DELETE FROM uploads WHERE entry_id = ?`, entryID); err != nil {
 		return nil, fmt.Errorf("replace local uploads: %w", err)
 	}
@@ -442,7 +454,7 @@ func replaceLocalEntryFromRemote(
 		return nil, fmt.Errorf("remote mapping changed during pull")
 	}
 
-	// Only update the read-only snapshot if the matching remote mapping still exists.
+	// Only update the read-only snapshot if the matching remote mapping still exists
 	result, err = tx.Exec(`
         INSERT INTO remote_details (link_id, encrypted_data, pulled_at)
         SELECT id, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now')
@@ -455,8 +467,12 @@ func replaceLocalEntryFromRemote(
 	if err != nil {
 		return nil, fmt.Errorf("save read-only remote details: %w", err)
 	}
-	if affected, err := result.RowsAffected(); err != nil || affected == 0 {
-		return nil, fmt.Errorf("remote mapping changed while saving details: %v", err)
+	affected, err = result.RowsAffected()
+	if err != nil {
+		return nil, fmt.Errorf("read saved remote details count: %w", err)
+	}
+	if affected == 0 {
+		return nil, fmt.Errorf("remote mapping changed while saving details")
 	}
 
 	if err := tx.Commit(); err != nil {
@@ -465,8 +481,9 @@ func replaceLocalEntryFromRemote(
 	return oldHashes, nil
 }
 
+// Cleanup failures are warnings because the new entry has already been committed
 func cleanupUnreferencedUploadFiles(profileUUID string, db *sql.DB, hashes []string) []string {
-	warnings := make([]string, 0)
+	var warnings []string
 
 	for _, hash := range hashes {
 		var references int

@@ -41,8 +41,8 @@ func elabftwEntityPath(entityType string) (string, error) {
 	}
 }
 
-// A local entry keeps the remote type selected on its first successful push.
-// This applies across instances, not only to the current target instance.
+// The first successful push locks the remote entity type across all linked instances.
+// An entry cannot be both an experiment and a resource
 func ensureLinkedEntityType(db *sql.DB, entryID int64, entityType string) error {
 	var linkedType string
 	err := db.QueryRow(`
@@ -113,12 +113,14 @@ func (a *App) PushEntryToElabftw(profileUUID string, entryID int64, instanceID i
 		return nil, fmt.Errorf("decrypt body: %w", err)
 	}
 
+	// Send the saved content type and body unchanged without Markdown-to-HTML conversion
 	payload := map[string]any{
 		"title":        title,
 		"body":         bodyText,
 		"content_type": contentType,
 	}
 
+	// An existing local2remote mapping means PATCH, otherwise POST a new remote entity
 	var remoteID int64
 	var lastSyncModifiedAt string
 
@@ -133,7 +135,6 @@ func (a *App) PushEntryToElabftw(profileUUID string, entryID int64, instanceID i
 	}
 
 	if err == nil {
-		// Existing local2remote row means this should PATCH.
 		return a.patchExistingRemoteEntry(
 			profileUUID,
 			db,
@@ -201,6 +202,7 @@ func (a *App) patchExistingRemoteEntry(
 		return nil, err
 	}
 
+	// Force bypasses this conflict check, not the rest of the push validation
 	if !force && remoteModifiedAt.After(lastSyncAt) {
 		return nil, errors.New(remoteModifiedConflictMessage(entityType, remoteID))
 	}
@@ -316,8 +318,8 @@ func (a *App) postNewRemoteEntry(
 	}, nil
 }
 
-// after pushing, we re-GET the item's modified_at or else it would always be slightly
-// different (& superior) to local modified_at.
+// Read the server timestamp after pushing rather than trusting the local clock
+// The next conflict check compares against this saved remote revision
 func (a *App) fetchRemoteModifiedAt(profileUUID string, instanceID int64, basePath string, remoteID int64) (time.Time, error) {
 	resp, err := a.elabftwRequest(
 		profileUUID,
@@ -410,7 +412,7 @@ func (a *App) PushAllEntriesToElabftw(profileUUID string, instanceID int64, enti
 	return results, rows.Err()
 }
 
-// the posted entry's id is in the Location header so we need to parse it
+// POST returns the new entity ID at the end of the Location header
 func remoteIDFromLocation(location string) (int64, error) {
 	location = strings.TrimSpace(location)
 	if location == "" {

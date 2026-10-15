@@ -6,6 +6,8 @@
  * @copyright 2026 Deltablot
  * @see https://www.elabftw.net Official website
  * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * preferences table. Will be filled with more options later
  */
 package main
 
@@ -17,7 +19,7 @@ import (
 
 const preferredEditorKey = "preferred_editor"
 
-// GetPreferredEditor reads the preference from this profile's SQLite database.
+// read the preferred editor from the unlocked profile's own SQLite database
 func (a *App) GetPreferredEditor(profileUUID string) (string, error) {
 	profileUUID, err := a.requireUnlockedProfile(profileUUID)
 	if err != nil {
@@ -31,10 +33,11 @@ func (a *App) GetPreferredEditor(profileUUID string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Open profile db: %w", err)
 	}
-	defer func() { _ = db.Close() }()
+	defer db.Close()
 
 	var editor string
 	err = db.QueryRow(`SELECT value FROM preferences WHERE key = ?`, preferredEditorKey).Scan(&editor)
+	// A new profile defaults to TinyMCE until its preference is saved
 	if errors.Is(err, sql.ErrNoRows) {
 		return "tinymce", nil
 	}
@@ -47,7 +50,7 @@ func (a *App) GetPreferredEditor(profileUUID string) (string, error) {
 	return editor, nil
 }
 
-// SetPreferredEditor stores the setting only for the unlocked profile.
+// save the preferred editor setting only for the unlocked profile
 func (a *App) SetPreferredEditor(profileUUID string, editor string) error {
 	profileUUID, err := a.requireUnlockedProfile(profileUUID)
 	if err != nil {
@@ -64,8 +67,9 @@ func (a *App) SetPreferredEditor(profileUUID string, editor string) error {
 	if err != nil {
 		return fmt.Errorf("Open profile db: %w", err)
 	}
-	defer func() { _ = db.Close() }()
+	defer db.Close()
 
+	// UPSERT updates one key instead of creating duplicate preference rows
 	_, err = db.Exec(`
 INSERT INTO preferences (key, value) VALUES (?, ?)
 ON CONFLICT(key) DO UPDATE SET value = excluded.value

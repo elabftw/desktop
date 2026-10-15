@@ -246,6 +246,7 @@ func (a *App) AddProfile(displayName string, passphrase string) (*ProfileIndex, 
 	return a.index, nil
 }
 
+// SaveEntry stores contentType 1 for HTML and 2 for Markdown
 func (a *App) SaveEntry(profileUUID string, title string, body string, contentType int) (int64, error) {
 	profileUUID, err := a.requireUnlockedProfile(profileUUID)
 	if err != nil {
@@ -261,7 +262,7 @@ func (a *App) SaveEntry(profileUUID string, title string, body string, contentTy
 	if err != nil {
 		return 0, fmt.Errorf("Open profile db: %w", err)
 	}
-	defer func() { _ = db.Close() }()
+	defer db.Close()
 
 	title = strings.TrimSpace(title)
 	if title == "" {
@@ -319,7 +320,7 @@ func (a *App) UpdateEntry(profileUUID string, id int64, title string, body strin
 	if err != nil {
 		return fmt.Errorf("Open profile db: %w", err)
 	}
-	defer func() { _ = db.Close() }()
+	defer db.Close()
 
 	title = strings.TrimSpace(title)
 	if title == "" {
@@ -380,7 +381,7 @@ func (a *App) DeleteEntry(profileUUID string, id int64) error {
 	if err != nil {
 		return fmt.Errorf("Open profile db: %w", err)
 	}
-	defer func() { _ = db.Close() }()
+	defer db.Close()
 
 	res, err := db.Exec(`
 		DELETE FROM entries
@@ -426,7 +427,7 @@ func (a *App) ListEntries(profileUUID string) ([]EntrySummary, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open profile db: %w", err)
 	}
-	defer func() { _ = db.Close() }()
+	defer db.Close()
 
 	rows, err := db.Query(`
 		SELECT e.id, e.title, e.created_at, e.modified_at,
@@ -500,7 +501,7 @@ func (a *App) GetEntry(profileUUID string, id int64) (*Entry, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open profile db: %w", err)
 	}
-	defer func() { _ = db.Close() }()
+	defer db.Close()
 
 	var e Entry
 	err = db.QueryRow(`
