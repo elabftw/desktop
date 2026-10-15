@@ -25,10 +25,10 @@
 </script>
 
 {#if labels.length}
-  <span class='entity-category-status'>
+  <span class='flex gap-1'>
     {#each labels as badge (badge.kind)}
-      <span class='entity-label' title={badge.kind}>
-        <span class='entity-label-dot' style:background-color={badge.color} aria-hidden='true'></span>
+      <span title={badge.kind}>
+        <span class='catstat-dot' style:background-color={badge.color} aria-hidden='true'></span>
         {badge.title}
       </span>
     {/each}
