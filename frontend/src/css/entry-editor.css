@@ -1,31 +1,6 @@
-/* Editor layout. Reuse global panel, button and input styles. */
+/* When in edit mode, the container gets bigger (we add the side panel) */
 .container.editor-container {
-  width: min(1380px, calc(100vw - 3rem));
-}
-
-.editor-title {
-  min-width: 0;
-}
-
-.editor-title h1 {
-  font-size: clamp(1.9rem, 3vw, 2.5rem);
-}
-
-.editor-type-icon {
-  color: var(--info-text);
-  flex: none;
-  font-size: 2.2rem;
-}
-
-.editor-heading-content {
-  min-width: 0;
-}
-
-.editor-actions {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: .75rem;
+  width: min(1780px, calc(100vw - 3rem));
 }
 
 .btn-external-link {
@@ -55,10 +30,10 @@
 }
 
 .editor-sidebar .panel h3 {
-  font-size: 1rem;
   margin: 0;
 }
 
+/* for the panels to have "Title    ^ " <-- with the toggling arrow */
 .editor-sidebar .entry-panel-heading {
   align-items: center;
   display: flex;
@@ -102,18 +77,6 @@
 .editor-sidebar .uploads-grid {
   flex-direction: column;
   gap: .65rem;
-}
-
-.editor-sidebar .upload-card {
-  height: auto;
-  min-height: 72px;
-  padding: .65rem;
-  width: 100%;
-}
-
-.editor-sidebar .upload-card-add {
-  border-style: dashed;
-  min-height: 100px;
 }
 
 .editor-sidebar .upload-icon {
@@ -184,11 +147,6 @@
 @media (width <= 950px) {
   .editor-layout {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .editor-actions {
-    flex: 1;
-    justify-content: flex-end;
   }
 }
 

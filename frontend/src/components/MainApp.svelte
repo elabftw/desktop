@@ -343,11 +343,11 @@ SPDX-License-Identifier: GPL-3.0-or-later
         <h1>My Entries</h1>
         <h2>Manage your saved entries.</h2>
       {:else if view === 'editor'}
-        <div class='flex items-center gap-1 editor-title'>
+        <div class='flex items-center gap-1'>
           {#if linkedEntityType}
-            <span class='editor-type-icon' aria-hidden='true'><EntityTypeIcon type={linkedEntityType} /></span>
+            <h1 class='text-info'><span aria-hidden='true'><EntityTypeIcon type={linkedEntityType} /></span></h1>
           {/if}
-          <div class='grid gap-03 editor-heading-content'>
+          <div class='grid'>
             <h1 class='text-ellipsis'>{entryTitle.trim() || 'Untitled entry'}</h1>
             <EntityCategoryStatus snapshot={selectedEntry?.remoteDetails} />
           </div>
@@ -472,7 +472,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     <div>
       <div class='panel flex justify-between mb-2'>
           <button class='btn btn-secondary' type='button' onclick={openIndex}>← Back</button>
-          <div class='editor-actions'>
+          <div class='flex gap-1'>
               {#if remoteLinks.length > 0}
                 <div class='flex gap-1'>
                   <button

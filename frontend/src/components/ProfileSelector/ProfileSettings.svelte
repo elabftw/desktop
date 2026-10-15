@@ -52,7 +52,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
         <option value='markdown'>Markdown</option>
       </select>
     </div>
-    <p class='description'>
+    <p>
       The preference applies to new entries. Entries saved in another format
       can be edited by selecting their original editor here. Content is never automatically converted.
     </p>

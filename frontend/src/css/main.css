@@ -224,6 +224,10 @@ a, .link-button {
   color: var(--success-text);
 }
 
+.text-info {
+  color: var(--info-text);
+}
+
 .text-ellipsis {
   overflow: hidden;
   text-overflow: ellipsis;

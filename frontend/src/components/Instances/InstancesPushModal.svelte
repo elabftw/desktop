@@ -26,6 +26,7 @@ with "Instance Name" for cross platform data share.
   type Props = {
     profileUuid: string;
     force?: boolean;
+    // once we push the entity, the type is locked (as either exp or resource)
     lockedEntityType?: EntityType | null;
     onClose: () => void;
     onPush: (

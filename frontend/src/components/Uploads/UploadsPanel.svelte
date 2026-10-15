@@ -13,10 +13,9 @@
     profileUuid: string;
     entryId: number | null;
     ensureEntrySaved: () => Promise<number | null>;
-    compact?: boolean;
   };
 
-  let {profileUuid, entryId, ensureEntrySaved, compact = false}: Props = $props();
+  let {profileUuid, entryId, ensureEntrySaved}: Props = $props();
 
   let uploads = $state<main.StoredUpload[]>([]);
   let loading = $state(false);
@@ -124,7 +123,7 @@
   });
 </script>
 
-<section class={compact ? 'panel' : 'panel mt-2'}>
+<section class='panel'>
   <details open>
     <summary class='entry-panel-heading'>
       <h3>Uploads ({uploads.length})</h3>
@@ -146,7 +145,7 @@
           <div class='upload-file-description'>
             <div class='upload-name'>{upload.realName}</div>
             <div class='description'>{formatFileSize(upload.filesize)}</div>
-            <div class='description upload-date'>Added {formatDate(upload.createdAt)}</div>
+            <div class='description'>Added {formatDate(upload.createdAt)}</div>
           </div>
           <div class='flex gap-03'>
             <button aria-label='Download file' class='btn btn-secondary' type='button' disabled={busyUploadId === upload.id} onclick={() => downloadUpload(upload)}>
