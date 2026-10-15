@@ -196,7 +196,7 @@ log new instances, edit existing and delete. You can test the API as well
       {#each instances as instance (instance.id)}
         <div class='flex justify-between items-center gap-1'>
           <div class='grid gap-03'>
-            <span class='text-white'>{instance.siteUrl}</span>
+            <span>{instance.siteUrl}</span>
             <span class={instance.verifyTls ? 'text-success' : 'text-orange'}>
               TLS verification: {instance.verifyTls ? 'enabled' : 'disabled'}
             </span>

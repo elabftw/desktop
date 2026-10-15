@@ -417,7 +417,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
               <button type='button' class='entry-card' onclick={() => openEntry(e.id)} disabled={!preferencesReady}>
                 <span class='icon-sm' aria-hidden='true'><EntityTypeIcon type={e.remoteType} /></span>
                 <span class='grid gap-03'>
-                <span class='text-ellipsis text-white text-strong text-big'>
+                <span class='text-ellipsis text-strong text-big'>
                   {e.title || 'Untitled entry'}
                 </span>
                 <span class='description'>

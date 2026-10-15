@@ -119,7 +119,7 @@ with "Instance Name" for cross platform data share.
       {#if instances.length === 1}
         <div>
           <h1>Instance</h1>
-          <p class='text-white'>{instances[0].siteUrl}</p>
+          <p>{instances[0].siteUrl}</p>
         </div>
       {:else}
         <div>
@@ -145,8 +145,8 @@ with "Instance Name" for cross platform data share.
 
       <div>
         {#if lockedEntityType}
-          <p class='description'>Remote type</p>
-          <p class='text-white'>{lockedEntityType === 'experiment' ? 'Experiment' : 'Resource'} (linked)</p>
+          <span class='text-strong'>Remote type</span>
+          <p>{lockedEntityType === 'experiment' ? 'Experiment' : 'Resource'} (linked)</p>
         {:else}
           <label for='push-entity-type'>Remote type</label>
           <select id='push-entity-type' class='input' bind:value={entityType}>

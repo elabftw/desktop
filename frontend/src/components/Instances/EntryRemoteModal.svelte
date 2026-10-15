@@ -40,7 +40,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 </script>
 
 <Modal title={mode === 'pull' ? 'Pull from eLabFTW' : 'Open in eLabFTW'} onClose={() => { if (!pulling) onClose(); }}>
-  <div class='grid gap-1 text-white'>
+  <div class='grid gap-1'>
     {#if links.length > 1}
       <div>
         <label for='remote-instance'>eLabFTW instance</label>
