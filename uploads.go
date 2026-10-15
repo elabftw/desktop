@@ -21,6 +21,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -36,6 +37,9 @@ type StoredUpload struct {
 	CreatedAt     string `json:"createdAt"`
 	ModifiedAt    string `json:"modifiedAt"`
 }
+
+// Serializes changes to shared encrypted upload files and their DB references.
+var uploadFilesMu sync.Mutex
 
 func fileSHA256(content []byte) string {
 	sum := sha256.Sum256(content)
@@ -71,6 +75,9 @@ func (a *App) ImportUpload(profileUUID string, entryID int64, sourcePath string)
 	if err != nil {
 		return nil, fmt.Errorf("encrypt file: %w", err)
 	}
+
+	uploadFilesMu.Lock()
+	defer uploadFilesMu.Unlock()
 
 	destPath, err := encryptedProfileUploadPath(profileUUID, hash)
 	if err != nil {
@@ -364,6 +371,9 @@ func (a *App) DeleteUpload(
 		return fmt.Errorf("open profile db: %w", err)
 	}
 	defer db.Close()
+
+	uploadFilesMu.Lock()
+	defer uploadFilesMu.Unlock()
 
 	upload, err := getUploadFromDB(db, entryID, uploadID)
 	if err != nil {

@@ -74,6 +74,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
       : remoteLinks[0]?.type === 'resource' ? 'resource' : null
   );
   let remoteModalMode = $state<'open' | 'pull' | null>(null);
+  let pullInProgress = $state(false);
   // reactive to trigger an uploads refresh after a pull
   let uploadsRefreshKey = $state(0);
 
@@ -88,9 +89,11 @@ SPDX-License-Identifier: GPL-3.0-or-later
     }
   }
 
-  async function loadEntry(id: number): Promise<void> {
+  async function loadEntry(id: number, requireEditor = false): Promise<void> {
     const entry = await GetEntry(profileUuid, id);
     const links = await ListEntryRemoteLinks(profileUuid, id);
+    // An async read must never replace the state of a different entry.
+    if (currentEntryId !== id || (requireEditor && view !== 'editor')) return;
     entryTitle = entry.title;
     entryMainText = entry.body;
     selectedEntry = entry;
@@ -242,24 +245,38 @@ SPDX-License-Identifier: GPL-3.0-or-later
   }
 
   function closeRemoteModal(): void {
+    if (pullInProgress) return;
     remoteModalMode = null;
   }
 
   async function confirmPull(link: main.EntryRemoteLink): Promise<void> {
-    if (!currentEntryId) {
+    const entryId = currentEntryId;
+    if (entryId === null) {
       showAlert({type: 'error', message: 'No entry selected.'});
       return;
     }
+    if (pullInProgress) return;
+    pullInProgress = true;
 
     try {
       const result = await PullEntryFromElabftw(
         profileUuid,
-        currentEntryId,
+        entryId,
         link.instanceId,
         link.type,
       );
 
-      await loadEntry(currentEntryId);
+      // The pull may have completed after the user navigated to another entry.
+      if (currentEntryId !== entryId || view !== 'editor') {
+        remoteModalMode = null;
+        return;
+      }
+
+      await loadEntry(entryId, true);
+      if (currentEntryId !== entryId || view !== 'editor') {
+        remoteModalMode = null;
+        return;
+      }
       uploadsRefreshKey += 1;
       await refreshEntries();
 
@@ -271,6 +288,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
       remoteModalMode = null;
     } catch (e: unknown) {
       showAlert({type: 'error', message: errorMessage(e)});
+    } finally {
+      pullInProgress = false;
     }
   }
 

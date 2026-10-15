@@ -168,6 +168,11 @@ func (a *App) PullEntryFromElabftw(
 		return nil, fmt.Errorf("encrypt remote details: %w", err)
 	}
 
+	// The hash files are shared across entries. Keep publication, DB updates
+	// and cleanup in the same critical section for concurrent Wails calls.
+	uploadFilesMu.Lock()
+	defer uploadFilesMu.Unlock()
+
 	preparedUploads := make([]preparedPulledUpload, 0, len(remote.Uploads))
 	createdPaths := make([]string, 0, len(remote.Uploads))
 	for _, upload := range remote.Uploads {
