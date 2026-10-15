@@ -83,24 +83,6 @@
   font-size: 2rem;
 }
 
-.editor-sidebar .upload-file {
-  align-items: center;
-  display: flex;
-  gap: .5rem;
-  justify-content: space-between;
-  text-align: left;
-}
-
-.editor-sidebar .upload-file-description {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.editor-sidebar .upload-name {
-  padding: 0;
-  text-align: left;
-}
-
 .editor-sidebar .upload-file .btn {
   padding: .4rem;
 }

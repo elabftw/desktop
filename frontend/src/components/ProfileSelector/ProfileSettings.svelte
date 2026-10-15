@@ -40,8 +40,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 </script>
 
 <section class='panel'>
-  <div class='flex justify-between items-center border-bottom mb-2'>
-    <h3>Editor preference</h3>
+  <div class='border-bottom mb-2'>
     <button type='button' class='btn btn-secondary' onclick={onBack}>← Back</button>
   </div>
   <form onsubmit={preventDefaultSubmit(savePreference)} class='grid gap-1'>

@@ -141,8 +141,8 @@
       </button>
 
       {#each uploads as upload (upload.id)}
-        <div class='upload-card upload-file'>
-          <div class='upload-file-description'>
+        <div class='upload-card'>
+          <div>
             <div class='upload-name'>{upload.realName}</div>
             <div class='description'>{formatFileSize(upload.filesize)}</div>
             <div class='description'>Added {formatDate(upload.createdAt)}</div>
