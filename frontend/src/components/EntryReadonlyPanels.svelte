@@ -50,7 +50,7 @@
   let hint = $derived(linked ? 'Pull from eLabFTW to load this information.' : 'Not linked to an eLabFTW instance.');
 </script>
 
-{#each ['Tags', 'Metadata', 'Links'] as section}
+{#each ['Tags', 'Metadata', 'Links'] as section (section)}
   <details class='panel'>
     <summary class='entry-panel-heading'>
       <h3>{section}{#if snapshot} ({section === 'Tags' ? tags.length : section === 'Metadata' ? metadata.length : links.length}){/if}</h3>
@@ -61,17 +61,17 @@
         <p class='description'>{hint}</p>
       {:else if section === 'Tags'}
         {#if tags.length}
-          <div class='entry-tag-list'>{#each tags as tag}<span class='entry-tag'>{tag}</span>{/each}</div>
+          <div class='entry-tag-list'>{#each tags as tag, i (i)}<span class='entry-tag'>{tag}</span>{/each}</div>
         {:else}<p class='description'>No tags.</p>{/if}
       {:else if section === 'Metadata'}
         {#if metadata.length}
-          {#each metadata as field}
+          {#each metadata as field (field.name)}
             <div class='entry-readonly-row'><span>{field.name}</span><span>{field.value}</span></div>
           {/each}
         {:else}<p class='description'>No custom fields.</p>{/if}
       {:else}
         {#if links.length}
-          {#each links as link}
+          {#each links as link, i (i)}
             <div class='entry-readonly-row'><span>{link.name || 'Untitled'}</span><span>{link.type}</span></div>
           {/each}
         {:else}<p class='description'>No linked entries.</p>{/if}
