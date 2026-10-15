@@ -24,6 +24,8 @@ export function GetPreferredEditor(arg1:string):Promise<string>;
 
 export function GetProfileIndex():Promise<main.ProfileIndex>;
 
+export function ImportEntryFromElabftw(arg1:string,arg2:number,arg3:string,arg4:number):Promise<main.PullEntryResult>;
+
 export function ImportUpload(arg1:string,arg2:number,arg3:string):Promise<main.StoredUpload>;
 
 export function ListElabftwInstances(arg1:string):Promise<Array<main.ElabftwInstance>>;
@@ -33,6 +35,8 @@ export function ListEntries(arg1:string):Promise<Array<main.EntrySummary>>;
 export function ListEntryRemoteLinks(arg1:string,arg2:number):Promise<Array<main.EntryRemoteLink>>;
 
 export function ListEntryUploads(arg1:string,arg2:number):Promise<Array<main.StoredUpload>>;
+
+export function ListRemoteEntries(arg1:string,arg2:number,arg3:string,arg4:string,arg5:number):Promise<Array<main.RemoteEntryOption>>;
 
 export function LockProfile():Promise<void>;
 

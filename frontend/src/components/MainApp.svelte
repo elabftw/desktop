@@ -19,6 +19,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     DeleteEntry,
     LockProfile,
     PullEntryFromElabftw,
+    ImportEntryFromElabftw,
     PushEntryToElabftw,
     PushAllEntriesToElabftw,
     ListEntryRemoteLinks,
@@ -29,6 +30,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
   import ProfileSettings from './ProfileSelector/ProfileSettings.svelte';
   import InstancesPushModal from './Instances/InstancesPushModal.svelte';
   import EntryRemoteModal from './Instances/EntryRemoteModal.svelte';
+  import EntryImportModal from './Instances/EntryImportModal.svelte';
   import MarkdownEditor from "./MarkdownEditor.svelte";
   import TinyMceEditor from "./TinyMceEditor.svelte";
   import { showAlert } from "./stores/alert.svelte";
@@ -60,6 +62,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
   let currentEntryId = $state<number | null>(null); // null means a new entry, otherwise update the selected one
   // Prevent editing an existing body with the wrong editor format
   let editorFormatMismatch = $derived(entryContentType !== (preferredEditor === 'markdown' ? 2 : 1));
+  let importModalOpen = $state(false);
   let pushModalOpen = $state(false);
   let pushMode = $state<'single' | 'all'>('single'); // from View of an entry, push a single entry. From list of entries, push all.
   let pushEntryId = $state<number | null>(null); // # currentEntryId. This is for the modal to push to eLab.
@@ -221,6 +224,17 @@ SPDX-License-Identifier: GPL-3.0-or-later
   function openInstances(): void {
     showAlert(null);
     view = 'instances';
+  }
+
+  async function confirmImport(instanceId: number, entityType: 'experiment' | 'resource', remoteId: number): Promise<void> {
+    const result = await ImportEntryFromElabftw(profileUuid, instanceId, entityType, remoteId);
+    importModalOpen = false;
+    await refreshEntries();
+    const warning = result.warnings?.length ? ` Warning: ${result.warnings.join(' ')}` : '';
+    showAlert({
+      type: result.warnings?.length ? 'warning' : 'success',
+      message: `Imported ${result.type} #${result.remoteId} as local entry #${result.localId} ✔${warning}`,
+    });
   }
 
   // modal helpers
@@ -395,7 +409,12 @@ SPDX-License-Identifier: GPL-3.0-or-later
             </span>
           </div>
         </div>
-        <button class='btn btn-primary' onclick={openEditor} disabled={!preferencesReady}><span aria-hidden='true'>+</span> Create entry</button>
+        <div class='flex gap-1'>
+          <button class='btn btn-secondary' type='button' onclick={() => { showAlert(null); importModalOpen = true; }}>
+            Import from eLabFTW
+          </button>
+          <button class='btn btn-primary' onclick={openEditor} disabled={!preferencesReady}><span aria-hidden='true'>+</span> Create entry</button>
+        </div>
       </div>
 
       {#if loading}
@@ -569,6 +588,13 @@ SPDX-License-Identifier: GPL-3.0-or-later
         </aside>
       </div>
     </div>
+  {/if}
+  {#if importModalOpen}
+    <EntryImportModal
+      {profileUuid}
+      onClose={() => { importModalOpen = false; }}
+      onImport={confirmImport}
+    />
   {/if}
   {#if pushModalOpen}
     <InstancesPushModal
