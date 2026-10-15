@@ -9,12 +9,16 @@ SPDX-License-Identifier: GPL-3.0-or-later
 -->
 
 <script lang='ts'>
+  import type { Snippet } from 'svelte';
+
   type Props = {
     title: string;
     onClose: () => void;
+    children?: Snippet;
+    actions?: Snippet;
   };
 
-  let {title, onClose}: Props = $props();
+  let {title, onClose, children, actions}: Props = $props();
 
   function stopClick(event: MouseEvent): void {
     event.stopPropagation();
@@ -29,11 +33,11 @@ SPDX-License-Identifier: GPL-3.0-or-later
     </header>
 
     <div>
-      <slot/>
+      {@render children?.()}
     </div>
 
     <footer class='flex justify-end gap-1 mt-2'>
-      <slot name='actions'/>
+      {@render actions?.()}
     </footer>
   </dialog>
 </div>

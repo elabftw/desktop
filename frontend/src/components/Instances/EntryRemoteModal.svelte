@@ -67,7 +67,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     {/if}
   </div>
 
-  <svelte:fragment slot='actions'>
+  {#snippet actions()}
     <button class='btn btn-secondary' type='button' disabled={pulling} onclick={onClose}>
       Cancel
     </button>
@@ -75,5 +75,5 @@ SPDX-License-Identifier: GPL-3.0-or-later
             disabled={pulling || !selectedLink} onclick={confirmAction}>
       {pulling ? 'Pulling...' : mode === 'pull' ? 'Pull and overwrite' : 'Open in browser'}
     </button>
-  </svelte:fragment>
+  {/snippet}
 </Modal>

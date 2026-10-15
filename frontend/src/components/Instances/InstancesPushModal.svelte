@@ -157,7 +157,7 @@ with "Instance Name" for cross platform data share.
     </div>
   {/if}
 
-  <svelte:fragment slot='actions'>
+  {#snippet actions()}
     <button
       class='btn btn-secondary'
       type='button'
@@ -177,5 +177,5 @@ with "Instance Name" for cross platform data share.
         {pushing ? 'Pushing...' : force ? 'Push anyway' : 'Push'}
       </button>
     {/if}
-  </svelte:fragment>
+  {/snippet}
 </Modal>

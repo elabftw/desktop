@@ -235,9 +235,9 @@ PRAGMA user_version = 5;
 	if v == 5 {
 		_, err := db.Exec(`
 CREATE TABLE IF NOT EXISTS preferences (
-	key TEXT PRIMARY KEY,
+	key TEXT PRIMARY KEY NOT NULL,
 	value TEXT NOT NULL
-);
+) WITHOUT ROWID;
 PRAGMA user_version = 6;
 `)
 		if err != nil {
