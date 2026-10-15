@@ -336,6 +336,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
   }
 </script>
 
+<!-- when using editor, the container becomes larger (side panel with uploads/metadata appears) -->
 <div class='container' class:editor-container={view === 'editor'}>
   <header class='flex justify-between items-center mb-2' class:border-bottom={view !== 'editor'}>
     <div class='w-100 text-ellipsis'>
