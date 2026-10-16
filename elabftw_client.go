@@ -155,8 +155,8 @@ func (a *App) elabftwRequest(
 
 	client := elabftwHTTPClient(cfg.VerifyTLS, isUpload)
 
-	// log the requests made to the API
-	log.Printf("API REQUEST: %s %s", method, req.URL.RequestURI())
+	// Uncomment the logging below when debugging API requests locally.
+	// log.Printf("API REQUEST: %s %s", method, req.URL.RequestURI())
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -164,9 +164,11 @@ func (a *App) elabftwRequest(
 		return nil, fmt.Errorf("call elabftw %s %s: %w", method, path, err)
 	}
 
-	log.Printf("API RESPONSE: %s %s -> %d", method, path, resp.StatusCode)
+	// log.Printf("API RESPONSE: %s %s -> %d", method, path, resp.StatusCode)
 
-	// Log all API response bodies
+	// Uncomment this block to log response bodies as well.
+	// It reads the entire response into memory, including file downloads.
+	/*
 	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		resp.Body.Close()
@@ -178,6 +180,7 @@ func (a *App) elabftwRequest(
 
 	// Restore the body so the rest of the app can still read it
 	resp.Body = io.NopCloser(bytes.NewReader(responseBody))
+	*/
 
 	return resp, nil
 }
