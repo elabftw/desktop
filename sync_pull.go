@@ -80,11 +80,6 @@ func (a *App) PullEntryFromElabftw(
 		return nil, fmt.Errorf("Invalid entry id")
 	}
 
-	basePath, err := elabftwEntityPath(entityType)
-	if err != nil {
-		return nil, err
-	}
-
 	pdir, err := profileDir(profileUUID)
 	if err != nil {
 		return nil, err
