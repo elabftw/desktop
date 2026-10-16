@@ -1,4 +1,4 @@
-# eLabFTW Desktop
+# eLabFTW Lite
 
 > ⚠️ [WARNING]
 >
@@ -89,8 +89,8 @@ sudo pacman -Syu webkit2gtk-4.1
 ## Setup
 
 ```bash
-git clone https://github.com/elabftw/desktop.git
-cd desktop
+git clone https://github.com/elabftw/lite.git
+cd lite
 #install frontend dependencies
 cd frontend
 npm install

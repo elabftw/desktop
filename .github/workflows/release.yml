@@ -90,13 +90,13 @@ jobs:
           mkdir -p release
           case '${{ runner.os }}' in
             Linux)
-              cp build/bin/elabftw-desktop 'release/elabftw-desktop-${{ matrix.name }}'
+              cp build/bin/elabftw-lite 'release/elabftw-lite-${{ matrix.name }}'
               ;;
             Windows)
-              cp build/bin/elabftw-desktop.exe 'release/elabftw-desktop-${{ matrix.name }}.exe'
+              cp build/bin/elabftw-lite.exe 'release/elabftw-lite-${{ matrix.name }}.exe'
               ;;
             macOS)
-              ditto -c -k --sequesterRsrc --keepParent build/bin/elabftw-desktop.app 'release/elabftw-desktop-${{ matrix.name }}.zip'
+              ditto -c -k --sequesterRsrc --keepParent build/bin/elabftw-lite.app 'release/elabftw-lite-${{ matrix.name }}.zip'
               ;;
           esac
 

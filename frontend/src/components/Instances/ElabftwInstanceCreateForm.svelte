@@ -1,5 +1,5 @@
 <!--
-This file is part of eLabFTW Desktop.
+This file is part of eLabFTW lite.
 
 @author Nicolas CARPi / Deltablot
 @author Moustapha Camara / Deltablot
@@ -8,7 +8,7 @@ This file is part of eLabFTW Desktop.
 SPDX-License-Identifier: GPL-3.0-or-later
 
 This file is the centralized form for creating the relationship between
-an eLabFTW instance and the desktop App.
+an eLabFTW instance and the lite App.
 It is used in the Instances View page and in the Modal called from the
 "Push to eLabFTW" buttons
 -->
