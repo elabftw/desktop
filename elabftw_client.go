@@ -166,20 +166,20 @@ func (a *App) elabftwRequest(
 
 	log.Printf("API RESPONSE: %s %s -> %d", method, path, resp.StatusCode)
 
-    // Log all API response bodies
-    responseBody, err := io.ReadAll(resp.Body)
-    if err != nil {
-        resp.Body.Close()
-        return nil, err
-    }
-    resp.Body.Close()
+	// Log all API response bodies
+	responseBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		resp.Body.Close()
+		return nil, err
+	}
+	resp.Body.Close()
 
-    log.Printf("API RESPONSE BODY: %s", string(responseBody))
+	log.Printf("API RESPONSE BODY: %s", string(responseBody))
 
-    // Restore the body so the rest of the app can still read it
-    resp.Body = io.NopCloser(bytes.NewReader(responseBody))
+	// Restore the body so the rest of the app can still read it
+	resp.Body = io.NopCloser(bytes.NewReader(responseBody))
 
-    return resp, nil
+	return resp, nil
 }
 
 // http.Response is an open stream, so we need to close it when done reading
