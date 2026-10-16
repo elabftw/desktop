@@ -39,8 +39,8 @@
 .upload-name {
   font-weight: 700;
   overflow-wrap: break-word;
-  text-align: left;
   padding: 0;
+  text-align: left;
 }
 
 .upload-meta {
