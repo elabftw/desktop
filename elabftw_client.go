@@ -169,17 +169,17 @@ func (a *App) elabftwRequest(
 	// Uncomment this block to log response bodies as well.
 	// It reads the entire response into memory, including file downloads.
 	/*
-	responseBody, err := io.ReadAll(resp.Body)
-	if err != nil {
+		responseBody, err := io.ReadAll(resp.Body)
+		if err != nil {
+			resp.Body.Close()
+			return nil, err
+		}
 		resp.Body.Close()
-		return nil, err
-	}
-	resp.Body.Close()
 
-	log.Printf("API RESPONSE BODY: %s", string(responseBody))
+		log.Printf("API RESPONSE BODY: %s", string(responseBody))
 
-	// Restore the body so the rest of the app can still read it
-	resp.Body = io.NopCloser(bytes.NewReader(responseBody))
+		// Restore the body so the rest of the app can still read it
+		resp.Body = io.NopCloser(bytes.NewReader(responseBody))
 	*/
 
 	return resp, nil
