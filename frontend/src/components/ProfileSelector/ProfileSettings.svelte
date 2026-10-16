@@ -12,6 +12,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
   import { SetPreferredEditor } from '../../../wailsjs/go/main/App';
   import { errorMessage, preventDefaultSubmit } from '../../utils/helpers';
   import { showAlert } from '../stores/alert.svelte';
+  import InstancesView from '../Instances/InstancesView.svelte';
 
   type PreferredEditor = 'tinymce' | 'markdown';
   type Props = {
@@ -39,6 +40,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
   }
 </script>
 
+<div class='grid gap-1'>
 <section class='panel'>
   <div class='border-bottom mb-2'>
     <button type='button' class='btn btn-secondary' onclick={onBack}>← Back</button>
@@ -62,3 +64,5 @@ SPDX-License-Identifier: GPL-3.0-or-later
     </div>
   </form>
 </section>
+<InstancesView {profileUuid} />
+</div>

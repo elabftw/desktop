@@ -46,6 +46,10 @@ export function GetProfileIndex() {
   return window['go']['main']['App']['GetProfileIndex']();
 }
 
+export function ImportEntryFromElabftw(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['ImportEntryFromElabftw'](arg1, arg2, arg3, arg4);
+}
+
 export function ImportUpload(arg1, arg2, arg3) {
   return window['go']['main']['App']['ImportUpload'](arg1, arg2, arg3);
 }
@@ -64,6 +68,10 @@ export function ListEntryRemoteLinks(arg1, arg2) {
 
 export function ListEntryUploads(arg1, arg2) {
   return window['go']['main']['App']['ListEntryUploads'](arg1, arg2);
+}
+
+export function ListRemoteEntries(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['main']['App']['ListRemoteEntries'](arg1, arg2, arg3, arg4, arg5);
 }
 
 export function LockProfile() {
@@ -92,6 +100,10 @@ export function SelectFile() {
 
 export function SetPreferredEditor(arg1, arg2) {
   return window['go']['main']['App']['SetPreferredEditor'](arg1, arg2);
+}
+
+export function UnlinkEntryFromElabftw(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['main']['App']['UnlinkEntryFromElabftw'](arg1, arg2, arg3, arg4, arg5);
 }
 
 export function UnlockProfile(arg1, arg2) {

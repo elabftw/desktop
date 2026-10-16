@@ -60,6 +60,20 @@ button {
   background: var(--dark-blue);
 }
 
+/* A quieter action next to Pull and Push. */
+.btn-quiet {
+  background: transparent;
+  border-color: transparent;
+  color: var(--light-gray);
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+}
+
+.btn-quiet:hover {
+  background: var(--dark-blue-2);
+  color: var(--soft-white);
+}
+
 .btn-danger {
   background: var(--red-background);
   border-color: var(--red-border);

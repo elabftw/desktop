@@ -19,16 +19,18 @@ SPDX-License-Identifier: GPL-3.0-or-later
     DeleteEntry,
     LockProfile,
     PullEntryFromElabftw,
+    ImportEntryFromElabftw,
     PushEntryToElabftw,
     PushAllEntriesToElabftw,
     ListEntryRemoteLinks,
+    UnlinkEntryFromElabftw,
   } from '../../wailsjs/go/main/App';
   import type { main } from '../../wailsjs/go/models';
   import { autofocus, errorMessage, openExternalURL, preventDefaultSubmit, toRelativeTime } from '../utils/helpers';
-  import InstancesView from './Instances/InstancesView.svelte';
   import ProfileSettings from './ProfileSelector/ProfileSettings.svelte';
   import InstancesPushModal from './Instances/InstancesPushModal.svelte';
   import EntryRemoteModal from './Instances/EntryRemoteModal.svelte';
+  import EntryImportModal from './Instances/EntryImportModal.svelte';
   import MarkdownEditor from "./MarkdownEditor.svelte";
   import TinyMceEditor from "./TinyMceEditor.svelte";
   import { showAlert } from "./stores/alert.svelte";
@@ -43,7 +45,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     onLogout?: () => void;
   };
 
-  type View = 'index' | 'editor' | 'instances' | 'profile';
+  type View = 'index' | 'editor' | 'profile';
   type PreferredEditor = 'tinymce' | 'markdown';
 
   let {profileUuid, profileName, onLogout}: Props = $props();
@@ -60,6 +62,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
   let currentEntryId = $state<number | null>(null); // null means a new entry, otherwise update the selected one
   // Prevent editing an existing body with the wrong editor format
   let editorFormatMismatch = $derived(entryContentType !== (preferredEditor === 'markdown' ? 2 : 1));
+  let importModalOpen = $state(false);
   let pushModalOpen = $state(false);
   let pushMode = $state<'single' | 'all'>('single'); // from View of an entry, push a single entry. From list of entries, push all.
   let pushEntryId = $state<number | null>(null); // # currentEntryId. This is for the modal to push to eLab.
@@ -73,8 +76,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
     remoteLinks[0]?.type === 'experiment' ? 'experiment'
       : remoteLinks[0]?.type === 'resource' ? 'resource' : null
   );
-  let remoteModalMode = $state<'open' | 'pull' | null>(null);
-  let pullInProgress = $state(false);
+  let remoteModalMode = $state<'open' | 'pull' | 'unlink' | null>(null);
+  let remoteActionInProgress = $state(false);
   // Recreate the uploads panel after a pull to load the replacement files
   let uploadsRefreshKey = $state(0);
 
@@ -177,7 +180,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     }
   }
 
-  let profileSettingsReturnView = $state<'index' | 'editor' | 'instances'>('index');
+  let profileSettingsReturnView = $state<'index' | 'editor'>('index');
 
   function openProfileSettings(): void {
     showAlert(null);
@@ -218,9 +221,15 @@ SPDX-License-Identifier: GPL-3.0-or-later
     void loadPreferences();
   });
 
-  function openInstances(): void {
-    showAlert(null);
-    view = 'instances';
+  async function confirmImport(instanceId: number, entityType: 'experiment' | 'resource', remoteId: number): Promise<void> {
+    const result = await ImportEntryFromElabftw(profileUuid, instanceId, entityType, remoteId);
+    importModalOpen = false;
+    await refreshEntries();
+    const warning = result.warnings?.length ? ` Warning: ${result.warnings.join(' ')}` : '';
+    showAlert({
+      type: result.warnings?.length ? 'warning' : 'success',
+      message: `Imported ${result.type} #${result.remoteId} as local entry #${result.localId} ✔${warning}`,
+    });
   }
 
   // modal helpers
@@ -236,7 +245,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     lastFailedPush = null;
   }
 
-  function openRemoteModal(mode: 'open' | 'pull'): void {
+  function openRemoteModal(mode: 'open' | 'pull' | 'unlink'): void {
     if (remoteLinks.length === 0) return;
     showAlert(null);
     if (mode === 'open' && remoteLinks.length === 1) {
@@ -247,7 +256,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
   }
 
   function closeRemoteModal(): void {
-    if (pullInProgress) return;
+    if (remoteActionInProgress) return;
     remoteModalMode = null;
   }
 
@@ -257,8 +266,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
       showAlert({type: 'error', message: 'No entry selected.'});
       return;
     }
-    if (pullInProgress) return;
-    pullInProgress = true;
+    if (remoteActionInProgress) return;
+    remoteActionInProgress = true;
 
     try {
       const result = await PullEntryFromElabftw(
@@ -291,7 +300,28 @@ SPDX-License-Identifier: GPL-3.0-or-later
     } catch (e: unknown) {
       showAlert({type: 'error', message: errorMessage(e)});
     } finally {
-      pullInProgress = false;
+      remoteActionInProgress = false;
+    }
+  }
+
+  async function confirmUnlink(link: main.EntryRemoteLink): Promise<void> {
+    const entryId = currentEntryId;
+    if (entryId === null || remoteActionInProgress) return;
+    remoteActionInProgress = true;
+
+    try {
+      await UnlinkEntryFromElabftw(profileUuid, entryId, link.instanceId, link.remoteId, link.type);
+      remoteModalMode = null;
+      if (currentEntryId !== entryId || view !== 'editor') return;
+
+      remoteLinks = await ListEntryRemoteLinks(profileUuid, entryId);
+      selectedEntry = await GetEntry(profileUuid, entryId);
+      await refreshEntries();
+      showAlert({type: 'success', message: 'Entry unlinked from eLabFTW ✔'});
+    } catch (e: unknown) {
+      showAlert({type: 'error', message: errorMessage(e)});
+    } finally {
+      remoteActionInProgress = false;
     }
   }
 
@@ -353,9 +383,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
             <EntityCategoryStatus snapshot={selectedEntry?.remoteDetails} />
           </div>
         </div>
-      {:else if view === 'instances'}
-        <h1 class='text-ellipsis'>eLabFTW instances</h1>
-        <h2>Add the server you want to sync with</h2>
       {:else} <!-- view === 'profile' -->
         <h1>Profile settings</h1>
         <h2>Manage preferences for {profileName}.</h2>
@@ -395,7 +422,12 @@ SPDX-License-Identifier: GPL-3.0-or-later
             </span>
           </div>
         </div>
-        <button class='btn btn-primary' onclick={openEditor} disabled={!preferencesReady}><span aria-hidden='true'>+</span> Create entry</button>
+        <div class='flex gap-1'>
+          <button class='btn btn-secondary' type='button' onclick={() => { showAlert(null); importModalOpen = true; }}>
+            Import from eLabFTW
+          </button>
+          <button class='btn btn-primary' onclick={openEditor} disabled={!preferencesReady}><span aria-hidden='true'>+</span> Create entry</button>
+        </div>
       </div>
 
       {#if loading}
@@ -440,18 +472,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
         {#if entries.length !== 0}
           <button class='btn btn-secondary' onclick={() => openPushModal('all')}>Push all entries to eLabFTW</button>
         {/if}
-        <button class='btn btn-secondary' onclick={openInstances}>
-          Manage your eLabFTW Instances
-        </button>
-
       </div>
     </section>
-    <!-- VIEW ELABFTW INSTANCES -->
-  {:else if view === 'instances'}
-    <InstancesView
-      {profileUuid}
-      onBack={openIndex}
-    />
     <!-- PROFILE SETTINGS -->
   {:else if view === 'profile'}
     <ProfileSettings
@@ -487,6 +509,11 @@ SPDX-License-Identifier: GPL-3.0-or-later
                   <button type='button' class='btn btn-secondary' onclick={() => openRemoteModal('pull')}>
                     <svg aria-hidden='true' width='1em' height='1em' viewBox='0 0 384 512'><path fill='currentColor' d='M169.4 502.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 402.7V32c0-17.7-14.3-32-32-32s-32 14.3-32 32v370.7L54.6 297.3c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/></svg>
                     Pull
+                  </button>
+                  <button type='button' class='btn btn-secondary btn-quiet'
+                          title='Remove the local sync link without deleting either entry'
+                          onclick={() => openRemoteModal('unlink')}>
+                    Unlink
                   </button>
                 </div>
               {/if}
@@ -570,6 +597,13 @@ SPDX-License-Identifier: GPL-3.0-or-later
       </div>
     </div>
   {/if}
+  {#if importModalOpen}
+    <EntryImportModal
+      {profileUuid}
+      onClose={() => { importModalOpen = false; }}
+      onImport={confirmImport}
+    />
+  {/if}
   {#if pushModalOpen}
     <InstancesPushModal
       {profileUuid}
@@ -589,6 +623,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
         closeRemoteModal();
       }}
       onPull={confirmPull}
+      onUnlink={confirmUnlink}
     />
   {/if}
 </div>

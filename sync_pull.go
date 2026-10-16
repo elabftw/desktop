@@ -80,11 +80,6 @@ func (a *App) PullEntryFromElabftw(
 		return nil, fmt.Errorf("Invalid entry id")
 	}
 
-	basePath, err := elabftwEntityPath(entityType)
-	if err != nil {
-		return nil, err
-	}
-
 	pdir, err := profileDir(profileUUID)
 	if err != nil {
 		return nil, err
@@ -110,6 +105,17 @@ func (a *App) PullEntryFromElabftw(
 		return nil, fmt.Errorf("query local2remote: %w", err)
 	}
 
+	return a.pullRemoteEntry(profileUUID, db, entryID, instanceID, entityType, remoteID)
+}
+
+// Shared pipeline for overwriting an existing linked entry or importing a new
+// remote entry. The latter passes entryID = 0; both paths download the exact
+// same content, metadata, links and uploads before starting a DB transaction.
+func (a *App) pullRemoteEntry(profileUUID string, db *sql.DB, entryID int64, instanceID int64, entityType string, remoteID int64) (*PullEntryResult, error) {
+	basePath, err := elabftwEntityPath(entityType)
+	if err != nil {
+		return nil, err
+	}
 	resp, err := a.elabftwRequest(
 		profileUUID,
 		instanceID,
@@ -200,7 +206,7 @@ func (a *App) PullEntryFromElabftw(
 	oldHashes, err := replaceLocalEntryFromRemote(
 		db,
 		instanceID,
-		entryID,
+		&entryID,
 		entityType,
 		remoteID,
 		encryptedTitle,
@@ -348,7 +354,7 @@ func readElabftwBinaryResponse(resp *http.Response) ([]byte, error) {
 func replaceLocalEntryFromRemote(
 	db *sql.DB,
 	instanceID int64,
-	entryID int64,
+	entryID *int64,
 	entityType string,
 	remoteID int64,
 	encryptedTitle string,
@@ -365,8 +371,30 @@ func replaceLocalEntryFromRemote(
 	// Roll back an incomplete replacement; after Commit this becomes a no-op
 	defer tx.Rollback()
 
+	localID := *entryID
+	if localID == 0 {
+		// Create both the entry and its remote mapping in the SAME transaction
+		// as uploads and read-only details. Any failure leaves no partial entry.
+		result, err := tx.Exec(`
+			INSERT INTO entries (title, body, content_type) VALUES (?, ?, ?)
+		`, encryptedTitle, encryptedBody, contentType)
+		if err != nil {
+			return nil, fmt.Errorf("create pulled entry: %w", err)
+		}
+		localID, err = result.LastInsertId()
+		if err != nil {
+			return nil, fmt.Errorf("get pulled entry id: %w", err)
+		}
+		if _, err := tx.Exec(`
+			INSERT INTO local2remote (instance, remote_id, local_id, type, modified_at)
+			VALUES (?, ?, ?, ?, ?)
+		`, instanceID, remoteID, localID, entityType, modifiedAt); err != nil {
+			return nil, fmt.Errorf("map imported entry (possibly already imported): %w", err)
+		}
+	}
+
 	var oldHashes []string
-	rows, err := tx.Query(`SELECT DISTINCT hash FROM uploads WHERE entry_id = ?`, entryID)
+	rows, err := tx.Query(`SELECT DISTINCT hash FROM uploads WHERE entry_id = ?`, localID)
 	if err != nil {
 		return nil, fmt.Errorf("query old upload hashes: %w", err)
 	}
@@ -391,7 +419,7 @@ func replaceLocalEntryFromRemote(
 		SET title = ?, body = ?, content_type = ?,
 			modified_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
 		WHERE id = ?
-	`, encryptedTitle, encryptedBody, contentType, entryID)
+	`, encryptedTitle, encryptedBody, contentType, localID)
 	if err != nil {
 		return nil, fmt.Errorf("replace local entry: %w", err)
 	}
@@ -404,7 +432,7 @@ func replaceLocalEntryFromRemote(
 	}
 
 	// Foreign keys also remove upload2remote mappings for these deleted uploads
-	if _, err := tx.Exec(`DELETE FROM uploads WHERE entry_id = ?`, entryID); err != nil {
+	if _, err := tx.Exec(`DELETE FROM uploads WHERE entry_id = ?`, localID); err != nil {
 		return nil, fmt.Errorf("replace local uploads: %w", err)
 	}
 
@@ -412,7 +440,7 @@ func replaceLocalEntryFromRemote(
 		result, err := tx.Exec(`
 			INSERT INTO uploads (entry_id, real_name, hash, hash_algorithm, filesize, state)
 			VALUES (?, ?, ?, 'sha256', ?, 'synced')
-		`, entryID, upload.RealName, upload.Hash, upload.Filesize)
+		`, localID, upload.RealName, upload.Hash, upload.Filesize)
 		if err != nil {
 			return nil, fmt.Errorf("insert pulled upload %q: %w", upload.RealName, err)
 		}
@@ -432,7 +460,7 @@ func replaceLocalEntryFromRemote(
 				type
 			)
 			VALUES (?, ?, ?, ?, ?, ?)
-		`, instanceID, localUploadID, entryID, remoteID, upload.RemoteID, entityType)
+		`, instanceID, localUploadID, localID, remoteID, upload.RemoteID, entityType)
 		if err != nil {
 			return nil, fmt.Errorf("map pulled upload %q: %w", upload.RealName, err)
 		}
@@ -442,7 +470,7 @@ func replaceLocalEntryFromRemote(
 		UPDATE local2remote
 		SET modified_at = ?
 		WHERE instance = ? AND local_id = ? AND type = ? AND remote_id = ?
-	`, modifiedAt, instanceID, entryID, entityType, remoteID)
+	`, modifiedAt, instanceID, localID, entityType, remoteID)
 	if err != nil {
 		return nil, fmt.Errorf("update pull sync timestamp: %w", err)
 	}
@@ -463,7 +491,7 @@ func replaceLocalEntryFromRemote(
         ON CONFLICT(link_id) DO UPDATE SET
             encrypted_data = excluded.encrypted_data,
             pulled_at = excluded.pulled_at
-    `, encryptedDetails, instanceID, entryID, entityType, remoteID)
+    `, encryptedDetails, instanceID, localID, entityType, remoteID)
 	if err != nil {
 		return nil, fmt.Errorf("save read-only remote details: %w", err)
 	}
@@ -478,6 +506,7 @@ func replaceLocalEntryFromRemote(
 	if err := tx.Commit(); err != nil {
 		return nil, fmt.Errorf("commit pull transaction: %w", err)
 	}
+	*entryID = localID
 	return oldHashes, nil
 }
 

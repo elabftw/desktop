@@ -192,6 +192,20 @@ export namespace main {
 	        this.uploadWarnings = source["uploadWarnings"];
 	    }
 	}
+	export class RemoteEntryOption {
+	    id: number;
+	    title: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new RemoteEntryOption(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.title = source["title"];
+	    }
+	}
 	export class StoredUpload {
 	    id: number;
 	    entryId: number;
