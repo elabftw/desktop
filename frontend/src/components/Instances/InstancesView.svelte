@@ -1,5 +1,5 @@
 <!--
-This file is part of eLabFTW Desktop.
+This file is part of eLabFTW lite.
 
 @author Nicolas CARPi / Deltablot
 @author Moustapha Camara / Deltablot
@@ -130,7 +130,7 @@ log new instances, edit existing and delete. You can test the API as well
 <section class='panel'>
   <div class='border-bottom mb-2 grid gap-1'>
     <h3>eLabFTW instances</h3>
-    <p>To allow communication between the desktop app and your eLabFTW instance, add the site URL and your API key.</p>
+    <p>To allow communication between the lite app and your eLabFTW instance, add the site URL and your API key.</p>
     <p>See the
       <button type='button' class='link-button'
               onclick={() => openExternalURL('https://doc.elabftw.net/docs/usage/api')}>Documentation</button>

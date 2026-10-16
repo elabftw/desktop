@@ -1,4 +1,4 @@
-module elabftw-desktop
+module elabftw-lite
 
 go 1.25.0
 

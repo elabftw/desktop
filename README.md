@@ -1,4 +1,4 @@
-# eLabFTW Desktop
+# eLabFTW Lite
 
 > ⚠️ [WARNING]
 >
@@ -89,8 +89,8 @@ sudo pacman -Syu webkit2gtk-4.1
 ## Setup
 
 ```bash
-git clone https://github.com/elabftw/desktop.git
-cd desktop
+git clone https://github.com/elabftw/lite.git
+cd lite
 #install frontend dependencies
 cd frontend
 npm install
@@ -130,7 +130,7 @@ Build error - exit status 1
 
 ## 🖥 What to expect
 
-- A **native desktop window** should open automatically
+- A **native lite window** should open automatically
 - The app is **not meant to run in a browser**
 
 ---

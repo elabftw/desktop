@@ -1,5 +1,5 @@
 /*
- * This file is part of eLabFTW Desktop.
+ * This file is part of eLabFTW lite.
  *
  * @author Nicolas CARPi / Deltablot
  * @author Moustapha Camara / Deltablot
@@ -45,7 +45,7 @@ const (
 	argonKeySize = chacha20poly1305.KeySize
 )
 
-const profileVerifierPlaintext = "elabftw-desktop profile verifier v1"
+const profileVerifierPlaintext = "elabftw-lite profile verifier v1"
 
 var base64Encoding = base64.RawStdEncoding
 

@@ -1,5 +1,5 @@
 /*
- * This file is part of eLabFTW Desktop.
+ * This file is part of eLabFTW lite.
  *
  * @author Nicolas CARPi / Deltablot
  * @author Moustapha Camara / Deltablot
@@ -34,8 +34,8 @@ func main() {
 	about := func() {
 		_, _ = rt.MessageDialog(app.ctx, rt.MessageDialogOptions{
 			Type:    rt.InfoDialog,
-			Title:   "About eLabFTW Desktop",
-			Message: "Version: " + AppVersion + "\n\nLocal-first eLabFTW desktop client." + "\nDevelopment sponsored by CNRS.",
+			Title:   "About eLabFTW lite",
+			Message: "Version: " + AppVersion + "\n\nLocal-first eLabFTW lite client." + "\nDevelopment sponsored by CNRS.",
 			Buttons: []string{"OK"},
 		})
 	}
@@ -50,7 +50,7 @@ func main() {
 	}
 
 	if runtime.GOOS == "darwin" {
-		appSubmenu := appMenu.AddSubmenu("eLabFTW Desktop")
+		appSubmenu := appMenu.AddSubmenu("eLabFTW lite")
 		appSubmenu.AddText("About...", nil, func(_ *menu.CallbackData) {
 			about()
 		})
@@ -85,7 +85,7 @@ func main() {
 
 	// Create application with options
 	err := wails.Run(&options.App{
-		Title:  "elabftw-desktop",
+		Title:  "elabftw-lite",
 		Width:  1200,
 		Height: 900,
 		AssetServer: &assetserver.Options{

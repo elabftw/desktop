@@ -1,5 +1,5 @@
 /*
- * This file is part of eLabFTW Desktop.
+ * This file is part of eLabFTW lite.
  *
  * @author Nicolas CARPi / Deltablot
  * @author Moustapha Camara / Deltablot
@@ -18,7 +18,7 @@ import (
 	"path/filepath"
 )
 
-const AppName = "elabftw-desktop"
+const AppName = "elabftw-lite"
 
 type ProfileIndex struct {
 	Version  int            `json:"version"`

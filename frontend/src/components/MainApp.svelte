@@ -1,5 +1,5 @@
 <!--
-This file is part of eLabFTW Desktop.
+This file is part of eLabFTW lite.
 
 @author Nicolas CARPi / Deltablot
 @author Moustapha Camara / Deltablot
@@ -354,7 +354,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
       pushModalOpen = false;
     } catch (e: unknown) {
       const message = errorMessage(e);
-      // warning if remote data is more recent than desktop
+      // warning if remote data is more recent than lite
       if (message.includes('was modified after your last sync')) {
         lastFailedPush = { instanceId, entityType };
         showAlert({ type: 'warning', message });
