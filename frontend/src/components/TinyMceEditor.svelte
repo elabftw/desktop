@@ -102,6 +102,7 @@
   </div>
 </div>
 
+<!-- TODO: Create a reusable spinner component. Extract spinner styles into a reusable global class -->
 <style>
   .tinymce-loading-container { position: relative; min-height: 360px; background: #1b2636; }
   .tinymce-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: .5rem; color: #fff; }
