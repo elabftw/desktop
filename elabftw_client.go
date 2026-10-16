@@ -17,6 +17,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -154,9 +155,30 @@ func (a *App) elabftwRequest(
 
 	client := elabftwHTTPClient(cfg.VerifyTLS, isUpload)
 
+	// log the requests made to the API
+	log.Printf("API REQUEST: %s %s", method, req.URL.RequestURI())
+
 	resp, err := client.Do(req)
 	if err != nil {
+		log.Printf("API ERROR: %v", err)
 		return nil, fmt.Errorf("call elabftw %s %s: %w", method, path, err)
+	}
+
+	log.Printf("API RESPONSE: %d", resp.StatusCode)
+
+	// thi is for the fastq queries only
+	if strings.Contains(path, "fastq=") {
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			resp.Body.Close()
+			return nil, err
+		}
+		resp.Body.Close()
+
+		log.Printf("API RESPONSE BODY: %s", string(body))
+
+		// restore the body so the rest of the app can still read it
+		resp.Body = io.NopCloser(bytes.NewReader(body))
 	}
 
 	return resp, nil
