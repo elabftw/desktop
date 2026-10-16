@@ -130,7 +130,7 @@ Build error - exit status 1
 
 ## 🖥 What to expect
 
-- A **native lite window** should open automatically
+- A **native desktop window** should open automatically
 - The app is **not meant to run in a browser**
 
 ---
