@@ -164,24 +164,22 @@ func (a *App) elabftwRequest(
 		return nil, fmt.Errorf("call elabftw %s %s: %w", method, path, err)
 	}
 
-	log.Printf("API RESPONSE: %d", resp.StatusCode)
+	log.Printf("API RESPONSE: %s %s -> %d", method, path, resp.StatusCode)
 
-	// thi is for the fastq queries only
-	if strings.Contains(path, "fastq=") {
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			resp.Body.Close()
-			return nil, err
-		}
-		resp.Body.Close()
+    // Log all API response bodies
+    responseBody, err := io.ReadAll(resp.Body)
+    if err != nil {
+        resp.Body.Close()
+        return nil, err
+    }
+    resp.Body.Close()
 
-		log.Printf("API RESPONSE BODY: %s", string(body))
+    log.Printf("API RESPONSE BODY: %s", string(responseBody))
 
-		// restore the body so the rest of the app can still read it
-		resp.Body = io.NopCloser(bytes.NewReader(body))
-	}
+    // Restore the body so the rest of the app can still read it
+    resp.Body = io.NopCloser(bytes.NewReader(responseBody))
 
-	return resp, nil
+    return resp, nil
 }
 
 // http.Response is an open stream, so we need to close it when done reading
