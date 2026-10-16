@@ -28,10 +28,9 @@ log new instances, edit existing and delete. You can test the API as well
   import { showAlert } from "../stores/alert.svelte";
   type Props = {
     profileUuid: string;
-    onBack: () => void;
   };
 
-  let {profileUuid, onBack}: Props = $props();
+  let {profileUuid}: Props = $props();
 
   let loading = $state(false);
   let instances = $state<main.ElabftwInstance[]>([]);
@@ -129,14 +128,14 @@ log new instances, edit existing and delete. You can test the API as well
 </script>
 
 <section class='panel'>
-  <div class='border-bottom mb-2 flex flex-column items-center'>
-    <button class='btn btn-secondary mb-2' type='button' onclick={onBack}>← Back</button>
-    <span>To allow communication between the desktop app and your eLabFTW instance, add the site URL and your API key.</span>
-    <span>See the
+  <div class='border-bottom mb-2 grid gap-1'>
+    <h3>eLabFTW instances</h3>
+    <p>To allow communication between the desktop app and your eLabFTW instance, add the site URL and your API key.</p>
+    <p>See the
       <button type='button' class='link-button'
               onclick={() => openExternalURL('https://doc.elabftw.net/docs/usage/api')}>Documentation</button>
       to learn how to create a new API key.
-    </span>
+    </p>
   </div>
 
   <form onsubmit={handleInstanceSubmit} class='grid gap-1'>

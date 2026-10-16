@@ -102,6 +102,10 @@ export function SetPreferredEditor(arg1, arg2) {
   return window['go']['main']['App']['SetPreferredEditor'](arg1, arg2);
 }
 
+export function UnlinkEntryFromElabftw(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['main']['App']['UnlinkEntryFromElabftw'](arg1, arg2, arg3, arg4, arg5);
+}
+
 export function UnlockProfile(arg1, arg2) {
   return window['go']['main']['App']['UnlockProfile'](arg1, arg2);
 }

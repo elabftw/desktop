@@ -84,3 +84,61 @@ func (a *App) ListEntryRemoteLinks(profileUUID string, entryID int64) ([]EntryRe
 
 	return out, rows.Err()
 }
+
+// UnlinkEntryFromElabftw disconnects a local entry from one remote entry.
+// The local and remote entries (including their uploaded files) are kept.
+func (a *App) UnlinkEntryFromElabftw(profileUUID string, entryID, instanceID, remoteID int64, entityType string) error {
+	profileUUID, err := a.requireUnlockedProfile(profileUUID)
+	if err != nil {
+		return err
+	}
+	if entryID <= 0 || instanceID <= 0 || remoteID <= 0 || (entityType != "experiment" && entityType != "resource") {
+		return fmt.Errorf("invalid remote entry link")
+	}
+
+	pdir, err := profileDir(profileUUID)
+	if err != nil {
+		return err
+	}
+	db, err := OpenProfileDB(pdir)
+	if err != nil {
+		return fmt.Errorf("open profile db: %w", err)
+	}
+	defer db.Close()
+
+	tx, err := db.Begin()
+	if err != nil {
+		return fmt.Errorf("begin unlink transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	result, err := tx.Exec(`
+		DELETE FROM local2remote
+		WHERE local_id = ? AND instance = ? AND remote_id = ? AND type = ?
+	`, entryID, instanceID, remoteID, entityType)
+	if err != nil {
+		return fmt.Errorf("unlink remote entry: %w", err)
+	}
+	deleted, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("check removed link: %w", err)
+	}
+	if deleted == 0 {
+		return fmt.Errorf("remote entry link not found")
+	}
+
+	// upload2remote is not linked to local2remote by a foreign key.
+	_, err = tx.Exec(`
+		DELETE FROM upload2remote
+		WHERE local_entry_id = ? AND instance = ? AND remote_entity_id = ? AND type = ?
+	`, entryID, instanceID, remoteID, entityType)
+	if err != nil {
+		return fmt.Errorf("remove remote upload mappings: %w", err)
+	}
+
+	// remote_details is removed by ON DELETE CASCADE from local2remote.
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit unlink transaction: %w", err)
+	}
+	return nil
+}

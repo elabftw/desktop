@@ -12,16 +12,17 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
   type Props = {
     links: main.EntryRemoteLink[];
-    mode: 'open' | 'pull';
+    mode: 'open' | 'pull' | 'unlink';
     onClose: () => void;
     onOpen: (link: main.EntryRemoteLink) => void;
     onPull: (link: main.EntryRemoteLink) => Promise<void>;
+    onUnlink: (link: main.EntryRemoteLink) => Promise<void>;
   };
 
-  let {links, mode, onClose, onOpen, onPull}: Props = $props();
+  let {links, mode, onClose, onOpen, onPull, onUnlink}: Props = $props();
   let selectedIndex = $state(links.length === 1 ? 0 : -1);
   let selectedLink = $derived(links[selectedIndex] ?? null);
-  let pulling = $state(false);
+  let working = $state(false);
 
   async function confirmAction(): Promise<void> {
     if (!selectedLink) return;
@@ -30,16 +31,20 @@ SPDX-License-Identifier: GPL-3.0-or-later
       return;
     }
 
-    pulling = true;
+    working = true;
     try {
-      await onPull(selectedLink);
+      if (mode === 'pull') {
+        await onPull(selectedLink);
+      } else {
+        await onUnlink(selectedLink);
+      }
     } finally {
-      pulling = false;
+      working = false;
     }
   }
 </script>
 
-<Modal title={mode === 'pull' ? 'Pull from eLabFTW' : 'Open in eLabFTW'} onClose={() => { if (!pulling) onClose(); }}>
+<Modal title={mode === 'pull' ? 'Pull from eLabFTW' : mode === 'unlink' ? 'Unlink from eLabFTW' : 'Open in eLabFTW'} onClose={() => { if (!working) onClose(); }}>
   <div class='grid gap-1'>
     {#if links.length > 1}
       <div>
@@ -61,19 +66,24 @@ SPDX-License-Identifier: GPL-3.0-or-later
           This will overwrite the local title, body and uploads with the remote version.
           Local changes that are not present online will be lost. <span class='text-strong text-orange'>This cannot be undone.</span>
         </p>
+      {:else if mode === 'unlink'}
+        <p>
+          Remove the local synchronization link? Both the local and remote entries will remain unchanged.
+          Cached remote details and upload mappings for this link will be cleared.
+        </p>
       {/if}
     {:else}
-      <p class='description'>Select an instance to {mode === 'pull' ? 'pull from' : 'open'}.</p>
+      <p class='description'>Select an instance to {mode === 'pull' ? 'pull from' : mode === 'unlink' ? 'unlink from' : 'open'}.</p>
     {/if}
   </div>
 
   {#snippet actions()}
-    <button class='btn btn-secondary' type='button' disabled={pulling} onclick={onClose}>
+    <button class='btn btn-secondary' type='button' disabled={working} onclick={onClose}>
       Cancel
     </button>
-    <button class={mode === 'pull' ? 'btn btn-danger' : 'btn btn-primary'} type='button'
-            disabled={pulling || !selectedLink} onclick={confirmAction}>
-      {pulling ? 'Pulling...' : mode === 'pull' ? 'Pull and overwrite' : 'Open in browser'}
+    <button class={mode === 'open' ? 'btn btn-primary' : 'btn btn-danger'} type='button'
+            disabled={working || !selectedLink} onclick={confirmAction}>
+      {working ? (mode === 'pull' ? 'Pulling...' : 'Unlinking...') : mode === 'pull' ? 'Pull and overwrite' : mode === 'unlink' ? 'Unlink entry' : 'Open in browser'}
     </button>
   {/snippet}
 </Modal>

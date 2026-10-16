@@ -52,6 +52,8 @@ export function SelectFile():Promise<string>;
 
 export function SetPreferredEditor(arg1:string,arg2:string):Promise<void>;
 
+export function UnlinkEntryFromElabftw(arg1:string,arg2:number,arg3:number,arg4:number,arg5:string):Promise<void>;
+
 export function UnlockProfile(arg1:string,arg2:string):Promise<void>;
 
 export function UpdateElabftwInstance(arg1:string,arg2:number,arg3:string,arg4:string,arg5:boolean):Promise<void>;
