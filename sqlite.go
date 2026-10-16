@@ -1,8 +1,8 @@
 /*
  * This file is part of eLabFTW Desktop.
  *
- * @author Nicolas CARPi <Deltablot>
- * @author Moustapha Camara <Deltablot>
+ * @author Nicolas CARPi / Deltablot
+ * @author Moustapha Camara / Deltablot
  * @copyright 2026 Nicolas CARPi
  * @see https://www.elabftw.net Official website
  * SPDX-License-Identifier: GPL-3.0-or-later
@@ -18,9 +18,13 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 
 	_ "modernc.org/sqlite"
 )
+
+// Journal-mode setup and migrations must not race across profile DB handles.
+var profileDBInitMu sync.Mutex
 
 func OpenProfileDB(profileDir string) (*sql.DB, error) {
 	if err := os.MkdirAll(profileDir, 0o755); err != nil {
@@ -38,14 +42,30 @@ func OpenProfileDB(profileDir string) (*sql.DB, error) {
 	db.SetMaxOpenConns(1)
 	db.SetMaxIdleConns(1)
 
-	// Good defaults for desktop apps
+	// A new connection must wait briefly if another handle is writing.
+	if _, err := db.Exec(`PRAGMA busy_timeout = 5000;`); err != nil {
+		_ = db.Close()
+		return nil, fmt.Errorf("Pragma busy_timeout: %w", err)
+	}
 	if _, err := db.Exec(`PRAGMA foreign_keys = ON;`); err != nil {
 		_ = db.Close()
 		return nil, fmt.Errorf("Pragma foreign_keys: %w", err)
 	}
-	if _, err := db.Exec(`PRAGMA journal_mode = WAL;`); err != nil {
+
+	profileDBInitMu.Lock()
+	defer profileDBInitMu.Unlock()
+
+	// WAL mode persists in SQLite. Don't try to set it on every login/read.
+	var journalMode string
+	if err := db.QueryRow(`PRAGMA journal_mode;`).Scan(&journalMode); err != nil {
 		_ = db.Close()
-		return nil, fmt.Errorf("Pragma journal_mode: %w", err)
+		return nil, fmt.Errorf("Read journal_mode: %w", err)
+	}
+	if journalMode != "wal" {
+		if _, err := db.Exec(`PRAGMA journal_mode = WAL;`); err != nil {
+			_ = db.Close()
+			return nil, fmt.Errorf("Pragma journal_mode: %w", err)
+		}
 	}
 
 	if err := initSchema(db); err != nil {
@@ -155,7 +175,6 @@ PRAGMA user_version = 2;
 		}
 		v = 3
 	}
-	// todo next version have a correct schema versioning
 	if v == 3 {
 		_, err := db.Exec(`
     CREATE TABLE IF NOT EXISTS upload2remote (
@@ -198,6 +217,50 @@ PRAGMA user_version = 2;
 		}
 
 		v = 4
+	}
+
+	// Existing entries contain Markdown, so they migrate with content_type 2
+	// Newly created entries save their explicit editor format
+	if v == 4 {
+		_, err := db.Exec(`
+ALTER TABLE entries ADD COLUMN content_type INTEGER NOT NULL DEFAULT 2 CHECK (content_type IN (1, 2));
+PRAGMA user_version = 5;
+`)
+		if err != nil {
+			return fmt.Errorf("Create schema v5: %w", err)
+		}
+		v = 5
+	}
+
+	// Store preferences per profile instead of in browser-wide localStorage
+	// WITHOUT ROWID avoids a redundant row identifier for this key-value table
+	if v == 5 {
+		_, err := db.Exec(`
+CREATE TABLE IF NOT EXISTS preferences (
+	key TEXT PRIMARY KEY NOT NULL,
+	value TEXT NOT NULL
+) WITHOUT ROWID;
+PRAGMA user_version = 6;
+`)
+		if err != nil {
+			return fmt.Errorf("Create schema v6: %w", err)
+		}
+		v = 6
+	}
+
+	// Remote-only details disappear automatically when their local2remote link is deleted
+	if v == 6 {
+		_, err := db.Exec(`
+CREATE TABLE remote_details (
+    link_id INTEGER PRIMARY KEY REFERENCES local2remote(id) ON DELETE CASCADE,
+    encrypted_data TEXT NOT NULL,
+    pulled_at TEXT NOT NULL
+);
+PRAGMA user_version = 7;
+`)
+		if err != nil {
+			return fmt.Errorf("Create schema v7: %w", err)
+		}
 	}
 	return nil
 }

@@ -5,6 +5,7 @@
 @import url('main-app.css');
 @import url('easymde.css');
 @import url('uploads.css');
+@import url('entry-editor.css');
 
 /* TODO: add stylelint */
 :root {
@@ -81,6 +82,10 @@ body {
   margin: 0;
   min-height: 100%;
   overflow-y: auto;
+}
+
+p, span {
+  color: var(--text);
 }
 
 @font-face {
@@ -207,20 +212,16 @@ a, .link-button {
   font-weight: 600;
 }
 
-.text-gray {
-  color: var(--gray);
-}
-
 .text-orange {
   color: var(--orange);
 }
 
-.text-white {
-  color: var(--soft-white);
-}
-
 .text-success {
   color: var(--success-text);
+}
+
+.text-info {
+  color: var(--info-text);
 }
 
 .text-ellipsis {

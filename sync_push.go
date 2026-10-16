@@ -1,8 +1,8 @@
 /*
  * This file is part of eLabFTW Desktop.
  *
- * @author Nicolas CARPi <Deltablot>
- * @author Moustapha Camara <Deltablot>
+ * @author Nicolas CARPi / Deltablot
+ * @author Moustapha Camara / Deltablot
  * @copyright 2026 Nicolas CARPi
  * @see https://www.elabftw.net Official website
  * SPDX-License-Identifier: GPL-3.0-or-later
@@ -41,6 +41,25 @@ func elabftwEntityPath(entityType string) (string, error) {
 	}
 }
 
+// The first successful push locks the remote entity type across all linked instances.
+// An entry cannot be both an experiment and a resource
+func ensureLinkedEntityType(db *sql.DB, entryID int64, entityType string) error {
+	var linkedType string
+	err := db.QueryRow(`
+		SELECT type FROM local2remote WHERE local_id = ? ORDER BY id ASC LIMIT 1
+	`, entryID).Scan(&linkedType)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("query linked entity type: %w", err)
+	}
+	if linkedType != entityType {
+		return fmt.Errorf("entry %d is already linked as a %s, cannot push as a %s", entryID, linkedType, entityType)
+	}
+	return nil
+}
+
 func (a *App) PushEntryToElabftw(profileUUID string, entryID int64, instanceID int64, entityType string, force bool) (*PushEntryResult, error) {
 	profileUUID, err := a.requireUnlockedProfile(profileUUID)
 	if err != nil {
@@ -67,14 +86,19 @@ func (a *App) PushEntryToElabftw(profileUUID string, entryID int64, instanceID i
 	}
 	defer db.Close()
 
+	if err := ensureLinkedEntityType(db, entryID, entityType); err != nil {
+		return nil, err
+	}
+
 	var encryptedTitle string
 	var encryptedBody string
+	var contentType int
 
 	err = db.QueryRow(`
-		SELECT title, body
+		SELECT title, body, content_type
 		FROM entries
 		WHERE id = ?
-	`, entryID).Scan(&encryptedTitle, &encryptedBody)
+	`, entryID).Scan(&encryptedTitle, &encryptedBody, &contentType)
 	if err != nil {
 		return nil, fmt.Errorf("query entry: %w", err)
 	}
@@ -89,12 +113,14 @@ func (a *App) PushEntryToElabftw(profileUUID string, entryID int64, instanceID i
 		return nil, fmt.Errorf("decrypt body: %w", err)
 	}
 
+	// Send the saved content type and body unchanged without Markdown-to-HTML conversion
 	payload := map[string]any{
 		"title":        title,
-		"body":         renderMarkdownToHTML(bodyText),
-		"content_type": 1,
+		"body":         bodyText,
+		"content_type": contentType,
 	}
 
+	// An existing local2remote mapping means PATCH, otherwise POST a new remote entity
 	var remoteID int64
 	var lastSyncModifiedAt string
 
@@ -109,7 +135,6 @@ func (a *App) PushEntryToElabftw(profileUUID string, entryID int64, instanceID i
 	}
 
 	if err == nil {
-		// Existing local2remote row means this should PATCH.
 		return a.patchExistingRemoteEntry(
 			profileUUID,
 			db,
@@ -160,12 +185,14 @@ func (a *App) patchExistingRemoteEntry(
 		return nil, err
 	}
 
-	var remote map[string]any
+	var remote struct {
+		ModifiedAt string `json:"modified_at"`
+	}
 	if err := decodeElabftwJSONResponse(resp, &remote); err != nil {
 		return nil, err
 	}
 
-	remoteModifiedAt, err := parseElabftwModifiedAt(remote["modified_at"])
+	remoteModifiedAt, err := parseElabftwModifiedAt(remote.ModifiedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -175,6 +202,7 @@ func (a *App) patchExistingRemoteEntry(
 		return nil, err
 	}
 
+	// Force bypasses this conflict check, not the rest of the push validation
 	if !force && remoteModifiedAt.After(lastSyncAt) {
 		return nil, errors.New(remoteModifiedConflictMessage(entityType, remoteID))
 	}
@@ -290,8 +318,8 @@ func (a *App) postNewRemoteEntry(
 	}, nil
 }
 
-// after pushing, we re-GET the item's modified_at or else it would always be slightly
-// different (& superior) to local modified_at.
+// Read the server timestamp after pushing rather than trusting the local clock
+// The next conflict check compares against this saved remote revision
 func (a *App) fetchRemoteModifiedAt(profileUUID string, instanceID int64, basePath string, remoteID int64) (time.Time, error) {
 	resp, err := a.elabftwRequest(
 		profileUUID,
@@ -343,6 +371,22 @@ func (a *App) PushAllEntriesToElabftw(profileUUID string, instanceID int64, enti
 	}
 	defer db.Close()
 
+	// Reject a conflicting bulk push before pushing any entries.
+	var conflictID int64
+	var linkedType string
+	err = db.QueryRow(`
+		SELECT l.local_id, l.type FROM local2remote l
+		JOIN entries e ON e.id = l.local_id
+		WHERE l.id IN (SELECT MIN(id) FROM local2remote GROUP BY local_id)
+		AND l.type <> ? LIMIT 1
+	`, entityType).Scan(&conflictID, &linkedType)
+	if err == nil {
+		return nil, fmt.Errorf("entry %d is already linked as a %s, cannot push all as %s", conflictID, linkedType, entityType)
+	}
+	if !errors.Is(err, sql.ErrNoRows) {
+		return nil, fmt.Errorf("check linked entity types: %w", err)
+	}
+
 	rows, err := db.Query(`SELECT id FROM entries ORDER BY id ASC`)
 	if err != nil {
 		return nil, fmt.Errorf("query entries: %w", err)
@@ -368,7 +412,7 @@ func (a *App) PushAllEntriesToElabftw(profileUUID string, instanceID int64, enti
 	return results, rows.Err()
 }
 
-// the posted entry's id is in the Location header so we need to parse it
+// POST returns the new entity ID at the end of the Location header
 func remoteIDFromLocation(location string) (int64, error) {
 	location = strings.TrimSpace(location)
 	if location == "" {

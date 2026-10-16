@@ -35,3 +35,27 @@ export function openExternalURL(url: string): void {
   if (!url) return;
   BrowserOpenURL(url);
 }
+
+/* Formats a timestamp relative to now without a date library. */
+export function toRelativeTime(iso: string, locale = 'en'): string {
+  const seconds = (Date.parse(iso) - Date.now()) / 1000;
+  if (!Number.isFinite(seconds)) return 'now';
+
+  const formatter = new Intl.RelativeTimeFormat(locale, {numeric: 'auto'});
+  const units: Array<[Intl.RelativeTimeFormatUnit, number]> = [
+    ['year', 31536000],
+    ['month', 2592000],
+    ['week', 604800],
+    ['day', 86400],
+    ['hour', 3600],
+    ['minute', 60],
+    ['second', 1],
+  ];
+
+  for (const [unit, duration] of units) {
+    if (Math.abs(seconds) >= duration || unit === 'second') {
+      return formatter.format(Math.round(seconds / duration), unit);
+    }
+  }
+  return 'now';
+}

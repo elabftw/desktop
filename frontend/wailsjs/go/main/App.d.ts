@@ -20,6 +20,8 @@ export function FetchElabftwInfo(arg1:string,arg2:number):Promise<main.ElabftwIn
 
 export function GetEntry(arg1:string,arg2:number):Promise<main.Entry>;
 
+export function GetPreferredEditor(arg1:string):Promise<string>;
+
 export function GetProfileIndex():Promise<main.ProfileIndex>;
 
 export function ImportUpload(arg1:string,arg2:number,arg3:string):Promise<main.StoredUpload>;
@@ -34,16 +36,20 @@ export function ListEntryUploads(arg1:string,arg2:number):Promise<Array<main.Sto
 
 export function LockProfile():Promise<void>;
 
+export function PullEntryFromElabftw(arg1:string,arg2:number,arg3:number,arg4:string):Promise<main.PullEntryResult>;
+
 export function PushAllEntriesToElabftw(arg1:string,arg2:number,arg3:string,arg4:boolean):Promise<Array<main.PushEntryResult>>;
 
 export function PushEntryToElabftw(arg1:string,arg2:number,arg3:number,arg4:string,arg5:boolean):Promise<main.PushEntryResult>;
 
-export function SaveEntry(arg1:string,arg2:string,arg3:string):Promise<number>;
+export function SaveEntry(arg1:string,arg2:string,arg3:string,arg4:number):Promise<number>;
 
 export function SelectFile():Promise<string>;
+
+export function SetPreferredEditor(arg1:string,arg2:string):Promise<void>;
 
 export function UnlockProfile(arg1:string,arg2:string):Promise<void>;
 
 export function UpdateElabftwInstance(arg1:string,arg2:number,arg3:string,arg4:string,arg5:boolean):Promise<void>;
 
-export function UpdateEntry(arg1:string,arg2:number,arg3:string,arg4:string):Promise<void>;
+export function UpdateEntry(arg1:string,arg2:number,arg3:string,arg4:string,arg5:number):Promise<void>;

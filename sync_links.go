@@ -1,8 +1,8 @@
 /*
  * This file is part of eLabFTW Desktop.
  *
- * @author Nicolas CARPi <Deltablot>
- * @author Moustapha Camara <Deltablot>
+ * @author Nicolas CARPi / Deltablot
+ * @author Moustapha Camara / Deltablot
  * @copyright 2026 Nicolas CARPi
  * @see https://www.elabftw.net Official website
  * SPDX-License-Identifier: GPL-3.0-or-later
@@ -58,7 +58,7 @@ func (a *App) ListEntryRemoteLinks(profileUUID string, entryID int64) ([]EntryRe
 		FROM local2remote l
 		JOIN elabftw_instances i ON i.id = l.instance
 		WHERE l.local_id = ?
-		ORDER BY i.site_url ASC, l.type ASC
+		ORDER BY l.id ASC
 	`, entryID)
 	if err != nil {
 		return nil, fmt.Errorf("query remote links: %w", err)

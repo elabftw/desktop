@@ -123,11 +123,13 @@
   });
 </script>
 
-<section class='panel mt-2'>
-  <div class='border-bottom mb-2'>
-    <h3>Uploads</h3>
-  </div>
-
+<section class='panel'>
+  <details open>
+    <summary class='entry-panel-heading'>
+      <h3>Uploads ({uploads.length})</h3>
+      <svg class='entry-chevron' aria-hidden='true' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='m6 9 6 6 6-6'/></svg>
+    </summary>
+  <div class='mt-2'>
   {#if loading}
     <div class='empty-state'>Loading uploads...</div>
   {:else}
@@ -140,12 +142,10 @@
 
       {#each uploads as upload (upload.id)}
         <div class='upload-card'>
-          <div class='upload-name'>{upload.realName}</div>
-          <div class='description'>
-            {formatFileSize(upload.filesize)}
-          </div>
-          <div class="description upload-date">
-            Added {formatDate(upload.createdAt)}
+          <div>
+            <div class='upload-name'>{upload.realName}</div>
+            <div class='description'>{formatFileSize(upload.filesize)}</div>
+            <div class='description'>Added {formatDate(upload.createdAt)}</div>
           </div>
           <div class='flex gap-03'>
             <button aria-label='Download file' class='btn btn-secondary' type='button' disabled={busyUploadId === upload.id} onclick={() => downloadUpload(upload)}>
@@ -161,4 +161,6 @@
       {/each}
     </div>
   {/if}
+  </div>
+  </details>
 </section>

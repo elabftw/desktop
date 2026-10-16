@@ -1,8 +1,8 @@
 /*
  * This file is part of eLabFTW Desktop.
  *
- * @author Nicolas CARPi <Deltablot>
- * @author Moustapha Camara <Deltablot>
+ * @author Nicolas CARPi / Deltablot
+ * @author Moustapha Camara / Deltablot
  * @copyright 2026 Nicolas CARPi
  * @see https://www.elabftw.net Official website
  * SPDX-License-Identifier: GPL-3.0-or-later
@@ -246,7 +246,8 @@ func (a *App) AddProfile(displayName string, passphrase string) (*ProfileIndex, 
 	return a.index, nil
 }
 
-func (a *App) SaveEntry(profileUUID string, title string, body string) (int64, error) {
+// SaveEntry stores contentType 1 for HTML and 2 for Markdown
+func (a *App) SaveEntry(profileUUID string, title string, body string, contentType int) (int64, error) {
 	profileUUID, err := a.requireUnlockedProfile(profileUUID)
 	if err != nil {
 		return 0, err
@@ -261,12 +262,14 @@ func (a *App) SaveEntry(profileUUID string, title string, body string) (int64, e
 	if err != nil {
 		return 0, fmt.Errorf("Open profile db: %w", err)
 	}
-	defer func() { _ = db.Close() }()
+	defer db.Close()
 
 	title = strings.TrimSpace(title)
-	body = strings.TrimSpace(body)
 	if title == "" {
 		return 0, fmt.Errorf("Title is empty")
+	}
+	if contentType != 1 && contentType != 2 {
+		return 0, fmt.Errorf("Invalid content type")
 	}
 
 	// Encrypt sensitive entry content before writing to SQLite.
@@ -282,9 +285,10 @@ func (a *App) SaveEntry(profileUUID string, title string, body string) (int64, e
 	}
 
 	res, err := db.Exec(
-		`INSERT INTO entries (title, body) VALUES (?, ?)`,
+		`INSERT INTO entries (title, body, content_type) VALUES (?, ?, ?)`,
 		encryptedTitle,
 		encryptedBody,
+		contentType,
 	)
 	if err != nil {
 		return 0, fmt.Errorf("Insert entry: %w", err)
@@ -298,7 +302,7 @@ func (a *App) SaveEntry(profileUUID string, title string, body string) (int64, e
 	return id, nil
 }
 
-func (a *App) UpdateEntry(profileUUID string, id int64, title string, body string) error {
+func (a *App) UpdateEntry(profileUUID string, id int64, title string, body string, contentType int) error {
 	profileUUID, err := a.requireUnlockedProfile(profileUUID)
 	if err != nil {
 		return err
@@ -316,12 +320,14 @@ func (a *App) UpdateEntry(profileUUID string, id int64, title string, body strin
 	if err != nil {
 		return fmt.Errorf("Open profile db: %w", err)
 	}
-	defer func() { _ = db.Close() }()
+	defer db.Close()
 
 	title = strings.TrimSpace(title)
-	body = strings.TrimSpace(body)
 	if title == "" {
 		return fmt.Errorf("Title is empty")
+	}
+	if contentType != 1 && contentType != 2 {
+		return fmt.Errorf("Invalid content type")
 	}
 
 	encryptedTitle, err := encryptString(a.activeKey, title)
@@ -338,9 +344,10 @@ func (a *App) UpdateEntry(profileUUID string, id int64, title string, body strin
 		UPDATE entries
 		SET title = ?,
 			body = ?,
+			content_type = ?,
 			modified_at = (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
 		WHERE id = ?
-	`, encryptedTitle, encryptedBody, id)
+	`, encryptedTitle, encryptedBody, contentType, id)
 	if err != nil {
 		return fmt.Errorf("Update entry: %w", err)
 	}
@@ -374,7 +381,7 @@ func (a *App) DeleteEntry(profileUUID string, id int64) error {
 	if err != nil {
 		return fmt.Errorf("Open profile db: %w", err)
 	}
-	defer func() { _ = db.Close() }()
+	defer db.Close()
 
 	res, err := db.Exec(`
 		DELETE FROM entries
@@ -396,10 +403,12 @@ func (a *App) DeleteEntry(profileUUID string, id int64) error {
 }
 
 type EntrySummary struct {
-	ID         int64  `json:"id"`
-	Title      string `json:"title"`
-	CreatedAt  string `json:"createdAt"`
-	ModifiedAt string `json:"modifiedAt"`
+	ID            int64  `json:"id"`
+	Title         string `json:"title"`
+	CreatedAt     string `json:"createdAt"`
+	ModifiedAt    string `json:"modifiedAt"`
+	RemoteType    string `json:"remoteType,omitempty"`
+	RemoteDetails string `json:"remoteDetails,omitempty"`
 }
 
 // Titles are stored encrypted, so decrypt them before returning the summaries to frontend.
@@ -418,12 +427,17 @@ func (a *App) ListEntries(profileUUID string) ([]EntrySummary, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open profile db: %w", err)
 	}
-	defer func() { _ = db.Close() }()
+	defer db.Close()
 
 	rows, err := db.Query(`
-		SELECT id, title, created_at, modified_at
-		FROM entries
-		ORDER BY modified_at DESC, id DESC
+		SELECT e.id, e.title, e.created_at, e.modified_at,
+			COALESCE((SELECT l.type FROM local2remote l WHERE l.local_id = e.id ORDER BY l.id LIMIT 1), ''),
+			COALESCE((SELECT d.encrypted_data
+			  FROM remote_details d JOIN local2remote l ON l.id = d.link_id
+			  WHERE l.local_id = e.id
+			  ORDER BY d.pulled_at DESC, d.link_id DESC LIMIT 1), '')
+		FROM entries e
+		ORDER BY e.modified_at DESC, e.id DESC
 	`)
 	if err != nil {
 		return nil, fmt.Errorf("query entries: %w", err)
@@ -433,7 +447,7 @@ func (a *App) ListEntries(profileUUID string) ([]EntrySummary, error) {
 	out := make([]EntrySummary, 0)
 	for rows.Next() {
 		var e EntrySummary
-		if err := rows.Scan(&e.ID, &e.Title, &e.CreatedAt, &e.ModifiedAt); err != nil {
+		if err := rows.Scan(&e.ID, &e.Title, &e.CreatedAt, &e.ModifiedAt, &e.RemoteType, &e.RemoteDetails); err != nil {
 			return nil, fmt.Errorf("scan entry: %w", err)
 		}
 		// The row stores encrypted title/body values.
@@ -443,6 +457,12 @@ func (a *App) ListEntries(profileUUID string) ([]EntrySummary, error) {
 			return nil, fmt.Errorf("Decrypt entry title: %w", err)
 		}
 		e.Title = title
+		if e.RemoteDetails != "" {
+			e.RemoteDetails, err = decryptString(a.activeKey, e.RemoteDetails)
+			if err != nil {
+				return nil, fmt.Errorf("Decrypt entry details: %w", err)
+			}
+		}
 		out = append(out, e)
 	}
 	if err := rows.Err(); err != nil {
@@ -453,11 +473,14 @@ func (a *App) ListEntries(profileUUID string) ([]EntrySummary, error) {
 }
 
 type Entry struct {
-	ID         int64  `json:"id"`
-	Title      string `json:"title"`
-	Body       string `json:"body"`
-	CreatedAt  string `json:"createdAt"`
-	ModifiedAt string `json:"modifiedAt"`
+	ID            int64  `json:"id"`
+	Title         string `json:"title"`
+	Body          string `json:"body"`
+	ContentType   int    `json:"contentType"`
+	CreatedAt     string `json:"createdAt"`
+	ModifiedAt    string `json:"modifiedAt"`
+	RemoteDetails string `json:"remoteDetails,omitempty"`
+	RemoteSource  string `json:"remoteSource,omitempty"`
 }
 
 func (a *App) GetEntry(profileUUID string, id int64) (*Entry, error) {
@@ -478,14 +501,14 @@ func (a *App) GetEntry(profileUUID string, id int64) (*Entry, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open profile db: %w", err)
 	}
-	defer func() { _ = db.Close() }()
+	defer db.Close()
 
 	var e Entry
 	err = db.QueryRow(`
-		SELECT id, title, body, created_at, modified_at
+		SELECT id, title, body, content_type, created_at, modified_at
 		FROM entries
 		WHERE id = ?
-	`, id).Scan(&e.ID, &e.Title, &e.Body, &e.CreatedAt, &e.ModifiedAt)
+	`, id).Scan(&e.ID, &e.Title, &e.Body, &e.ContentType, &e.CreatedAt, &e.ModifiedAt)
 
 	if err == sql.ErrNoRows {
 		return nil, fmt.Errorf("Entry not found")
@@ -506,6 +529,27 @@ func (a *App) GetEntry(profileUUID string, id int64) (*Entry, error) {
 
 	e.Title = title
 	e.Body = body
+
+	// Show the latest successfully pulled read-only eLabFTW metadata when offline.
+	var encryptedDetails string
+	err = db.QueryRow(`
+        SELECT d.encrypted_data, i.site_url
+        FROM remote_details d
+        JOIN local2remote l ON l.id = d.link_id
+        JOIN elabftw_instances i ON i.id = l.instance
+        WHERE l.local_id = ?
+        ORDER BY d.pulled_at DESC, d.link_id DESC
+        LIMIT 1
+    `, id).Scan(&encryptedDetails, &e.RemoteSource)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, fmt.Errorf("read remote details: %w", err)
+	}
+	if err == nil {
+		e.RemoteDetails, err = decryptString(a.activeKey, encryptedDetails)
+		if err != nil {
+			return nil, fmt.Errorf("decrypt remote details: %w", err)
+		}
+	}
 
 	return &e, nil
 }

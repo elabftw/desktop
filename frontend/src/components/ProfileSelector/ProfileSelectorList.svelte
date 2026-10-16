@@ -1,8 +1,8 @@
 <!--
 This file is part of eLabFTW Desktop.
 
-@author Nicolas CARPi <Deltablot>
-@author Moustapha Camara <Deltablot>
+@author Nicolas CARPi / Deltablot
+@author Moustapha Camara / Deltablot
 @copyright 2026 Deltablot
 @see https://www.elabftw.net Official website
 SPDX-License-Identifier: GPL-3.0-or-later
@@ -73,8 +73,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
           >
             <span class='profile-avatar'>{initials(profile)}</span>
             <span class='grid gap-03'>
-              <span class='text-strong text-white text-ellipsis text-big'>{profile.display_name?.trim() || profile.uuid}</span>
-              <span class='text-gray'>{activeProfile === profile.uuid ? 'Selected' : 'Click to unlock'}</span>
+              <span class='text-strong text-ellipsis text-big'>{profile.display_name?.trim() || profile.uuid}</span>
+              <span class='description'>{activeProfile === profile.uuid ? 'Selected' : 'Click to unlock'}</span>
             </span>
 
             <span class='text-orange text-strong' aria-hidden='true'>

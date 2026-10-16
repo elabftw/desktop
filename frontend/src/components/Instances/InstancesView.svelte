@@ -1,8 +1,8 @@
 <!--
 This file is part of eLabFTW Desktop.
 
-@author Nicolas CARPi <Deltablot>
-@author Moustapha Camara <Deltablot>
+@author Nicolas CARPi / Deltablot
+@author Moustapha Camara / Deltablot
 @copyright 2026 Deltablot
 @see https://www.elabftw.net Official website
 SPDX-License-Identifier: GPL-3.0-or-later
@@ -196,7 +196,7 @@ log new instances, edit existing and delete. You can test the API as well
       {#each instances as instance (instance.id)}
         <div class='flex justify-between items-center gap-1'>
           <div class='grid gap-03'>
-            <span class='text-white'>{instance.siteUrl}</span>
+            <span>{instance.siteUrl}</span>
             <span class={instance.verifyTls ? 'text-success' : 'text-orange'}>
               TLS verification: {instance.verifyTls ? 'enabled' : 'disabled'}
             </span>

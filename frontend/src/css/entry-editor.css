@@ -1,0 +1,143 @@
+/* When in edit mode, the container gets bigger (we add the side panel) */
+.container.editor-container {
+  width: min(1780px, calc(100vw - 3rem));
+}
+
+.btn-external-link {
+  color: var(--info-text);
+  text-decoration: none;
+}
+
+.editor-layout {
+  align-items: start;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 2.1fr) minmax(280px, 1fr);
+}
+
+.editor-layout > * {
+  min-width: 0;
+}
+
+.editor-sidebar {
+  display: grid;
+  gap: 1rem;
+}
+
+.editor-sidebar .panel {
+  border-radius: 14px;
+  padding: 1rem 1.2rem;
+}
+
+.editor-sidebar .panel h3 {
+  margin: 0;
+}
+
+/* for the panels to have "Title    ^ " <-- with the toggling arrow */
+.editor-sidebar .entry-panel-heading {
+  align-items: center;
+  display: flex;
+  gap: .5rem;
+  justify-content: space-between;
+  padding: .2rem 0;
+}
+
+.editor-sidebar summary {
+  list-style: none;
+}
+
+.editor-sidebar summary::-webkit-details-marker {
+  display: none;
+}
+
+.editor-sidebar details .entry-chevron {
+  transition: transform .2s ease;
+}
+
+.editor-sidebar details[open] .entry-chevron {
+  transform: rotate(180deg);
+}
+
+.entry-info-row {
+  display: grid;
+  gap: .4rem;
+  grid-template-columns: minmax(85px, 1fr) minmax(0, 1.5fr);
+  margin-top: .75rem;
+  overflow-wrap: anywhere;
+}
+
+.entry-info-row > :first-child {
+  color: var(--light-gray);
+}
+
+.entry-info-row > :last-child {
+  color: var(--soft-white);
+}
+
+.editor-sidebar .uploads-grid {
+  flex-direction: column;
+  gap: .65rem;
+}
+
+.editor-sidebar .upload-icon {
+  font-size: 2rem;
+}
+
+.editor-sidebar .upload-file .btn {
+  padding: .4rem;
+}
+
+.entry-detail-content {
+  border-top: 1px solid var(--border-soft);
+  margin-top: .8rem;
+  padding-top: .8rem;
+}
+
+.entry-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+}
+
+.entry-tag {
+  background: var(--dark-blue-2);
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  color: var(--soft-white);
+  font-size: .85rem;
+  padding: .3rem .55rem;
+}
+
+.entry-readonly-row {
+  border-bottom: 1px solid var(--border-soft);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  justify-content: space-between;
+  overflow-wrap: anywhere;
+  padding: .45rem 0;
+}
+
+.entry-readonly-row:last-child {
+  border-bottom: 0;
+}
+
+.entry-readonly-row > :last-child {
+  color: var(--light-gray);
+}
+
+@media (width <= 950px) {
+  .editor-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.catstat-dot {
+  background-color: var(--light-gray);
+  border-radius: 50%;
+  display: inline-block;
+  flex: none;
+  height: .85rem;
+  margin: .5rem .5rem 0 0;
+  width: .85rem;
+}

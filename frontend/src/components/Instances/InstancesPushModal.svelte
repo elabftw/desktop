@@ -1,8 +1,8 @@
 <!--
 This file is part of eLabFTW Desktop.
 
-@author Nicolas CARPi <Deltablot>
-@author Moustapha Camara <Deltablot>
+@author Nicolas CARPi / Deltablot
+@author Moustapha Camara / Deltablot
 @copyright 2026 Deltablot
 @see https://www.elabftw.net Official website
 SPDX-License-Identifier: GPL-3.0-or-later
@@ -26,6 +26,8 @@ with "Instance Name" for cross platform data share.
   type Props = {
     profileUuid: string;
     force?: boolean;
+    // once we push the entity, the type is locked (as either exp or resource)
+    lockedEntityType?: EntityType | null;
     onClose: () => void;
     onPush: (
       instanceId: number,
@@ -37,6 +39,7 @@ with "Instance Name" for cross platform data share.
   let {
     profileUuid,
     force = false,
+    lockedEntityType = null,
     onClose,
     onPush,
   }: Props = $props();
@@ -82,7 +85,7 @@ with "Instance Name" for cross platform data share.
     pushing = true;
 
     try {
-      await onPush(selectedInstanceId, entityType, force);
+      await onPush(selectedInstanceId, lockedEntityType ?? entityType, force);
     } finally {
       pushing = false;
     }
@@ -116,7 +119,7 @@ with "Instance Name" for cross platform data share.
       {#if instances.length === 1}
         <div>
           <h1>Instance</h1>
-          <p class='text-white'>{instances[0].siteUrl}</p>
+          <p>{instances[0].siteUrl}</p>
         </div>
       {:else}
         <div>
@@ -141,16 +144,21 @@ with "Instance Name" for cross platform data share.
       {/if}
 
       <div>
-        <label for='push-entity-type'>Remote type</label>
-        <select id='push-entity-type' class='input' bind:value={entityType}>
-          <option value='experiment'>Experiment</option>
-          <option value='resource'>Resource</option>
-        </select>
+        {#if lockedEntityType}
+          <span class='text-strong'>Remote type</span>
+          <p>{lockedEntityType === 'experiment' ? 'Experiment' : 'Resource'} (linked)</p>
+        {:else}
+          <label for='push-entity-type'>Remote type</label>
+          <select id='push-entity-type' class='input' bind:value={entityType}>
+            <option value='experiment'>Experiment</option>
+            <option value='resource'>Resource</option>
+          </select>
+        {/if}
       </div>
     </div>
   {/if}
 
-  <svelte:fragment slot='actions'>
+  {#snippet actions()}
     <button
       class='btn btn-secondary'
       type='button'
@@ -170,5 +178,5 @@ with "Instance Name" for cross platform data share.
         {pushing ? 'Pushing...' : force ? 'Push anyway' : 'Push'}
       </button>
     {/if}
-  </svelte:fragment>
+  {/snippet}
 </Modal>

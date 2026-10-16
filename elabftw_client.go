@@ -1,8 +1,8 @@
 /*
  * This file is part of eLabFTW Desktop.
  *
- * @author Nicolas CARPi <Deltablot>
- * @author Moustapha Camara <Deltablot>
+ * @author Nicolas CARPi / Deltablot
+ * @author Moustapha Camara / Deltablot
  * @copyright 2026 Nicolas CARPi
  * @see https://www.elabftw.net Official website
  * SPDX-License-Identifier: GPL-3.0-or-later
@@ -17,6 +17,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -154,10 +155,29 @@ func (a *App) elabftwRequest(
 
 	client := elabftwHTTPClient(cfg.VerifyTLS, isUpload)
 
+	// log the requests made to the API
+	log.Printf("API REQUEST: %s %s", method, req.URL.RequestURI())
+
 	resp, err := client.Do(req)
 	if err != nil {
+		log.Printf("API ERROR: %v", err)
 		return nil, fmt.Errorf("call elabftw %s %s: %w", method, path, err)
 	}
+
+	log.Printf("API RESPONSE: %s %s -> %d", method, path, resp.StatusCode)
+
+	// Log all API response bodies
+	responseBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		resp.Body.Close()
+		return nil, err
+	}
+	resp.Body.Close()
+
+	log.Printf("API RESPONSE BODY: %s", string(responseBody))
+
+	// Restore the body so the rest of the app can still read it
+	resp.Body = io.NopCloser(bytes.NewReader(responseBody))
 
 	return resp, nil
 }
