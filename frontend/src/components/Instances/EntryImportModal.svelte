@@ -85,7 +85,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 <Modal title='Import from eLabFTW' onClose={() => { if (!importing) onClose(); }}>
   <div class='grid gap-1'>
-    <p class='description'>Select one remote entry to save locally, including its metadata, links and uploads for offline use.</p>
+    <p>Select one remote entry to save locally, including its metadata, links and uploads for offline use.</p>
     {#if instances.length === 0 && !loading}
       <p class='description'>No eLabFTW instances configured. Add one in Manage your eLabFTW Instances first.</p>
     {:else}
