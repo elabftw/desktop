@@ -163,7 +163,7 @@ func (a *App) pullRemoteEntry(profileUUID string, db *sql.DB, entryID int64, ins
 	}
 
 	// Save read-only information from the existing remote entity response.
-	snapshotJSON, err := json.Marshal(remoteReadOnlySnapshot{
+	detailsJSON, err := json.Marshal(remoteReadOnlyDetails{
 		CategoryTitle:    remote.CategoryTitle,
 		CategoryColor:    remote.CategoryColor,
 		StatusTitle:      remote.StatusTitle,
@@ -176,7 +176,7 @@ func (a *App) pullRemoteEntry(profileUUID string, db *sql.DB, entryID int64, ins
 	if err != nil {
 		return nil, fmt.Errorf("encode remote details: %w", err)
 	}
-	encryptedDetails, err := encryptString(a.activeKey, string(snapshotJSON))
+	encryptedDetails, err := encryptString(a.activeKey, string(detailsJSON))
 	if err != nil {
 		return nil, fmt.Errorf("encrypt remote details: %w", err)
 	}
@@ -249,7 +249,7 @@ func validatePulledRemoteIdentity(remote remoteEntry, remoteID int64, entityType
 	return nil
 }
 
-type remoteReadOnlySnapshot struct {
+type remoteReadOnlyDetails struct {
 	CategoryTitle    string          `json:"categoryTitle"`
 	CategoryColor    string          `json:"categoryColor"`
 	StatusTitle      string          `json:"statusTitle"`
@@ -482,7 +482,7 @@ func replaceLocalEntryFromRemote(
 		return nil, fmt.Errorf("remote mapping changed during pull")
 	}
 
-	// Only update the read-only snapshot if the matching remote mapping still exists
+	// Only update the read-only remote details if the matching remote mapping still exists
 	result, err = tx.Exec(`
         INSERT INTO remote_details (link_id, encrypted_data, pulled_at)
         SELECT id, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now')

@@ -380,7 +380,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
           {/if}
           <div class='grid'>
             <h1 class='text-ellipsis'>{entryTitle.trim() || 'Untitled entry'}</h1>
-            <EntityCategoryStatus snapshot={selectedEntry?.remoteDetails} />
+            <EntityCategoryStatus remoteDetails={selectedEntry?.remoteDetails} />
           </div>
         </div>
       {:else} <!-- view === 'profile' -->
@@ -453,7 +453,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
                 <span class='description'>
                   Last edited {toRelativeTime(e.modifiedAt)}
                 </span>
-                <EntityCategoryStatus snapshot={e.remoteDetails} />
+                <EntityCategoryStatus remoteDetails={e.remoteDetails} />
               </span>
 
                 <span class='text-orange text-strong' aria-hidden='true'>
@@ -575,7 +575,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
           <section class='panel'>
             <h3 class='border-bottom'>Entry information</h3>
             <div class='entry-info-row'><span>Type</span><span class='flex items-center gap-03'><EntityTypeIcon type={linkedEntityType} /> {linkedEntityType === 'resource' ? 'Resource' : linkedEntityType === 'experiment' ? 'Experiment' : 'Local entry'}</span></div>
-            <div class='entry-info-row'><span>Category / Status</span><EntityCategoryStatus snapshot={selectedEntry?.remoteDetails} emptyLabel={remoteLinks.length > 0 ? 'Pull to load' : 'Not linked'} /></div>
+            <div class='entry-info-row'><span>Category / Status</span><EntityCategoryStatus remoteDetails={selectedEntry?.remoteDetails} emptyLabel={remoteLinks.length > 0 ? 'Pull to load' : 'Not linked'} /></div>
             <div class='entry-info-row'><span>Created</span><span>{selectedEntry ? new Intl.DateTimeFormat(undefined, {dateStyle: 'medium', timeStyle: 'short'}).format(new Date(selectedEntry.createdAt)) : 'Not saved yet'}</span></div>
             <div class='entry-info-row'><span>Modified</span><span>{selectedEntry ? new Intl.DateTimeFormat(undefined, {dateStyle: 'medium', timeStyle: 'short'}).format(new Date(selectedEntry.modifiedAt)) : 'Not saved yet'}</span></div>
             <div class='entry-info-row'><span>Content type</span><span>{entryContentType === 1 ? 'HTML (TinyMCE)' : 'Markdown'}</span></div>
@@ -589,7 +589,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
             />
           {/key}
           <EntryReadonlyPanels
-            snapshot={selectedEntry?.remoteDetails}
+            remoteDetails={selectedEntry?.remoteDetails}
             source={selectedEntry?.remoteSource}
             linked={remoteLinks.length > 0}
           />

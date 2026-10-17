@@ -1,8 +1,8 @@
 <script lang='ts'>
-  type Props = {snapshot?: string; emptyLabel?: string};
-  let {snapshot, emptyLabel = ''}: Props = $props();
+  type Props = {remoteDetails?: string; emptyLabel?: string};
+  let {remoteDetails, emptyLabel = ''}: Props = $props();
 
-  function fromSnapshot(value?: string): {kind: string; title: string; color: string}[] {
+  function fromRemoteDetails(value?: string): {kind: string; title: string; color: string}[] {
     if (!value) return [];
     try {
       const data = JSON.parse(value) as Record<string, unknown>;
@@ -21,7 +21,7 @@
     }
   }
 
-  let labels = $derived(fromSnapshot(snapshot));
+  let labels = $derived(fromRemoteDetails(remoteDetails));
 </script>
 
 {#if labels.length}
